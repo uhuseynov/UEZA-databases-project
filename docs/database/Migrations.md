@@ -2,7 +2,7 @@
 
 [← Database](./Home.md) | [Documentation Home](../Home.md)
 
-Alembic migration scaffolding is located under:
+Alembic migration infrastructure is located under:
 
 ```text
 src/database/migrations/
@@ -10,11 +10,11 @@ src/database/migrations/
 
 The project also contains `alembic.ini` at the repository root.
 
-## Intended Configuration
+## Configuration
 
 Application traffic uses the asynchronous `database_url`, while migration tooling should use the synchronous `sync_database_url` backed by PyMySQL.
 
-The migration environment should use the same SQLAlchemy metadata as the application:
+The migration environment uses the same SQLAlchemy metadata as the application:
 
 ```text
 Database models
@@ -28,13 +28,15 @@ migration revision
 
 ## Current Status
 
-The Alembic scaffolding exists, but the migration environment still needs to be connected to the project's `Settings.sync_database_url` and `Base.metadata` before autogeneration is considered ready.
+`src/database/migrations/env.py` is wired to `settings.sync_database_url` and `Base.metadata`. The synchronous URL is installed into the Alembic configuration for online migrations, while offline migrations use the same settings URL directly. `compare_type=True` is enabled in both modes.
 
-Model modules must also be imported before autogeneration so their tables are registered in `Base.metadata`.
+There are no persistence models yet. Once model modules are added, they must be imported before autogeneration so their tables are registered in `Base.metadata`.
+
+The Docker application entrypoint runs `alembic upgrade head` before starting Uvicorn, so container startup applies pending migrations automatically after MariaDB is healthy.
 
 ## Typical Workflow
 
-After the migration environment is wired:
+Once persistence models exist:
 
 ```bash
 uv run alembic revision --autogenerate -m "create initial schema"

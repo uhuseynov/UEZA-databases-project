@@ -48,7 +48,7 @@ FastAPI
 
 ### Database
 
-`src/database/` contains the SQLAlchemy base, asynchronous connection/session management, migration scaffolding, and placeholders for models and repositories.
+`src/database/` contains the SQLAlchemy base, asynchronous connection/session management, configured Alembic migration environment, and placeholders for models and repositories.
 
 [Database Documentation →](../database/Home.md)
 
@@ -65,3 +65,7 @@ FastAPI
 At startup the database connection pool is initialized. At shutdown the engine is disposed.
 
 The current article endpoint is a simple integration path for exercising `MediaWikiClient`; API routing can later be separated into dedicated route modules as the application grows.
+
+## Development Infrastructure
+
+The repository also includes a multi-stage Docker build, Docker Compose service health checks, repository-managed Git hooks, and a gated GitHub Actions CI pipeline. These are documented under [Development Workflow](../development/Home.md).

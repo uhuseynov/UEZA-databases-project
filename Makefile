@@ -116,6 +116,17 @@ help: ## Shows this help message
 ##@ Development
 # =============================================================================
 
+.PHONY: setup
+setup: sync hooks ## Sets up locked dependencies and repository Git hooks
+	@printf "$(GREEN)✅ Development environment ready.$(RESET)\n"
+
+
+.PHONY: hooks
+hooks: ## Configures repository Git hooks
+	@printf "$(BLUE)🪝 Configuring Git hooks...$(RESET)\n"
+	@./scripts/setup-hooks.sh
+
+
 .PHONY: install
 install: ## Installs all project dependencies
 	@printf "$(BLUE)📦 Installing dependencies...$(RESET)\n"
