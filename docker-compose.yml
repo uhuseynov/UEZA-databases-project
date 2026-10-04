@@ -1,0 +1,77 @@
+services:
+  db:
+    image: mariadb:12.3.3
+    restart: unless-stopped
+
+    environment:
+      MARIADB_ROOT_PASSWORD: ${MARIADB_ROOT_PASSWORD:-root_password}
+      MARIADB_DATABASE: ${MARIADB_DATABASE:-uza_db}
+      MARIADB_USER: ${MARIADB_USER:-uza}
+      MARIADB_PASSWORD: ${MARIADB_PASSWORD:-uza_password}
+
+    ports:
+      - "${MARIADB_PORT:-3306}:3306"
+
+    volumes:
+      - mariadb_data:/var/lib/mysql
+
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+      start_period: 10s
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+
+    restart: unless-stopped
+
+    environment:
+      APP_ENV: ${APP_ENV:-development}
+      LOG_LEVEL: ${LOG_LEVEL:-INFO}
+
+      MARIADB_HOST: db
+      MARIADB_PORT: 3306
+      MARIADB_USER: ${MARIADB_USER:-uza}
+      MARIADB_PASSWORD: ${MARIADB_PASSWORD:-uza_password}
+      MARIADB_DATABASE: ${MARIADB_DATABASE:-uza_db}
+
+      CACHE_DIR: /app/.cache/articles
+      CACHE_TTL_SECONDS: ${CACHE_TTL_SECONDS:-86400}
+
+      MEDIAWIKI_USER_AGENT: ${MEDIAWIKI_USER_AGENT:-UZA-Databases-Project/0.1}
+      MEDIAWIKI_REQUESTS_PER_SECOND: ${MEDIAWIKI_REQUESTS_PER_SECOND:-2.0}
+      MEDIAWIKI_MAX_RETRIES: ${MEDIAWIKI_MAX_RETRIES:-3}
+      MEDIAWIKI_BATCH_SIZE: ${MEDIAWIKI_BATCH_SIZE:-20}
+      MEDIAWIKI_TIMEOUT: ${MEDIAWIKI_TIMEOUT:-10.0}
+      MEDIAWIKI_MAXLAG: ${MEDIAWIKI_MAXLAG:-5}
+
+    ports:
+      - "${APP_PORT:-8000}:8000"
+
+    volumes:
+      - article_cache:/app/.cache
+
+    depends_on:
+      db:
+        condition: service_healthy
+
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "python",
+          "-c",
+          "import urllib.request; urllib.request.urlopen('http://localhost:8000/health', timeout=2)",
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+volumes:
+  mariadb_data:
+  article_cache:
