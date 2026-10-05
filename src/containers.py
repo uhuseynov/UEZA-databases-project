@@ -5,6 +5,7 @@ from database import Database
 from ingestion.cache import ArticleCache
 from ingestion.mediawiki import MediaWikiClient
 from logger import AppLogger
+from rag.embedder import Embedder
 
 
 class Container(containers.DeclarativeContainer):
@@ -30,4 +31,12 @@ class Container(containers.DeclarativeContainer):
         batch_size=config.provided.mediawiki_batch_size,
         logger=app_logger,
         cache=article_cache,
+    )
+
+    embedder = providers.Singleton(
+        Embedder,
+        model_name=config.provided.embedding_model_name,
+        dimension=config.provided.embedding_dimension,
+        query_prefix=config.provided.embedding_query_prefix,
+        passage_prefix=config.provided.embedding_passage_prefix,
     )

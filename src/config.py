@@ -43,8 +43,10 @@ class Settings(BaseSettings):
     chunk_overlap: int = Field(default=150, ge=0)
 
     # Vector & Embeddings Configuration
-    embedding_model_name: str = "sentence-transformers/all-MiniLM-L6-v2"
-    embedding_dimension: int = Field(default=384, ge=1)
+    embedding_model_name: str = "BAAI/bge-base-en-v1.5"
+    embedding_dimension: int = Field(default=768, ge=1)
+    embedding_query_prefix: str = "Represent this sentence for searching relevant passages: "
+    embedding_passage_prefix: str = ""
     vector_search_top_k: int = Field(default=5, ge=1)
 
     # LLM / RAG Configuration
