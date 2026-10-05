@@ -1,1 +1,1 @@
-# UZA-databases-project
+# UEZA-databases-project
