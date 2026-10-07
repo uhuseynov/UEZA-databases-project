@@ -50,7 +50,7 @@ This URL is intended for synchronous tooling such as Alembic migrations.
 
 ## Ingestion Settings
 
-Configuration currently includes settings for the article cache and MediaWiki client, including request rate, timeout, retries, batch size, and `maxlag`.
+Configuration currently includes settings for the article cache and MediaWiki client, including request rate, timeout, retries, batch size, `maxlag`, and `MEDIAWIKI_USER_AGENT`. The default User-Agent identifies this project with its repository URL and a contact address, as required for reliable Wikimedia API access. Override it through environment configuration when deploying under a different application identity.
 
 The configuration also contains planned chunking, embedding, vector-search, and LLM/RAG settings. Their presence does not mean those pipeline stages are implemented yet.
 

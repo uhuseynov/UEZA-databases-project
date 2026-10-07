@@ -42,7 +42,7 @@ services:
       CACHE_DIR: /app/.cache/articles
       CACHE_TTL_SECONDS: ${CACHE_TTL_SECONDS:-86400}
 
-      MEDIAWIKI_USER_AGENT: ${MEDIAWIKI_USER_AGENT:-UEZA-Databases-Project/0.1}
+      MEDIAWIKI_USER_AGENT: "${MEDIAWIKI_USER_AGENT:-UEZA-Databases-Project/0.1 (https://github.com/uhuseynov/UEZA-databases-project; mailto:info@constructor.university)}"
       MEDIAWIKI_REQUESTS_PER_SECOND: ${MEDIAWIKI_REQUESTS_PER_SECOND:-2.0}
       MEDIAWIKI_MAX_RETRIES: ${MEDIAWIKI_MAX_RETRIES:-3}
       MEDIAWIKI_BATCH_SIZE: ${MEDIAWIKI_BATCH_SIZE:-20}

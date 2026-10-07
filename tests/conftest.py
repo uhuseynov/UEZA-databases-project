@@ -24,12 +24,20 @@ def client_factory():
         http_client = httpx.Client(
             transport=transport,
             headers={
-                "User-Agent": "test-client",
+                "User-Agent": (
+                    "UEZA-Databases-Project/test "
+                    "(https://github.com/uhuseynov/UEZA-databases-project; "
+                    "mailto:info@constructor.university)"
+                ),
             },
         )
         clients.append(http_client)
         return MediaWikiClient(
-            user_agent="test-client",
+            user_agent=(
+                "UEZA-Databases-Project/test "
+                "(https://github.com/uhuseynov/UEZA-databases-project; "
+                "mailto:info@constructor.university)"
+            ),
             requests_per_second=100_000,
             max_retries=max_retries,
             batch_size=batch_size,

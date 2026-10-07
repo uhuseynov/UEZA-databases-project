@@ -31,7 +31,11 @@ class Settings(BaseSettings):
     cache_ttl_seconds: int = Field(default=86400, ge=0)
 
     # MediaWiki Client Settings
-    mediawiki_user_agent: str = "UEZA-Databases-Project/0.1 (academic-project)"
+    mediawiki_user_agent: str = (
+        "UEZA-Databases-Project/0.1 "
+        "(https://github.com/uhuseynov/UEZA-databases-project; "
+        "mailto:infon@constructor.university)"
+    )
     mediawiki_requests_per_second: float = Field(default=2.0, gt=0)
     mediawiki_max_retries: int = Field(default=3, ge=0)
     mediawiki_batch_size: int = Field(default=20, ge=1)

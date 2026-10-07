@@ -4,7 +4,7 @@ version = "0.1.0"
 description = "Native vector search and RAG evaluation using MariaDB"
 readme = "README.md"
 authors = [
-    { name = "Egehan Kılıçarslan", email = "egehankilicarslan@proton.me" },
+    { name = "Egehan Kılıçarslan", email = "ekilicarslan@constructor.university" },
 ]
 requires-python = ">=3.14"
 dependencies = [
