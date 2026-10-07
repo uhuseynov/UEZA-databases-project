@@ -1,0 +1,17 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+echo "Running pre-push checks..."
+
+if ! command -v uv >/dev/null 2>&1; then
+    echo "Error: uv is required but was not found."
+    echo "Install uv before pushing."
+    exit 1
+fi
+
+echo "Running unit tests..."
+uv run pytest tests/unit -q
+
+echo
+echo "Pre-push checks passed."
