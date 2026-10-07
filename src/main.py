@@ -3,10 +3,10 @@ from contextlib import asynccontextmanager
 
 from fastapi import FastAPI, HTTPException, Request
 
-from config import settings
-from containers import Container
-from database import Database
-from ingestion.mediawiki import MediaWikiClient, MediaWikiError, WikiArticle
+from src.config import settings
+from src.containers import Container
+from src.database import Database
+from src.ingestion.mediawiki import MediaWikiClient, MediaWikiError, WikiArticle
 
 
 @asynccontextmanager
@@ -62,4 +62,4 @@ app = create_app()
 if __name__ == "__main__":
     import uvicorn
 
-    uvicorn.run("main:app", host=settings.app_host, port=settings.app_port, reload=True)
+    uvicorn.run("src.main:app", host=settings.app_host, port=settings.app_port, reload=True)

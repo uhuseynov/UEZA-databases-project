@@ -3,7 +3,7 @@ import sys
 
 from pythonjsonlogger.json import JsonFormatter
 
-from config import Settings
+from src.config import Settings
 
 
 class AppLogger:
