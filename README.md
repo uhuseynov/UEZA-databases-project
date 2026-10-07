@@ -1,4 +1,4 @@
-# UZA Databases Project
+# UEZA Databases Project
 
 Native vector search and RAG evaluation using MariaDB.
 
