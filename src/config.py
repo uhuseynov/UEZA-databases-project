@@ -21,8 +21,8 @@ class Settings(BaseSettings):
     mariadb_host: str = "mariadb"
     mariadb_port: int = Field(default=3306, ge=1, le=65535)
     mariadb_user: str = "root"
-    mariadb_password: str = "uza_password"
-    mariadb_database: str = "uza_db"
+    mariadb_password: str = "ueza_password"
+    mariadb_database: str = "ueza_db"
     mariadb_pool_recycle: int = Field(default=3600, ge=60)
     mariadb_pool_pre_ping: bool = True
 
@@ -31,7 +31,7 @@ class Settings(BaseSettings):
     cache_ttl_seconds: int = Field(default=86400, ge=0)
 
     # MediaWiki Client Settings
-    mediawiki_user_agent: str = "UZA-Databases-Project/0.1 (academic-project)"
+    mediawiki_user_agent: str = "UEZA-Databases-Project/0.1 (academic-project)"
     mediawiki_requests_per_second: float = Field(default=2.0, gt=0)
     mediawiki_max_retries: int = Field(default=3, ge=0)
     mediawiki_batch_size: int = Field(default=20, ge=1)

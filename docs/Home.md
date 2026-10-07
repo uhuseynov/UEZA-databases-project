@@ -1,6 +1,6 @@
-# UZA Databases Project
+# UEZA Databases Project
 
-Technical documentation for the UZA Databases Project.
+Technical documentation for the UEZA Databases Project.
 
 The project explores native vector search and retrieval-augmented generation using MariaDB. The documentation follows the implementation: completed infrastructure is documented as current behavior, while unfinished ingestion and RAG stages are marked as planned.
 

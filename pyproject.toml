@@ -1,5 +1,5 @@
 [project]
-name = "uza-databases-project"
+name = "ueza-databases-project"
 version = "0.1.0"
 description = "Native vector search and RAG evaluation using MariaDB"
 readme = "README.md"

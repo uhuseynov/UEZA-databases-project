@@ -32,7 +32,7 @@ def create_app() -> FastAPI:
     container.wire(modules=[__name__])
 
     app = FastAPI(
-        title="UZA Databases Project",
+        title="UEZA Databases Project",
         description="Native vector search and RAG evaluation using MariaDB",
         version="0.1.0",
         lifespan=lifespan,

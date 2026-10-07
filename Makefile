@@ -1,5 +1,5 @@
 # =============================================================================
-# UZA Databases Project — Development Makefile
+# UEZA Databases Project — Development Makefile
 # =============================================================================
 
 SHELL := /bin/bash
@@ -22,7 +22,7 @@ endif
 # Variables
 # -----------------------------------------------------------------------------
 
-APP_NAME := uza-databases-project
+APP_NAME := ueza-databases-project
 
 UV      := uv
 DC      := docker compose
@@ -33,9 +33,9 @@ VERSION := $(shell git describe --tags --always --dirty 2>/dev/null || echo "dev
 COMMIT  := $(shell git rev-parse --short HEAD 2>/dev/null || echo "unknown")
 
 APP_PORT         ?= 8000
-MARIADB_USER     ?= uza
-MARIADB_PASSWORD ?= uza_password
-MARIADB_DATABASE ?= uza_db
+MARIADB_USER     ?= ueza
+MARIADB_PASSWORD ?= ueza_password
+MARIADB_DATABASE ?= ueza_db
 
 
 # -----------------------------------------------------------------------------
@@ -100,7 +100,7 @@ endef
 
 .PHONY: help
 help: ## Shows this help message
-	@printf "\n$(BOLD)UZA Databases Project$(RESET)\n"
+	@printf "\n$(BOLD)UEZA Databases Project$(RESET)\n"
 	@printf "Usage: make $(CYAN)<command>$(RESET)\n"
 	@awk 'BEGIN {FS = ":.*?## "} \
 		/^##@/ { \
