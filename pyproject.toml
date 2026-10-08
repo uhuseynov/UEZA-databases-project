@@ -1,0 +1,39 @@
+[project]
+name = "ueza-databases-project"
+version = "0.1.0"
+description = "Native vector search and RAG evaluation using MariaDB"
+readme = "README.md"
+authors = [
+    { name = "Egehan Kılıçarslan", email = "ekilicarslan@constructor.university" },
+]
+requires-python = ">=3.14"
+dependencies = [
+    "aiomysql>=0.3.2",
+    "alembic>=1.20.0",
+    "dependency-injector>=4.49.1",
+    "fastapi>=0.142.2",
+    "httpx>=0.28.1",
+    "pydantic-settings>=2.15.0",
+    "pymysql>=1.2.3",
+    "python-json-logger>=4.2.0",
+    "sqlalchemy[asyncio]>=2.1.3",
+    "uvicorn>=0.54.0",
+]
+
+
+[tool.uv]
+package = false
+
+
+[dependency-groups]
+dev = ["pytest>=9.1.1"]
+
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+
+markers = [
+    "integration: tests that require network access or external services",
+]
+
+addopts = ["-ra"]

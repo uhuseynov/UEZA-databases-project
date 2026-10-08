@@ -1,0 +1,31 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+COMMIT_MSG_FILE="$1"
+COMMIT_MSG="$(head -n 1 "$COMMIT_MSG_FILE")"
+
+PATTERN='^(feat|fix|docs|style|refactor|perf|test|build|ci|chore|revert)(\([a-zA-Z0-9._/-]+\))?!?: .+'
+
+if [[ "$COMMIT_MSG" =~ ^Merge\  ]] ||
+   [[ "$COMMIT_MSG" =~ ^Revert\  ]]; then
+    exit 0
+fi
+
+if ! [[ "$COMMIT_MSG" =~ $PATTERN ]]; then
+    echo
+    echo "Invalid commit message:"
+    echo "  $COMMIT_MSG"
+    echo
+    echo "Expected Conventional Commit format:"
+    echo "  <type>(optional-scope): <description>"
+    echo
+    echo "Examples:"
+    echo "  feat: add article cache"
+    echo "  fix(database): rollback failed transactions"
+    echo "  docs: update ingestion documentation"
+    echo "  ci: add integration test gate"
+    echo "  refactor(mediawiki): simplify retry handling"
+    echo
+    exit 1
+fi

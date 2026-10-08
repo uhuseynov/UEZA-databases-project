@@ -1,0 +1,45 @@
+# Byte-compiled / optimized / C-extensions
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+
+# Virtual Environments & Package Managers
+.venv/
+env/
+venv/
+ENV/
+.uv/
+
+# Ingestion / Application Cache & Local Data
+.cache/
+data/
+*.sqlite3
+
+# Environment Variables & Secrets
+.env
+.env.local
+.env.*.local
+!.env.example
+
+# Testing & Coverage
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+.nox/
+
+# Linters & Formatters
+.ruff_cache/
+.mypy_cache/
+
+# IDEs & Editors
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Docker volumes / local persistent mounts
+mariadb_data/
