@@ -39,43 +39,102 @@ The database is MariaDB 12.3.3, started through `docker-compose.yml`. If you use
 
 The schema lives in [schema.sql](./schema.sql). MariaDB runs it automatically the first time the database container starts with an empty data volume.
 
-Two tables: one for articles, one for the text chunks and their vectors.
+Four tables:
+
+- `articles`: one row per Wikipedia article, with the metadata we filter on.
+- `article_categories`: the categories of each article, one row per article and category.
+- `article_links`: the outgoing links of each article, stored as the title of the linked article.
+- `article_chunks`: the text chunks and their vectors.
 
 ```sql
 CREATE TABLE articles (
-    id INT PRIMARY KEY AUTO_INCREMENT,
-    title VARCHAR(255),
-    category VARCHAR(100),
-    url VARCHAR(500),
-    edited_at DATE
+    id             INT PRIMARY KEY AUTO_INCREMENT,
+    page_id        INT UNSIGNED NOT NULL UNIQUE,      -- MediaWiki page id
+    title          VARCHAR(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL UNIQUE,
+    url            VARCHAR(500),
+    article_length INT UNSIGNED NOT NULL,             -- size reported by MediaWiki
+    revision_id    BIGINT UNSIGNED NOT NULL,          -- stored revision, compared during sync
+    last_edit_date DATETIME NOT NULL,                 -- time of that revision (UTC)
+    INDEX idx_articles_article_length (article_length),
+    INDEX idx_articles_last_edit_date (last_edit_date)
+);
+
+CREATE TABLE article_categories (
+    article_id INT NOT NULL,
+    category   VARCHAR(255) NOT NULL,
+    PRIMARY KEY (article_id, category),
+    INDEX idx_article_categories_category (category),
+    CONSTRAINT fk_categories_article FOREIGN KEY (article_id) REFERENCES articles(id)
+);
+
+CREATE TABLE article_links (
+    article_id   INT NOT NULL,                        -- the article that contains the link
+    linked_title VARCHAR(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL,
+    PRIMARY KEY (article_id, linked_title),
+    INDEX idx_article_links_linked_title (linked_title),
+    CONSTRAINT fk_links_article FOREIGN KEY (article_id) REFERENCES articles(id)
 );
 
 CREATE TABLE article_chunks (
-    id INT PRIMARY KEY AUTO_INCREMENT,
-    article_id INT,
-    chunk_text TEXT,
-    embedding VECTOR(768) NOT NULL,
-    FOREIGN KEY (article_id) REFERENCES articles(id),
+    id          INT PRIMARY KEY AUTO_INCREMENT,
+    article_id  INT NOT NULL,
+    chunk_index INT NOT NULL,                         -- position in the article, from 0
+    chunk_text  TEXT NOT NULL,
+    embedding   VECTOR(768) NOT NULL,
+    UNIQUE KEY uq_chunks_position (article_id, chunk_index),
+    CONSTRAINT fk_chunks_article FOREIGN KEY (article_id) REFERENCES articles(id),
     VECTOR INDEX (embedding) DISTANCE=cosine
 );
 ```
 
-**Why it's split this way:** `articles` holds the basic facts about each article, so results can be filtered by things like category or date using normal SQL. `article_chunks` holds the actual text pieces and their vectors, linked back to the article they came from through `article_id`. This split is what makes it possible to combine a normal SQL filter and a vector search in a single query.
+Where the columns come from:
 
-**Why the vector column and index look like this:**
+| Column | Filter name in `docs/data_decisions.md` | Field from the MediaWiki client |
+| --- | --- | --- |
+| `articles.page_id` | | `page_id` |
+| `articles.title` | | `title` |
+| `articles.article_length` | `article_length` | `length` |
+| `articles.last_edit_date` | `last_edit_date` | `last_modified` |
+| `articles.revision_id` | | `revision_id` (sync compares it to detect changes) |
+| `article_categories.category` | `category` | `categories` |
+| `article_links.linked_title` | `outgoing_links` | `links` |
 
+**Why it's built this way:**
+
+- An article has many categories, so they get their own table. Filtering by category is an `EXISTS` check, and an article never appears twice in the results.
+- The MediaWiki client returns links as article titles, and most of them point outside our dataset. Storing the title lets us ask "linked from article X" with a join on `articles.title`. It also keeps working when articles are loaded in any order. Links that point to a redirect title will not match.
+- Titles are compared case-sensitively (`utf8mb4_bin`), because Wikipedia treats `AI` and `Ai` as different articles.
+- `revision_id` lets the sync job see whether an article changed since it was loaded.
+- `chunk_index` records the order of chunks inside an article. Together with `article_id` it is unique.
 - `embedding` is `NOT NULL` because MariaDB only allows a vector index on a column that cannot be empty.
 - The index uses `DISTANCE=cosine`. The default is euclidean, and a search with `VEC_DISTANCE_COSINE` cannot use a euclidean index, so it would scan the whole table.
-- 768 dimensions is a placeholder until the embedding model is chosen. It must match the model's output size exactly.
-- A table can have only one vector index.
+- 768 dimensions fits two of our three candidate embedding models. A vector index is tied to one dimension, and a table can have only one, so a model with a different size needs its own table.
+- `article_chunks` is only ever the child side of a foreign key. MariaDB has an open bug (MDEV-35241) about dropping a table with a vector index when other tables reference it, so we avoid that setup.
 
-Example query: the 5 closest chunks to a given vector, filtered by category and date with ordinary SQL.
+Example: the 5 closest chunks, only from articles in the category "Machine learning" that are longer than 50,000 and edited in 2026.
 
 ```sql
 SELECT c.id, c.chunk_text, a.title
 FROM article_chunks c
-JOIN articles a ON c.article_id = a.id
-WHERE a.category = 'physics' AND a.edited_at > '2024-01-01'
+JOIN articles a ON a.id = c.article_id
+WHERE a.article_length > 50000
+  AND a.last_edit_date >= '2026-01-01'
+  AND EXISTS (SELECT 1 FROM article_categories ac
+              WHERE ac.article_id = a.id AND ac.category = 'Machine learning')
+ORDER BY VEC_DISTANCE_COSINE(c.embedding, @query_vector)
+LIMIT 5;
+```
+
+Example: the same search, restricted to articles that the article "Machine learning" links to.
+
+```sql
+SELECT c.id, c.chunk_text, a.title
+FROM article_chunks c
+JOIN articles a ON a.id = c.article_id
+WHERE a.title IN (SELECT l.linked_title
+                  FROM article_links l
+                  JOIN articles src ON src.id = l.article_id
+                  WHERE src.title = 'Machine learning')
 ORDER BY VEC_DISTANCE_COSINE(c.embedding, @query_vector)
 LIMIT 5;
 ```
