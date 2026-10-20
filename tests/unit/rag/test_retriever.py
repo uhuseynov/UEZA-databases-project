@@ -1,10 +1,9 @@
-import json
 from datetime import datetime
 
 import pytest
 
 from src.rag.models import SearchFilters
-from src.rag.retriever import MAX_K, VectorRetriever, build_search_query
+from src.rag.retriever import MAX_K, VectorRetriever, build_search_query, vector_to_text
 from tests.unit.rag.fakes import FakeDatabase, chunk_row
 
 VECTOR = [0.1, 0.2, 0.3]
@@ -16,7 +15,7 @@ def test_query_without_filters_orders_by_distance_alias_so_the_index_can_be_used
     assert "WHERE" not in query.sql
     assert "ORDER BY distance\n" in query.sql
     assert query.sql.endswith("LIMIT :k")
-    assert query.params == {"query_vector": json.dumps(VECTOR), "k": 5}
+    assert query.params == {"query_vector": "[0.10000000,0.20000000,0.30000000]", "k": 5}
 
 
 def test_exact_query_orders_by_an_expression_to_force_a_full_scan():
@@ -133,3 +132,12 @@ def test_filters_as_dict_skips_unset_values_and_formats_dates():
     assert filters.as_dict() == {"min_length": 10, "edited_since": "2026-01-01T00:00:00"}
     assert not filters.is_empty()
     assert SearchFilters().is_empty()
+
+
+def test_vector_text_never_uses_exponents():
+    assert vector_to_text([1e-05, -0.5, 1]) == "[0.00001000,-0.50000000,1.00000000]"
+
+
+def test_vector_text_rejects_nan():
+    with pytest.raises(ValueError):
+        vector_to_text([0.1, float("nan")])

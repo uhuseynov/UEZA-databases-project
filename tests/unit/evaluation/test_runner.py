@@ -17,7 +17,9 @@ def chunk(chunk_id: int, title: str, distance: float) -> RetrievedChunk:
 QUESTIONS = [
     Question("1", "q1", ("Random forest",), True),
     Question("2", "q2", ("Overfitting",), True),
-    Question("3", "q3", ("Gradient boosting",), True, SearchFilters(root_category="Core"), "root_category = Core"),
+    Question(
+        "3", "q3", ("Gradient boosting",), True, SearchFilters(root_category="Core"), "root_category = Core"
+    ),
     Question("4", "football?", (), False),
 ]
 
@@ -138,6 +140,9 @@ async def test_sweep_renders_a_table():
     assert "index recall@3" in markdown
 
 
+EMPTY_DISTANCES = {"samples": 0, "mean": None, "min": None, "p50": None, "max": None}
+
+
 def test_render_evaluation_lists_errors():
     report = {
         "label": "x",
@@ -147,9 +152,13 @@ def test_render_evaluation_lists_errors():
             "retrieval": {"all": {"questions": 0, "recall@1": float("nan"), "mrr": float("nan")}},
             "latency": {"run_to_run": {"mean_ms": float("nan"), "std_ms": float("nan"), "samples": 0}},
             "not_found": {
-                "answerable_top_distance": {"samples": 0, "mean": None, "min": None, "p50": None, "max": None},
-                "unanswerable_top_distance": {"samples": 0, "mean": None, "min": None, "p50": None, "max": None},
-                "configured_threshold": {"threshold": 0.5, "answerable_kept": None, "unanswerable_rejected": None},
+                "answerable_top_distance": EMPTY_DISTANCES,
+                "unanswerable_top_distance": EMPTY_DISTANCES,
+                "configured_threshold": {
+                    "threshold": 0.5,
+                    "answerable_kept": None,
+                    "unanswerable_rejected": None,
+                },
                 "best_threshold": None,
             },
             "filtered_with_fewer_than_k_results": [],

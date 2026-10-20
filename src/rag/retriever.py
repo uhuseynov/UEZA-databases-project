@@ -1,4 +1,4 @@
-import json
+import math
 from collections.abc import Sequence
 from dataclasses import dataclass
 from typing import Any
@@ -33,6 +33,17 @@ _FILTER_SQL: dict[str, str] = {
 }
 
 
+def vector_to_text(vector: Sequence[float]) -> str:
+    """Format a vector for VEC_FromText: ``[0.01234567,-0.50000000,...]``.
+
+    Fixed-point notation, so no value is ever written with an exponent (``1e-05``).
+    """
+    values = [float(x) for x in vector]
+    if not all(math.isfinite(x) for x in values):
+        raise ValueError("vector contains NaN or infinity")
+    return "[" + ",".join(f"{x:.8f}" for x in values) + "]"
+
+
 @dataclass(slots=True, frozen=True)
 class SearchQuery:
     sql: str
@@ -61,7 +72,7 @@ def build_search_query(
 
     filters = filters or SearchFilters()
     params: dict[str, Any] = {
-        "query_vector": json.dumps([float(x) for x in query_vector]),
+        "query_vector": vector_to_text(query_vector),
         "k": k,
     }
     conditions: list[str] = []

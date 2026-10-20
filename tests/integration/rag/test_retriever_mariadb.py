@@ -9,7 +9,6 @@ The filter tests use exact search, so they check the SQL predicates themselves a
 not depend on how many candidates the HNSW index visits when a filter is very selective.
 """
 
-import json
 from datetime import datetime
 
 import pytest
@@ -19,7 +18,7 @@ from src.config import settings
 from src.database import Database
 from src.logger import AppLogger
 from src.rag.models import SearchFilters
-from src.rag.retriever import VectorRetriever
+from src.rag.retriever import VectorRetriever, vector_to_text
 
 pytestmark = [pytest.mark.integration, pytest.mark.anyio]
 
@@ -112,7 +111,7 @@ async def database():
                     "INSERT INTO article_chunks (article_id, chunk_index, chunk_text, embedding) "
                     "VALUES (:a, 0, :t, VEC_FromText(:v))"
                 ),
-                {"a": article_id, "t": f"chunk of {title}", "v": json.dumps(basis_vector(basis))},
+                {"a": article_id, "t": f"chunk of {title}", "v": vector_to_text(basis_vector(basis))},
             )
 
     yield db

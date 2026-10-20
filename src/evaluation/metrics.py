@@ -125,7 +125,7 @@ def best_threshold(
     if not answerable_distances or not unanswerable_distances:
         return None
     observed = sorted(set(answerable_distances) | set(unanswerable_distances))
-    candidates = [(a + b) / 2 for a, b in zip(observed, observed[1:])] or observed
+    candidates = [(a + b) / 2 for a, b in zip(observed, observed[1:], strict=False)] or observed
     results = [
         evaluate_threshold(answerable_distances, unanswerable_distances, t) for t in candidates
     ]

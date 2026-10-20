@@ -54,7 +54,7 @@ class ChunkOut(BaseModel):
     distance: float
 
     @classmethod
-    def from_chunk(cls, chunk: RetrievedChunk) -> "ChunkOut":
+    def from_chunk(cls, chunk: RetrievedChunk) -> ChunkOut:
         return cls(
             chunk_id=chunk.chunk_id,
             title=chunk.title,
@@ -87,7 +87,7 @@ class AskResponse(BaseModel):
     timings_ms: dict[str, float]
 
     @classmethod
-    def from_answer(cls, answer: Answer, filters: SearchFilters) -> "AskResponse":
+    def from_answer(cls, answer: Answer, filters: SearchFilters) -> AskResponse:
         return cls(
             question=answer.question,
             answer=answer.text,

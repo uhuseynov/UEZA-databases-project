@@ -130,14 +130,14 @@ async def run_questions(
         )
 
     for _ in range(config.warmup_runs):
-        for question, vector, result in zip(questions, vectors, results):
+        for question, vector, result in zip(questions, vectors, results, strict=True):
             try:
                 await search(question, vector)
             except Exception as exc:  # noqa: BLE001 - recorded, not hidden
                 result.error = _describe(exc)
 
     for run in range(config.runs):
-        for question, vector, result in zip(questions, vectors, results):
+        for question, vector, result in zip(questions, vectors, results, strict=True):
             if result.error:
                 continue
             start = time.perf_counter()
