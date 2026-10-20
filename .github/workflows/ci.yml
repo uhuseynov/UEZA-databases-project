@@ -72,9 +72,9 @@ jobs:
       MARIADB_HOST: 127.0.0.1
       MARIADB_PORT: 3306
       MARIADB_ROOT_PASSWORD: root_password
-      MARIADB_USER: uza
-      MARIADB_PASSWORD: uza_password
-      MARIADB_DATABASE: uza_db
+      MARIADB_USER: ueza
+      MARIADB_PASSWORD: ueza_password
+      MARIADB_DATABASE: ueza_db
 
     steps:
       - name: Checkout repository
@@ -132,9 +132,9 @@ jobs:
       LOG_LEVEL: INFO
 
       MARIADB_ROOT_PASSWORD: root_password
-      MARIADB_USER: uza
-      MARIADB_PASSWORD: uza_password
-      MARIADB_DATABASE: uza_db
+      MARIADB_USER: ueza
+      MARIADB_PASSWORD: ueza_password
+      MARIADB_DATABASE: ueza_db
 
     steps:
       - name: Checkout repository

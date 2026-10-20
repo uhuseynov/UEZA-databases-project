@@ -1,11 +1,11 @@
 from dependency_injector import containers, providers
 
-from config import settings
-from database import Database
-from ingestion.cache import ArticleCache
-from ingestion.mediawiki import MediaWikiClient
-from logger import AppLogger
-from rag.embedder import Embedder
+from src.config import settings
+from src.database import Database
+from src.ingestion.cache import ArticleCache
+from src.ingestion.mediawiki import MediaWikiClient
+from src.logger import AppLogger
+from src.rag.embedder import Embedder
 
 
 class Container(containers.DeclarativeContainer):

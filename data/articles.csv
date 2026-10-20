@@ -1,0 +1,263 @@
+title,pageid,length,last_edit,root_category,category
+Neural network (machine learning),21523,170032,2026-09-23T15:02:15Z,Machine learning,Artificial neural networks
+Facial recognition system,602401,161701,2026-10-02T13:24:02Z,Machine learning,Machine learning task
+Algorithmic bias,55817338,157038,2026-09-17T10:51:59Z,Machine learning,Machine learning
+Google DeepMind,41755648,146972,2026-09-28T20:27:12Z,Machine learning,Applied machine learning
+Machine learning,233488,146370,2026-10-03T20:38:16Z,Machine learning,Machine learning
+Generative AI,73291755,145472,2026-10-01T08:15:52Z,Machine learning,Machine learning
+Language model benchmark,79100184,135350,2026-10-04T17:49:59Z,Machine learning,Datasets in machine learning
+Kalman filter,180855,134997,2026-09-27T09:03:28Z,Machine learning,Markov models
+Principal component analysis,76340,121703,2026-08-13T23:23:11Z,Machine learning,Dimension reduction
+Speech recognition,29468,119415,2026-10-04T01:43:31Z,Machine learning,Machine learning task
+History of artificial neural networks,61541925,108539,2026-08-24T05:10:18Z,Machine learning,Artificial neural networks
+Generative adversarial network,50073184,100000,2026-10-04T16:34:43Z,Machine learning,Unsupervised learning
+Products and applications of OpenAI,80209622,98990,2026-09-30T22:51:46Z,Machine learning,Machine learning
+Markov chain,60876,95526,2026-09-12T22:26:51Z,Machine learning,Markov models
+Hallucination (artificial intelligence),72607666,94596,2026-10-04T04:34:36Z,Machine learning,Machine learning
+Types of artificial neural networks,28016652,92010,2026-09-26T23:04:23Z,Machine learning,Classification algorithms
+AlphaFold,59766171,89293,2026-10-04T06:58:53Z,Machine learning,Applied machine learning
+Diffusion model,71912239,87800,2026-09-18T02:02:29Z,Machine learning,Machine learning algorithms
+Adversarial machine learning,45049676,86440,2026-09-30T05:34:02Z,Machine learning,Machine learning
+AlphaGo,49242352,85229,2026-08-26T22:35:31Z,Machine learning,Applied machine learning
+Cluster analysis,669675,84712,2026-06-23T15:34:31Z,Machine learning,Cluster analysis
+Quantum machine learning,44108758,83221,2026-09-17T11:32:44Z,Machine learning,Machine learning
+Reinforcement learning,66294,79844,2026-09-05T22:02:46Z,Machine learning,Markov models
+Machine learning in bioinformatics,53970843,78490,2026-09-02T16:37:58Z,Machine learning,Machine learning
+K-means clustering,1860407,77918,2026-09-07T06:27:00Z,Machine learning,Machine learning algorithms
+Geospatial foundation model,83579514,74535,2026-09-28T03:12:10Z,Machine learning,Unsupervised learning
+PageRank,26334893,74354,2026-10-02T16:42:34Z,Machine learning,Markov models
+Cellular neural network,2506529,73547,2026-07-13T10:07:09Z,Machine learning,Artificial neural networks
+Non-negative matrix factorization,3681279,72451,2026-09-20T18:44:32Z,Machine learning,Machine learning algorithms
+Foundation model,70984276,72390,2026-09-25T12:57:09Z,Machine learning,Unsupervised learning
+Stable Diffusion,71642695,68903,2026-08-30T23:38:28Z,Machine learning,Unsupervised learning
+Multi-armed bandit,2854828,68616,2026-09-10T15:41:01Z,Machine learning,Machine learning
+Electricity price forecasting,48684895,68127,2026-09-24T15:33:47Z,Machine learning,Artificial neural networks
+Fairness (machine learning),62683332,67414,2026-08-28T02:37:27Z,Machine learning,Machine learning
+Support vector machine,65309,66520,2026-09-28T10:17:26Z,Machine learning,Classification algorithms
+Markov chain Monte Carlo,236801,62576,2026-09-10T21:41:21Z,Machine learning,Markov models
+Mixture model,871681,60635,2026-08-25T12:43:56Z,Machine learning,Cluster analysis
+Feature selection,1179950,60242,2026-09-15T18:52:29Z,Machine learning,Dimension reduction
+Ensemble learning,22212276,60213,2026-09-21T15:19:48Z,Machine learning,Ensemble learning
+Reinforcement learning from human feedback,73200355,59746,2026-09-22T23:27:23Z,Machine learning,Reinforcement learning
+Federated learning,60992857,58003,2026-09-04T01:04:40Z,Machine learning,Machine learning
+Flow-based generative model,67064736,57869,2026-08-15T22:18:43Z,Machine learning,Machine learning
+Prompt engineering,69071767,57743,2026-09-29T21:31:17Z,Machine learning,Machine learning
+Kernel embedding of distributions,41370976,57599,2026-07-29T08:10:08Z,Machine learning,Machine learning
+Graph neural network,68162942,57473,2026-08-19T23:57:03Z,Machine learning,Artificial neural networks
+Lasso (statistics),22349350,56860,2026-09-23T07:38:26Z,Machine learning,Machine learning algorithms
+Backpropagation,1360091,56481,2026-09-07T06:21:10Z,Machine learning,Artificial neural networks
+Bayesian network,203996,56310,2026-09-27T08:16:29Z,Machine learning,Bayesian networks
+DALL-E,66303034,56151,2026-09-25T09:35:46Z,Machine learning,Unsupervised learning
+Gaussian process,302944,55856,2026-09-20T16:32:13Z,Machine learning,Kernel methods for machine learning
+Deepfake,56641018,187989,2026-09-20T16:37:16Z,Deep learning,Deepfakes
+Deep learning,32472154,183198,2026-09-28T09:41:41Z,Deep learning,Deep learning
+Large language model,73248112,135956,2026-10-01T07:21:56Z,Deep learning,Deep learning
+15.ai,78635504,116146,2026-09-28T18:38:58Z,Deep learning,Deepfakes
+Gemini (language model),74637995,73130,2026-10-04T06:13:16Z,Deep learning,Google DeepMind
+AI data center,81802552,55404,2026-09-27T12:41:22Z,Deep learning,Deep learning
+Long short-term memory,10711453,54982,2026-08-10T17:12:01Z,Deep learning,Deep learning
+Audio deepfake,65679106,54732,2026-10-01T22:36:42Z,Deep learning,Deepfakes
+TensorFlow,48508507,53632,2026-09-15T22:00:33Z,Deep learning,Deep learning software
+Artificial intelligence and elections,76385892,51438,2026-09-30T14:09:12Z,Deep learning,Deepfakes
+Midjourney,71151961,45855,2026-09-24T14:27:57Z,Deep learning,Text-to-image generation
+Neural scaling law,73713333,45523,2026-09-29T02:55:10Z,Deep learning,Deep learning
+Text-to-video model,71986552,43952,2026-10-03T19:35:02Z,Deep learning,Text-to-video generation
+Physics-informed neural networks,67944516,43392,2026-09-28T09:41:12Z,Deep learning,Deep learning
+Yoshua Bengio,47749536,41392,2026-10-02T15:53:37Z,Deep learning,Deep learning
+Digital cloning,60595691,40336,2026-09-26T16:39:31Z,Deep learning,Deep learning
+Flux (text-to-image model),78378498,40262,2026-10-02T17:28:03Z,Deep learning,Text-to-image generation
+Deep learning in photoacoustic imaging,63664231,38678,2026-09-03T11:26:20Z,Deep learning,Deep learning
+AlphaChip,80616342,35824,2026-10-04T05:32:46Z,Deep learning,Google DeepMind
+Sora (text-to-video model),76106601,35488,2026-10-02T20:13:13Z,Deep learning,Text-to-video generation
+Normalization (machine learning),77557393,35464,2026-02-25T12:55:53Z,Deep learning,Deep learning
+Multi-agent reinforcement learning,62285602,32909,2026-09-29T15:06:22Z,Deep learning,Deep learning
+Topological deep learning,76401012,31425,2026-09-16T01:27:34Z,Deep learning,Deep learning
+Comparison of deep learning software,49119569,31272,2026-09-04T05:09:36Z,Deep learning,Deep learning software
+Hierarchical temporal memory,11273721,30944,2026-09-15T18:53:59Z,Deep learning,Deep learning
+Question answering,360030,30477,2026-08-31T06:16:54Z,Deep learning,Deep learning
+Deep reinforcement learning,60105148,30384,2026-09-22T11:59:05Z,Deep learning,Deep learning
+Residual neural network,55867424,28897,2026-09-24T02:21:51Z,Deep learning,Deep learning
+Graph cuts in computer vision and artificial intelligence,10531718,28040,2026-08-16T19:39:06Z,Deep learning,Deep learning
+GPT-4o,76899001,27806,2026-09-29T04:27:52Z,Deep learning,Text-to-image generation
+Vision–language–action model,79446353,27485,2026-09-23T18:06:03Z,Deep learning,Deep learning
+Optuna,80384604,27353,2026-09-21T16:20:14Z,Deep learning,Deep learning software
+Stochastic parrot,73761282,26484,2026-10-01T21:56:53Z,Deep learning,Deep learning
+Weight initialization,78053249,25111,2026-08-10T02:49:40Z,Deep learning,Deep learning
+NovelAI,71905991,25081,2026-03-31T15:59:12Z,Deep learning,Text-to-image generation
+AlexNet,52801963,23560,2026-09-16T12:46:14Z,Deep learning,Deep learning software
+State space model (deep learning),81363082,22389,2026-10-02T23:16:29Z,Deep learning,Deep learning
+Text-to-image model,71701751,22242,2026-07-27T03:01:16Z,Deep learning,Text-to-image generation
+EleutherAI,73176768,22202,2026-08-01T05:23:53Z,Deep learning,Deep learning
+Synthesia (company),73288193,21969,2026-09-02T01:02:06Z,Deep learning,Text-to-video generation
+Gemma (language model),76155063,21749,2026-09-14T23:25:13Z,Deep learning,Google DeepMind
+Kolmogorov–Arnold Networks,81016886,21729,2026-10-02T02:54:00Z,Deep learning,Deep learning
+Neural network Gaussian process,63513679,20968,2026-02-09T10:03:42Z,Deep learning,Deep learning
+Audio inpainting,74274244,20894,2026-04-25T04:11:57Z,Deep learning,Deep learning
+Neural field,80384572,20596,2026-03-02T02:43:51Z,Deep learning,Deep learning
+Latent diffusion model,77815635,19612,2026-07-17T11:40:29Z,Deep learning,Deep learning
+Knowledge distillation,62295363,18305,2026-09-28T06:16:15Z,Deep learning,Deep learning
+ML.NET,57388949,17541,2026-04-16T05:18:03Z,Deep learning,Deep learning software
+Neural operators,74636983,17525,2026-09-28T09:42:41Z,Deep learning,Deep learning
+PyTorch,54022970,16967,2026-10-04T05:14:47Z,Deep learning,Deep learning software
+Google Translate,3235536,130380,2026-10-03T05:23:27Z,Natural language processing,Natural language processing software
+Transformer (deep learning),61603971,126000,2026-10-04T19:17:20Z,Natural language processing,Natural language processing
+IBM Watson,22584291,82186,2026-09-27T16:24:55Z,Natural language processing,Natural language processing software
+Siri,26086272,81342,2026-10-04T19:29:16Z,Natural language processing,Natural language processing software
+Google Assistant,50575063,72327,2026-10-03T13:29:00Z,Natural language processing,Natural language processing software
+Automated journalism,53070037,71248,2026-09-28T05:09:38Z,Natural language processing,Natural language generation
+Machine translation,19980,64640,2026-09-30T17:45:33Z,Natural language processing,Machine translation
+Sentiment analysis,6435232,64250,2026-09-29T23:38:32Z,Natural language processing,Tasks of natural language processing
+Stylometry,2097760,63417,2026-10-03T04:17:58Z,Natural language processing,Natural language processing
+Automatic summarization,637199,62415,2026-10-04T16:43:27Z,Natural language processing,Natural language processing
+Word-sense disambiguation,67065,61068,2026-07-31T16:39:25Z,Natural language processing,Natural language processing
+Cortana (virtual assistant),42119832,59551,2026-10-04T14:27:38Z,Natural language processing,Natural language processing software
+Latent semantic analysis,689427,59210,2026-10-04T13:53:36Z,Natural language processing,Natural language processing
+Natural language processing,21652,58176,2026-09-11T14:27:38Z,Natural language processing,Natural language processing
+Knowledge extraction,31002435,56425,2026-08-20T09:20:12Z,Natural language processing,Natural language processing
+Zipf's law,43218,50492,2026-09-14T19:05:23Z,Natural language processing,Corpus linguistics
+Comparison of machine translation applications,13829382,50156,2026-10-01T23:16:42Z,Natural language processing,Natural language processing software
+Treebank,3732417,50041,2026-06-29T23:54:37Z,Natural language processing,Corpus linguistics
+Latent Dirichlet allocation,4605351,45073,2026-08-12T10:52:21Z,Natural language processing,Statistical natural language processing
+Information retrieval,15271,44698,2026-09-15T14:02:00Z,Natural language processing,Natural language processing
+Pronunciation assessment,4941061,44050,2026-09-25T13:48:23Z,Natural language processing,Natural language processing
+Cohere,69643817,43163,2026-09-17T18:01:02Z,Natural language processing,Natural language processing software
+WordNet,33955,43015,2026-10-03T01:38:11Z,Natural language processing,Corpus linguistics
+Optical character recognition,49091,42325,2026-09-25T03:19:46Z,Natural language processing,Optical character recognition
+Probabilistic context-free grammar,299329,42281,2026-09-12T21:41:26Z,Natural language processing,Statistical natural language processing
+Text mining,318439,40869,2026-09-18T10:29:00Z,Natural language processing,Natural language processing
+DeepL Translator,61658617,37674,2026-09-22T05:34:43Z,Natural language processing,Natural language processing software
+Neural machine translation,47961606,36547,2026-08-11T11:50:39Z,Natural language processing,Machine translation
+SemEval,29081358,34120,2026-09-01T15:40:16Z,Natural language processing,Natural language processing
+Microsoft Translator,22608452,34093,2026-09-22T06:08:18Z,Natural language processing,Natural language processing software
+Adversarial stylometry,72741362,33014,2026-09-21T08:13:04Z,Natural language processing,Natural language processing
+Entity linking,38873466,32332,2026-05-29T19:48:49Z,Natural language processing,Natural language processing
+Reasoning model,79013463,32043,2026-09-30T22:52:12Z,Natural language processing,Natural language processing
+Frederick Jelinek,4561188,31742,2026-09-28T19:31:12Z,Natural language processing,Statistical natural language processing
+Semantic parsing,55831248,31713,2026-09-13T22:44:22Z,Natural language processing,Tasks of natural language processing
+Stemming,30874683,31416,2026-08-12T09:54:46Z,Natural language processing,Natural language processing
+Referring expression generation,22705150,31287,2026-02-28T23:55:22Z,Natural language processing,Natural language processing
+Natural language generation,301999,31257,2026-08-31T10:33:14Z,Natural language processing,Natural language generation
+Tsetlin machine,57316019,31078,2026-04-20T11:58:49Z,Natural language processing,Finite-state machines
+Word embedding,43561218,30749,2026-09-14T12:25:56Z,Natural language processing,Natural language processing
+Vision-language model,81348246,30005,2026-09-20T16:32:17Z,Natural language processing,Natural language processing
+Contrastive Language–Image Pre-training,67219182,29987,2026-06-17T03:48:35Z,Natural language processing,Natural language processing
+Bixby (software),53639024,29774,2026-08-21T21:41:29Z,Natural language processing,Natural language processing software
+Named-entity recognition,1906608,29047,2026-08-07T09:53:34Z,Natural language processing,Tasks of natural language processing
+History of machine translation,4891153,28790,2026-09-10T01:27:36Z,Natural language processing,Natural language processing
+Automated essay scoring,35151113,28577,2026-07-11T05:17:41Z,Natural language processing,Natural language processing
+Stance detection,83580654,26950,2026-09-14T23:20:48Z,Natural language processing,Corpus linguistics
+State complexity,53568183,26431,2026-09-15T19:38:19Z,Natural language processing,Finite-state machines
+M-theory (learning framework),44632031,26337,2025-09-22T13:13:53Z,Natural language processing,Speech recognition
+Motor theory of speech perception,23060403,25951,2026-07-09T02:13:13Z,Natural language processing,Speech recognition
+Convolutional neural network,40409788,147385,2026-09-03T11:33:16Z,Computer vision,Computer vision
+Image segmentation,505717,81348,2026-09-21T09:12:24Z,Computer vision,Image segmentation
+Medical image computing,35201519,74829,2026-09-08T00:22:04Z,Computer vision,Image segmentation
+Point-set registration,40374554,72419,2026-09-12T16:19:24Z,Computer vision,Computer vision
+Computer vision,6596,70842,2026-09-03T11:34:52Z,Computer vision,Computer vision
+Scale-invariant feature transform,1208345,70653,2026-09-07T06:12:10Z,Computer vision,Feature detection (computer vision)
+Computer-aided diagnosis,9034035,69433,2026-09-08T15:27:32Z,Computer vision,Applications of computer vision
+Video super-resolution,66527786,68794,2025-12-30T06:57:00Z,Computer vision,Image processing
+Iris recognition,366418,57032,2026-09-24T15:04:35Z,Computer vision,Applications of computer vision
+Corner detection,4921759,55154,2026-09-16T23:34:28Z,Computer vision,Feature detection (computer vision)
+Scale space,1703661,54565,2026-09-23T00:56:41Z,Computer vision,Computer vision
+Digital image processing,97922,50956,2026-09-08T18:15:38Z,Computer vision,Computer vision
+Vision transformer,68212199,48673,2026-09-14T04:18:40Z,Computer vision,Computer vision
+Harris affine region detector,14664078,45852,2026-07-09T12:26:43Z,Computer vision,Feature detection (computer vision)
+Activity recognition,15795950,44446,2026-09-26T14:20:55Z,Computer vision,Motion in computer vision
+ImageNet,50896194,40404,2026-09-30T22:10:41Z,Computer vision,Datasets in computer vision
+Structure tensor,7096466,38570,2026-09-11T18:55:08Z,Computer vision,Feature detection (computer vision)
+Gesture recognition,1400452,37860,2026-07-25T14:12:39Z,Computer vision,Applications of computer vision
+Optical flow,869825,37370,2026-09-03T11:38:10Z,Computer vision,Motion in computer vision
+Edge detection,331680,36827,2026-09-03T20:42:45Z,Computer vision,Image processing
+Photogrammetry,552840,35451,2026-09-11T12:49:14Z,Computer vision,Photogrammetry
+Human image synthesis,4287389,35363,2026-09-20T10:57:16Z,Computer vision,Applications of computer vision
+3D reconstruction,16234982,35190,2026-09-16T01:25:33Z,Computer vision,Computer vision
+3D Morphable Model,77339299,34841,2026-02-21T19:54:46Z,Computer vision,Computer vision
+Hough transform,434897,34208,2026-08-06T00:42:22Z,Computer vision,Feature detection (computer vision)
+Policy gradient method,53349322,34823,2026-06-06T01:37:47Z,Reinforcement learning,Reinforcement learning
+Q-learning,1281850,31027,2026-09-07T06:28:20Z,Reinforcement learning,Reinforcement learning
+OpenAI Five,58714104,24106,2026-08-25T12:15:35Z,Reinforcement learning,Reinforcement learning
+Gerald Tesauro,79950569,18030,2026-10-02T09:42:09Z,Reinforcement learning,Reinforcement learning
+Proximal policy optimization,70774614,16995,2026-05-21T22:45:31Z,Reinforcement learning,Reinforcement learning
+TD-Gammon,26127201,15059,2026-03-11T18:58:11Z,Reinforcement learning,Reinforcement learning
+Temporal difference learning,1209759,12357,2026-09-16T00:40:30Z,Reinforcement learning,Reinforcement learning
+Actor-critic algorithm,78938430,11741,2026-04-12T08:53:03Z,Reinforcement learning,Reinforcement learning
+Model-free (reinforcement learning),60008386,10050,2026-10-03T14:34:43Z,Reinforcement learning,Reinforcement learning
+AlphaTensor,75523364,7539,2026-09-08T15:23:14Z,Reinforcement learning,Reinforcement learning
+State–action–reward–state–action,10584297,5879,2026-05-21T02:37:12Z,Reinforcement learning,Reinforcement learning
+Self-play,70721875,4395,2026-09-28T20:35:49Z,Reinforcement learning,Reinforcement learning
+Distributional Soft Actor Critic,75236706,3635,2025-08-25T15:45:48Z,Reinforcement learning,Reinforcement learning
+Sequential decision making,57634027,3395,2026-08-28T19:41:14Z,Reinforcement learning,Reinforcement learning
+Embodied cognition,33034640,185344,2026-09-29T13:16:50Z,Philosophy of artificial intelligence,Philosophy of artificial intelligence
+Regulation of artificial intelligence,63451675,184256,2026-10-03T06:06:16Z,Philosophy of artificial intelligence,Existential risk from artificial intelligence
+Ethics of artificial intelligence,13659583,169535,2026-09-26T19:50:20Z,Philosophy of artificial intelligence,Ethics of artificial intelligence
+Existential risk from artificial intelligence,46583121,141085,2026-10-04T15:27:17Z,Philosophy of artificial intelligence,Existential risk from artificial intelligence
+AI alignment,50785023,139650,2026-09-21T05:56:19Z,Philosophy of artificial intelligence,Philosophy of artificial intelligence
+Transhumanism,30299,134397,2026-08-24T18:49:25Z,Philosophy of artificial intelligence,Philosophy of artificial intelligence
+AI safety,72360809,117272,2026-10-01T08:37:22Z,Philosophy of artificial intelligence,Existential risk from artificial intelligence
+Technological singularity,54245,114373,2026-10-04T18:21:22Z,Philosophy of artificial intelligence,Philosophy of artificial intelligence
+Turing test,21391751,107834,2026-09-10T00:38:29Z,Philosophy of artificial intelligence,Philosophy of artificial intelligence
+Chinese room,6216,97107,2026-09-29T05:54:18Z,Philosophy of artificial intelligence,Philosophy of artificial intelligence
+Accelerationism,41330767,97055,2026-09-23T16:57:53Z,Philosophy of artificial intelligence,Existential risk from artificial intelligence
+Anthropic,6206236,91712,2026-10-04T15:25:28Z,Philosophy of artificial intelligence,Existential risk from artificial intelligence
+Uncanny valley,430976,85930,2026-09-23T12:34:27Z,Philosophy of artificial intelligence,Philosophy of artificial intelligence
+Computational creativity,16300571,80361,2026-09-23T15:03:47Z,Philosophy of artificial intelligence,Philosophy of artificial intelligence
+Magnifica humanitas,83211385,79131,2026-10-02T21:39:00Z,Philosophy of artificial intelligence,Ethics of artificial intelligence
+Philosophy of artificial intelligence,2958015,71110,2026-10-02T14:26:04Z,Philosophy of artificial intelligence,Philosophy of artificial intelligence
+Machine ethics,32237314,67826,2026-08-17T23:20:15Z,Philosophy of artificial intelligence,Ethics of artificial intelligence
+AI takeover,813176,47591,2026-10-01T02:42:42Z,Philosophy of artificial intelligence,Existential risk from artificial intelligence
+Safe and Secure Innovation for Frontier Artificial Intelligence Models Act,77238550,47192,2026-09-20T16:24:12Z,Philosophy of artificial intelligence,Existential risk from artificial intelligence
+Connectionism,263636,41964,2026-08-26T05:13:13Z,Philosophy of artificial intelligence,Philosophy of artificial intelligence
+LaMDA,70993391,39855,2026-05-19T02:50:45Z,Philosophy of artificial intelligence,Philosophy of artificial intelligence
+Hubert Dreyfus's views on artificial intelligence,8919856,37110,2026-09-07T18:49:43Z,Philosophy of artificial intelligence,Philosophy of artificial intelligence
+Future of Life Institute,42912557,36512,2026-09-19T15:44:45Z,Philosophy of artificial intelligence,Existential risk from artificial intelligence
+Regulation of algorithms,63442371,35883,2026-09-02T00:08:51Z,Philosophy of artificial intelligence,Existential risk from artificial intelligence
+Computing Machinery and Intelligence,404048,34522,2026-09-12T15:36:40Z,Philosophy of artificial intelligence,Philosophy of artificial intelligence
+Anthropic–United States Department of Defense dispute,82623892,31775,2026-09-19T16:47:45Z,Philosophy of artificial intelligence,Existential risk from artificial intelligence
+Rationalist community,74469524,30073,2026-10-01T12:51:48Z,Philosophy of artificial intelligence,Existential risk from artificial intelligence
+Hubert Dreyfus,952926,30057,2026-07-26T16:14:19Z,Philosophy of artificial intelligence,Philosophy of artificial intelligence
+TESCREAL,77241904,30010,2026-09-29T12:18:36Z,Philosophy of artificial intelligence,Philosophy of artificial intelligence
+Algorithmic Justice League,66072656,29596,2026-07-05T14:39:26Z,Philosophy of artificial intelligence,Existential risk from artificial intelligence
+Instrumental convergence,43591208,28907,2026-09-04T23:55:38Z,Philosophy of artificial intelligence,Existential risk from artificial intelligence
+Reward hacking,73429796,28812,2026-09-29T13:05:12Z,Philosophy of artificial intelligence,Existential risk from artificial intelligence
+Roko's basilisk,70371803,27929,2026-09-25T01:28:47Z,Philosophy of artificial intelligence,Philosophy of artificial intelligence
+AI aftermath scenarios,55962927,27427,2026-05-11T12:58:38Z,Philosophy of artificial intelligence,Philosophy of artificial intelligence
+Artificial intelligence safety institute,77301785,26843,2026-09-19T19:30:50Z,Philosophy of artificial intelligence,Existential risk from artificial intelligence
+Computational theory of mind,3951220,26630,2026-09-07T18:45:06Z,Philosophy of artificial intelligence,Philosophy of artificial intelligence
+The Singularity Is Near,767123,26395,2026-10-03T13:57:54Z,Philosophy of artificial intelligence,Singularitarianism
+Superintelligence,726659,26050,2026-10-04T18:13:39Z,Philosophy of artificial intelligence,Existential risk from artificial intelligence
+Dartmouth workshop,1124646,25679,2026-06-22T18:38:23Z,Philosophy of artificial intelligence,Philosophy of artificial intelligence
+Robot ethics,8434470,25266,2026-07-24T21:05:01Z,Philosophy of artificial intelligence,Ethics of artificial intelligence
+Effective accelerationism,75085196,25228,2026-09-20T19:30:57Z,Philosophy of artificial intelligence,Philosophy of artificial intelligence
+Digital necromancy,84077539,24772,2026-08-30T23:24:02Z,Philosophy of artificial intelligence,Philosophy of artificial intelligence
+Friendly artificial intelligence,351887,24736,2026-06-15T23:14:15Z,Philosophy of artificial intelligence,Philosophy of artificial intelligence
+Bitter lesson,81006227,24491,2026-10-03T17:20:56Z,Philosophy of artificial intelligence,Philosophy of artificial intelligence
+Physical symbol system,2685999,22506,2026-09-07T16:12:22Z,Philosophy of artificial intelligence,Philosophy of artificial intelligence
+ControlAI,81798293,21875,2026-07-23T11:32:23Z,Philosophy of artificial intelligence,Existential risk from artificial intelligence
+P(doom),77187024,21648,2026-10-03T22:18:11Z,Philosophy of artificial intelligence,Existential risk from artificial intelligence
+METR,80216309,20305,2026-10-04T08:53:18Z,Philosophy of artificial intelligence,Existential risk from artificial intelligence
+AI capability control,31641770,19395,2026-09-24T18:10:08Z,Philosophy of artificial intelligence,Philosophy of artificial intelligence
+4E cognition,79595959,19264,2026-06-18T15:08:33Z,Philosophy of artificial intelligence,Philosophy of artificial intelligence
+Artificial intelligence,1164,282144,2026-10-02T02:44:08Z,Core,Core
+Expert system,10136,57733,2026-10-02T22:44:45Z,Core,Core
+Supervised learning,20926,23575,2026-10-04T10:07:58Z,Core,Core
+Overfitting,173332,25959,2026-09-11T20:32:43Z,Core,Core
+Gradient descent,201489,40753,2026-09-07T06:25:53Z,Core,Core
+Unsupervised learning,233497,31778,2026-07-19T15:00:20Z,Core,Core
+Symbolic artificial intelligence,339417,89408,2026-09-11T12:36:06Z,Core,Core
+Decision tree learning,577003,49125,2026-09-07T06:23:14Z,Core,Core
+Random forest,1363880,47721,2026-09-07T06:29:12Z,Core,Core
+Recurrent neural network,1706303,91735,2026-10-04T03:43:57Z,Core,Core
+History of artificial intelligence,2894560,175845,2026-10-03T01:48:54Z,Core,Core
+Transfer learning,3920550,15025,2026-06-22T18:11:09Z,Core,Core
+Autoencoder,6836612,51517,2026-09-21T05:41:12Z,Core,Core
+Semantic search,11246715,5518,2026-09-22T07:12:54Z,Core,Core
+Gradient boosting,26649339,30012,2026-09-07T06:14:31Z,Core,Core
+BERT (language model),62026514,33573,2026-10-01T00:21:10Z,Core,Core
+Knowledge graph,64418530,27720,2026-10-04T15:31:13Z,Core,Core
+GPT-3,64695824,55860,2026-09-28T18:09:16Z,Core,Core
+Self-supervised learning,67902375,25499,2026-09-21T02:20:17Z,Core,Core
+ChatGPT,72417803,162184,2026-10-01T04:12:36Z,Core,Core
+Vector database,74020014,27323,2026-09-10T19:31:06Z,Core,Core
+Retrieval-augmented generation,75229858,20861,2026-09-28T11:20:51Z,Core,Core
+Attention Is All You Need,75477752,16307,2026-10-03T21:25:37Z,Core,Core

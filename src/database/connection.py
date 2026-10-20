@@ -8,8 +8,8 @@ from sqlalchemy.ext.asyncio import (
     create_async_engine,
 )
 
-from config import Settings
-from logger import AppLogger
+from src.config import Settings
+from src.logger import AppLogger
 
 
 class Database:
