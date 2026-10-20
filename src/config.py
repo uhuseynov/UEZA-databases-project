@@ -58,6 +58,12 @@ class Settings(BaseSettings):
     llm_api_key: str = ""
     llm_model: str = "gpt-4o-mini"
     llm_temperature: float = Field(default=0.2, ge=0.0, le=2.0)
+    llm_timeout_seconds: float = Field(default=60.0, gt=0)
+
+    # RAG & Evaluation Configuration
+    rag_max_distance: float = Field(default=0.5, gt=0.0, le=2.0)
+    ground_truth_path: str = "data/ground_truth.csv"
+    eval_results_dir: str = "eval/results"
 
     model_config = SettingsConfigDict(
         env_file=".env",
