@@ -212,6 +212,11 @@ eval-sweep: ## Measures index recall and latency for several mhnsw_ef_search val
 	@$(UV) run python -m src.evaluation ef-sweep
 
 
+.PHONY: eval-explain
+eval-explain: ## Prints the query plans: is the vector index used, with and without filters?
+	@$(UV) run python -m src.evaluation explain
+
+
 # =============================================================================
 ##@ Database
 # =============================================================================

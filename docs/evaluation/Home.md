@@ -6,6 +6,7 @@
 make eval          # Recall@K, MRR, latency, not-found analysis (EVAL_RUNS=5)
 make eval-exact    # the same with exact search (full scan, no vector index)
 make eval-sweep    # index recall and latency for several mhnsw_ef_search values
+make eval-explain  # EXPLAIN for the search: index vs exact, with and without filters
 ```
 
 Each run writes `eval/results/<timestamp>_<label>.json` (every number and every question) and a `.md` file with the tables for the README.
@@ -61,6 +62,8 @@ The current set has 59 questions: 35 plain, 17 with filters and 7 without an ans
 This shows the cost of the approximation and where a larger `ef_search` stops paying off. The `M` parameter is fixed when the index is created, so comparing `M` values means rebuilding the index and running the sweep again.
 
 `make eval-exact` gives the same report as `make eval` for the full scan, for a direct latency and recall comparison with the index.
+
+`make eval-explain` prints MariaDB's `EXPLAIN` for the search statement without a filter, with a length filter and with a category filter, each in index and exact mode. It uses a random vector, so it needs neither the embedding model nor the ground truth. It shows whether the optimizer actually uses the vector index once filters and joins are added.
 
 ## Comparing configurations
 

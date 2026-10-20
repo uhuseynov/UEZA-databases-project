@@ -3,14 +3,18 @@
     uv run python -m src.evaluation run --runs 5
     uv run python -m src.evaluation run --exact --label exact
     uv run python -m src.evaluation ef-sweep --ef 10 20 40 80 160
+    uv run python -m src.evaluation explain
+
 
 Results are written to EVAL_RESULTS_DIR as JSON (all data) and Markdown (tables).
 """
 
 import argparse
 import asyncio
+import math
 import os
 import platform
+import random
 import subprocess
 import sys
 from typing import Any
@@ -24,6 +28,10 @@ from src.database import Database
 from src.evaluation.ground_truth import load_ground_truth
 from src.evaluation.report import write_report
 from src.evaluation.runner import EvalConfig, ef_search_sweep, evaluate
+from src.rag.models import SearchFilters
+from src.rag.retriever import VectorRetriever
+
+EXPLAIN_COLUMNS = ("id", "select_type", "table", "type", "key", "rows", "Extra")
 
 
 async def collect_environment(database: Database, config: Settings) -> dict[str, Any]:
@@ -59,6 +67,34 @@ async def collect_environment(database: Database, config: Settings) -> dict[str,
     return environment
 
 
+async def explain_plans(retriever: VectorRetriever, dimension: int) -> str:
+    """EXPLAIN for the search with and without a filter, index vs exact search.
+
+    Uses a random unit vector, so it needs neither the embedding model nor the ground truth.
+    """
+    rng = random.Random(0)
+    vector = [rng.gauss(0, 1) for _ in range(dimension)]
+    norm = math.sqrt(sum(x * x for x in vector))
+    vector = [x / norm for x in vector]
+
+    cases = [
+        ("no filter", SearchFilters()),
+        ("article_length >= 50000", SearchFilters(min_length=50_000)),
+        ("category filter", SearchFilters(category="Machine learning")),
+    ]
+    parts = ["# Query plans", ""]
+    for name, filters in cases:
+        for exact in (False, True):
+            rows = await retriever.explain(vector, k=10, filters=filters, exact=exact)
+            mode = "exact (ORDER BY distance + 0)" if exact else "index (ORDER BY distance)"
+            parts += [f"## {name}, {mode}", "", "| " + " | ".join(EXPLAIN_COLUMNS) + " |",
+                      "|" + "---|" * len(EXPLAIN_COLUMNS)]
+            parts += ["| " + " | ".join(str(row.get(col, "")) for col in EXPLAIN_COLUMNS) + " |"
+                      for row in rows]
+            parts.append("")
+    return "\n".join(parts)
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(prog="python -m src.evaluation", description=__doc__,
                                      formatter_class=argparse.RawDescriptionHelpFormatter)
@@ -78,17 +114,21 @@ def build_parser() -> argparse.ArgumentParser:
     sweep.add_argument("--runs", type=int, default=3)
     sweep.add_argument("--warmup", type=int, default=1)
     sweep.add_argument("--k", type=int, default=10)
+
+    commands.add_parser("explain", help="query plans: is the vector index used?")
     return parser
 
 
 async def main(argv: list[str] | None = None) -> int:
     args = build_parser().parse_args(argv)
 
-    try:
-        questions = load_ground_truth(args.ground_truth)
-    except (FileNotFoundError, ValueError) as exc:
-        print(f"Cannot load the ground truth: {exc}", file=sys.stderr)
-        return 2
+    questions = []
+    if args.command != "explain":
+        try:
+            questions = load_ground_truth(args.ground_truth)
+        except (FileNotFoundError, ValueError) as exc:
+            print(f"Cannot load the ground truth: {exc}", file=sys.stderr)
+            return 2
 
     container = Container()
     container.app_logger().setup()
@@ -104,8 +144,11 @@ async def main(argv: list[str] | None = None) -> int:
                 file=sys.stderr,
             )
             return 3
-        embedder = await asyncio.to_thread(container.embedder)
         retriever = container.retriever()
+        if args.command == "explain":
+            print(await explain_plans(retriever, settings.embedding_dimension))
+            return 0
+        embedder = await asyncio.to_thread(container.embedder)
 
         if args.command == "run":
             label = args.label or (
