@@ -36,7 +36,8 @@ class Container(containers.DeclarativeContainer):
         cache=article_cache,
     )
 
-    embedder = providers.Singleton(
+    # Thread-safe: the API loads the model in a worker thread on the first request.
+    embedder = providers.ThreadSafeSingleton(
         Embedder,
         model_name=config.provided.embedding_model_name,
         dimension=config.provided.embedding_dimension,
