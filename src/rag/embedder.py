@@ -25,7 +25,8 @@ class Embedder:
 
             model = SentenceTransformer(model_name)
 
-        actual = model.get_sentence_embedding_dimension()
+        get_dimension = getattr(model, "get_embedding_dimension", None)
+        actual = get_dimension() if get_dimension else model.get_sentence_embedding_dimension()
         if actual != dimension:
             raise ValueError(
                 f"{model_name} produces {actual}-dimensional vectors, "
