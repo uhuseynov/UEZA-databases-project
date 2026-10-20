@@ -192,6 +192,27 @@ test-verbose: ## Runs all tests with verbose output
 
 
 # =============================================================================
+##@ Evaluation
+# =============================================================================
+
+EVAL_RUNS ?= 5
+
+.PHONY: eval
+eval: ## Runs the ground-truth evaluation: Recall@K, MRR, latency (EVAL_RUNS=5)
+	@$(UV) run python -m src.evaluation run --runs $(EVAL_RUNS)
+
+
+.PHONY: eval-exact
+eval-exact: ## Runs the evaluation with exact search (full scan, no vector index)
+	@$(UV) run python -m src.evaluation run --exact --runs $(EVAL_RUNS)
+
+
+.PHONY: eval-sweep
+eval-sweep: ## Measures index recall and latency for several mhnsw_ef_search values
+	@$(UV) run python -m src.evaluation ef-sweep
+
+
+# =============================================================================
 ##@ Database
 # =============================================================================
 
