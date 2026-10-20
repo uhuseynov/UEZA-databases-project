@@ -25,6 +25,11 @@ The project explores native vector search and retrieval-augmented generation usi
 - [Article Cache](./ingestion/Cache.md)
 - [MediaWiki Integration](./ingestion/mediawiki/Home.md)
 
+### Retrieval, RAG and Evaluation
+
+- [Retrieval and RAG](./rag/Home.md): hybrid search statement, not-found logic, prompt, API and web UI
+- [Evaluation](./evaluation/Home.md): ground truth, Recall@K, latency method, `mhnsw_ef_search` sweep
+
 ### Development
 
 - [Development Workflow](./development/Home.md)
@@ -47,9 +52,24 @@ src/
 │   ├── models/
 │   ├── repositories/
 │   └── service/
-└── ingestion/
-    ├── cache.py
-    └── mediawiki/
+├── ingestion/
+│   ├── cache.py
+│   └── mediawiki/
+├── rag/
+│   ├── embedder.py
+│   ├── retriever.py
+│   ├── llm.py
+│   ├── prompt.py
+│   └── service.py
+├── api/
+│   ├── routes.py
+│   ├── schemas.py
+│   └── static/index.html
+└── evaluation/
+    ├── ground_truth.py
+    ├── metrics.py
+    ├── runner.py
+    └── report.py
 ```
 
 ## Current Foundation
@@ -69,4 +89,4 @@ The repository currently contains:
 - Repository-managed Git hooks and Conventional Commit validation
 - Gated GitHub Actions CI for unit, integration, Docker, and smoke tests
 
-Cleaning, chunking, embedding, persistence models, vector search, and RAG are later stages and are not documented as completed implementations yet.
+Retrieval (hybrid vector + SQL search), the RAG pipeline, the API and web UI, and the evaluation harness are documented under [Retrieval and RAG](./rag/Home.md) and [Evaluation](./evaluation/Home.md). Cleaning, chunking and loading the chunks and vectors into MariaDB (the ingest) are later stages and are not documented as completed implementations yet.

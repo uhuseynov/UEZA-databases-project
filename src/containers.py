@@ -5,6 +5,10 @@ from src.database import Database
 from src.ingestion.cache import ArticleCache
 from src.ingestion.mediawiki import MediaWikiClient
 from src.logger import AppLogger
+from src.rag.embedder import Embedder
+from src.rag.llm import ChatLLM
+from src.rag.retriever import VectorRetriever
+from src.rag.service import RAGService
 
 
 class Container(containers.DeclarativeContainer):
@@ -30,4 +34,33 @@ class Container(containers.DeclarativeContainer):
         batch_size=config.provided.mediawiki_batch_size,
         logger=app_logger,
         cache=article_cache,
+    )
+
+    # Thread-safe: the API loads the model in a worker thread on the first request.
+    embedder = providers.ThreadSafeSingleton(
+        Embedder,
+        model_name=config.provided.embedding_model_name,
+        dimension=config.provided.embedding_dimension,
+        query_prefix=config.provided.embedding_query_prefix,
+        passage_prefix=config.provided.embedding_passage_prefix,
+    )
+
+    retriever = providers.Singleton(VectorRetriever, database=database)
+
+    llm = providers.Singleton(
+        ChatLLM,
+        base_url=config.provided.llm_api_base_url,
+        api_key=config.provided.llm_api_key,
+        model=config.provided.llm_model,
+        temperature=config.provided.llm_temperature,
+        timeout=config.provided.llm_timeout_seconds,
+    )
+
+    rag_service = providers.Singleton(
+        RAGService,
+        embedder=embedder,
+        retriever=retriever,
+        llm=llm,
+        top_k=config.provided.vector_search_top_k,
+        max_distance=config.provided.rag_max_distance,
     )

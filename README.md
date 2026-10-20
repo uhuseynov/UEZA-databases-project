@@ -81,3 +81,21 @@ LIMIT 5;
 ```
 
 Keep the `ORDER BY` on the bare distance function. Wrapping it in an expression makes MariaDB ignore the vector index.
+
+## Asking Questions
+
+Start the app with `make run` (or the whole stack with `make up`) and open <http://localhost:8000>. The page sends the question and the optional SQL filters (category, dataset group, length, edit date, linked from) to the API:
+
+- `GET /search?q=...`: the closest chunks and their cosine distance, no language model needed
+- `POST /ask`: an answer written only from the retrieved chunks, with the source articles, or "not found"
+
+Any OpenAI-compatible model works, including a free local one through Ollama. See [Retrieval and RAG](./docs/rag/Home.md) for the search statement, the not-found logic and the configuration.
+
+## Evaluation
+
+```bash
+make eval        # Recall@1/3/5/10, MRR, latency over repeated runs, not-found analysis
+make eval-sweep  # index recall and latency for several mhnsw_ef_search values vs. exact search
+```
+
+Results are saved in `eval/results/` as JSON and Markdown. The method and the metric definitions are in [Evaluation](./docs/evaluation/Home.md).

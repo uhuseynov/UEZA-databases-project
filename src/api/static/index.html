@@ -1,0 +1,211 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>UEZA Wikipedia RAG</title>
+  <style>
+    :root {
+      --bg: #f6f7f9; --card: #ffffff; --text: #1d2330; --muted: #5d6677;
+      --border: #d9dde5; --accent: #2f5bd3; --accent-text: #ffffff; --warn: #9a5b00;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #14171d; --card: #1d2129; --text: #e6e9ef; --muted: #9aa3b5;
+        --border: #333a46; --accent: #6d8ff0; --accent-text: #0e1116; --warn: #e3a64a;
+      }
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; font: 15px/1.5 system-ui, sans-serif; background: var(--bg); color: var(--text); }
+    main { max-width: 920px; margin: 0 auto; padding: 24px 16px 48px; }
+    h1 { font-size: 1.4rem; margin: 0 0 4px; }
+    p.lead { margin: 0 0 20px; color: var(--muted); }
+    .card { background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 16px; margin-bottom: 16px; }
+    label { display: block; font-size: .85rem; color: var(--muted); margin-bottom: 4px; }
+    input, select, textarea {
+      width: 100%; padding: 8px 10px; border: 1px solid var(--border); border-radius: 6px;
+      background: var(--bg); color: var(--text); font: inherit;
+    }
+    textarea { min-height: 70px; resize: vertical; }
+    .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 12px; margin-top: 12px; }
+    details summary { cursor: pointer; margin-top: 12px; color: var(--muted); }
+    .actions { display: flex; gap: 8px; margin-top: 14px; flex-wrap: wrap; align-items: center; }
+    button { padding: 9px 16px; border-radius: 6px; border: 1px solid var(--accent); font: inherit; cursor: pointer; }
+    button.primary { background: var(--accent); color: var(--accent-text); }
+    button.secondary { background: transparent; color: var(--accent); }
+    button:disabled { opacity: .6; cursor: wait; }
+    #status { color: var(--muted); font-size: .9rem; }
+    .answer { white-space: pre-wrap; }
+    .not-found { color: var(--warn); }
+    .sources a, .chunk a { color: var(--accent); }
+    .chunk { border-top: 1px solid var(--border); padding-top: 10px; margin-top: 10px; }
+    .chunk:first-of-type { border-top: 0; margin-top: 0; padding-top: 0; }
+    .meta { font-size: .82rem; color: var(--muted); }
+    .chunk p { margin: 6px 0 0; white-space: pre-wrap; }
+    .error { color: #c62828; white-space: pre-wrap; }
+  </style>
+</head>
+<body>
+<main>
+  <h1>UEZA Wikipedia RAG</h1>
+  <p class="lead">Questions about artificial intelligence, answered from Wikipedia articles stored in MariaDB.
+    Search runs <code>VEC_DISTANCE_COSINE</code> and the SQL filters in the same statement.</p>
+
+  <form id="form" class="card">
+    <label for="question">Question</label>
+    <textarea id="question" required maxlength="1000"
+      placeholder="Which method averages many decision trees trained on random subsets of the data?"></textarea>
+
+    <details>
+      <summary>SQL filters (optional)</summary>
+      <div class="grid">
+        <div><label for="category">Wikipedia category</label>
+          <input id="category" placeholder="e.g. Deepfakes"></div>
+        <div><label for="root_category">Dataset group</label>
+          <select id="root_category">
+            <option value="">any</option>
+            <option>Core</option>
+            <option>Machine learning</option>
+            <option>Deep learning</option>
+            <option>Natural language processing</option>
+            <option>Computer vision</option>
+            <option>Reinforcement learning</option>
+            <option>Philosophy of artificial intelligence</option>
+          </select></div>
+        <div><label for="linked_from">Linked from article</label>
+          <input id="linked_from" placeholder="e.g. Large language model"></div>
+        <div><label for="min_length">Min length (characters)</label>
+          <input id="min_length" type="number" min="0" step="1000"></div>
+        <div><label for="max_length">Max length (characters)</label>
+          <input id="max_length" type="number" min="0" step="1000"></div>
+        <div><label for="edited_since">Edited on or after</label>
+          <input id="edited_since" type="date"></div>
+        <div><label for="edited_before">Edited before</label>
+          <input id="edited_before" type="date"></div>
+        <div><label for="k">Chunks to retrieve</label>
+          <select id="k"><option>3</option><option selected>5</option><option>10</option></select></div>
+      </div>
+    </details>
+
+    <div class="actions">
+      <button type="submit" class="primary" id="ask">Ask</button>
+      <button type="button" class="secondary" id="search">Search only</button>
+      <span id="status"></span>
+    </div>
+  </form>
+
+  <section id="answer-card" class="card" hidden>
+    <h2 style="font-size:1.05rem;margin:0 0 8px">Answer</h2>
+    <div id="answer" class="answer"></div>
+    <div id="sources" class="sources meta" style="margin-top:10px"></div>
+  </section>
+
+  <section id="chunks-card" class="card" hidden>
+    <h2 style="font-size:1.05rem;margin:0 0 8px">Retrieved chunks</h2>
+    <div id="timings" class="meta" style="margin-bottom:10px"></div>
+    <div id="chunks"></div>
+  </section>
+</main>
+
+<script>
+  const FILTERS = ["category", "root_category", "linked_from", "min_length", "max_length",
+                   "edited_since", "edited_before"];
+  const $ = (id) => document.getElementById(id);
+
+  function readFilters() {
+    const filters = {};
+    for (const name of FILTERS) {
+      const value = $(name).value.trim();
+      if (value !== "") filters[name] = name.endsWith("length") ? Number(value) : value;
+    }
+    return filters;
+  }
+
+  function el(tag, text, className) {
+    const node = document.createElement(tag);
+    if (text !== undefined) node.textContent = text;
+    if (className) node.className = className;
+    return node;
+  }
+
+  function link(title, url) {
+    if (!url) return el("span", title);
+    const a = el("a", title);
+    a.href = url; a.target = "_blank"; a.rel = "noopener";
+    return a;
+  }
+
+  function showChunks(chunks, timings) {
+    $("chunks-card").hidden = false;
+    $("timings").textContent = Object.entries(timings)
+      .map(([name, ms]) => `${name.replace("_ms", "")}: ${ms} ms`).join(" · ");
+    const box = $("chunks");
+    box.replaceChildren();
+    if (chunks.length === 0) box.append(el("p", "No chunks matched these filters.", "meta"));
+    chunks.forEach((chunk, i) => {
+      const item = el("div", undefined, "chunk");
+      const head = el("div", undefined, "meta");
+      head.append(`[${i + 1}] `, link(chunk.title, chunk.url),
+                  ` · part ${chunk.chunk_index + 1} · cosine distance ${chunk.distance.toFixed(4)}`);
+      item.append(head, el("p", chunk.text));
+      box.append(item);
+    });
+  }
+
+  async function call(url, options) {
+    const response = await fetch(url, options);
+    const body = await response.json().catch(() => ({}));
+    if (!response.ok) {
+      const detail = typeof body.detail === "string" ? body.detail : JSON.stringify(body.detail ?? body);
+      throw new Error(`${response.status}: ${detail}`);
+    }
+    return body;
+  }
+
+  async function run(mode) {
+    const question = $("question").value.trim();
+    if (!question) { $("question").focus(); return; }
+    const k = Number($("k").value);
+    const filters = readFilters();
+
+    for (const id of ["ask", "search"]) $(id).disabled = true;
+    $("status").className = "";
+    $("status").textContent = mode === "ask" ? "Searching and asking the model…" : "Searching…";
+    $("answer-card").hidden = true;
+
+    try {
+      if (mode === "ask") {
+        const data = await call("/ask", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ question, k, filters }),
+        });
+        $("answer-card").hidden = false;
+        $("answer").textContent = data.answer;
+        $("answer").className = data.found ? "answer" : "answer not-found";
+        const sources = $("sources");
+        sources.replaceChildren();
+        if (data.sources.length) {
+          sources.append("Sources: ");
+          data.sources.forEach((s, i) => { if (i) sources.append(", "); sources.append(link(s.title, s.url)); });
+        }
+        showChunks(data.chunks, data.timings_ms);
+      } else {
+        const params = new URLSearchParams({ q: question, k, ...filters });
+        const data = await call(`/search?${params}`);
+        showChunks(data.results, data.timings_ms);
+      }
+      $("status").textContent = "";
+    } catch (error) {
+      $("status").className = "error";
+      $("status").textContent = error.message;
+    } finally {
+      for (const id of ["ask", "search"]) $(id).disabled = false;
+    }
+  }
+
+  $("form").addEventListener("submit", (event) => { event.preventDefault(); run("ask"); });
+  $("search").addEventListener("click", () => run("search"));
+</script>
+</body>
+</html>
