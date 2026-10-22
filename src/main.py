@@ -3,6 +3,7 @@ from contextlib import asynccontextmanager
 
 from fastapi import FastAPI, HTTPException, Request
 
+from src.api.routes import router as rag_router
 from src.config import settings
 from src.containers import Container
 from src.database import Database
@@ -38,6 +39,7 @@ def create_app() -> FastAPI:
         lifespan=lifespan,
     )
     app.state.container = container
+    app.include_router(rag_router)
 
     @app.get("/health")
     async def health_check():

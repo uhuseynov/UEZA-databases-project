@@ -52,9 +52,11 @@ CREATE TABLE articles (
     page_id        INT UNSIGNED NOT NULL UNIQUE,      -- MediaWiki page id
     title          VARCHAR(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL UNIQUE,
     url            VARCHAR(500),
+    root_category  VARCHAR(100),                      -- dataset group, from data/articles.csv
     article_length INT UNSIGNED NOT NULL,             -- size reported by MediaWiki
     revision_id    BIGINT UNSIGNED NOT NULL,          -- stored revision, compared during sync
     last_edit_date DATETIME NOT NULL,                 -- time of that revision (UTC)
+    INDEX idx_articles_root_category (root_category),
     INDEX idx_articles_article_length (article_length),
     INDEX idx_articles_last_edit_date (last_edit_date)
 );
@@ -89,21 +91,23 @@ CREATE TABLE article_chunks (
 
 Where the columns come from:
 
-| Column | Filter name in `docs/data_decisions.md` | Field from the MediaWiki client |
+| Column | Filter name in `docs/data_decisions.md` | Source |
 | --- | --- | --- |
-| `articles.page_id` | | `page_id` |
-| `articles.title` | | `title` |
-| `articles.article_length` | `article_length` | `length` |
-| `articles.last_edit_date` | `last_edit_date` | `last_modified` |
-| `articles.revision_id` | | `revision_id` (sync compares it to detect changes) |
-| `article_categories.category` | `category` | `categories` |
-| `article_links.linked_title` | `outgoing_links` | `links` |
+| `articles.page_id` | | MediaWiki client: `page_id` |
+| `articles.title` | | MediaWiki client: `title` |
+| `articles.root_category` | | `root_category` column of `data/articles.csv` (not known to MediaWiki) |
+| `articles.article_length` | `article_length` | MediaWiki client: `length` |
+| `articles.last_edit_date` | `last_edit_date` | MediaWiki client: `last_modified` |
+| `articles.revision_id` | | MediaWiki client: `revision_id` (sync compares it to detect changes) |
+| `article_categories.category` | `category` | MediaWiki client: `categories` |
+| `article_links.linked_title` | `outgoing_links` | MediaWiki client: `links` |
 
 **Why it's built this way:**
 
 - An article has many categories, so they get their own table. Filtering by category is an `EXISTS` check, and an article never appears twice in the results.
+- `root_category` is the dataset group an article was collected from, such as "Deep learning". MediaWiki doesn't know it, so the loader copies it from `data/articles.csv`. The search page's "Dataset group" filter uses it.
 - The MediaWiki client returns links as article titles, and most of them point outside our dataset. Storing the title lets us ask "linked from article X" with a join on `articles.title`. It also keeps working when articles are loaded in any order. Links that point to a redirect title will not match.
-- Titles are compared case-sensitively (`utf8mb4_bin`), because Wikipedia treats `AI` and `Ai` as different articles.
+- Titles are compared case-sensitively (`utf8mb4_bin`), because Wikipedia treats `AI` and `Ai` as different articles. This also means the "linked from" filter needs the exact title.
 - `revision_id` lets the sync job see whether an article changed since it was loaded.
 - `chunk_index` records the order of chunks inside an article. Together with `article_id` it is unique.
 - `embedding` is `NOT NULL` because MariaDB only allows a vector index on a column that cannot be empty.
@@ -125,18 +129,24 @@ ORDER BY VEC_DISTANCE_COSINE(c.embedding, @query_vector)
 LIMIT 5;
 ```
 
-Example: the same search, restricted to articles that the article "Machine learning" links to.
+The application builds the same kind of statement in `src/rag/retriever.py`. See [Retrieval and RAG](./docs/rag/Home.md).
 
-```sql
-SELECT c.id, c.chunk_text, a.title
-FROM article_chunks c
-JOIN articles a ON a.id = c.article_id
-WHERE a.title IN (SELECT l.linked_title
-                  FROM article_links l
-                  JOIN articles src ON src.id = l.article_id
-                  WHERE src.title = 'Machine learning')
-ORDER BY VEC_DISTANCE_COSINE(c.embedding, @query_vector)
-LIMIT 5;
+Keep the `ORDER BY` on the bare distance function (or its alias). Wrapping it in an expression makes MariaDB ignore the vector index.
+
+## Asking Questions
+
+Start the app with `make run` (or the whole stack with `make up`) and open <http://localhost:8000>. The page sends the question and the optional SQL filters (category, dataset group, length, edit date, linked from) to the API:
+
+- `GET /search?q=...`: the closest chunks and their cosine distance, no language model needed
+- `POST /ask`: an answer written only from the retrieved chunks, with the source articles, or "not found"
+
+Any OpenAI-compatible model works, including a free local one through Ollama. See [Retrieval and RAG](./docs/rag/Home.md) for the search statement, the not-found logic and the configuration.
+
+## Evaluation
+
+```bash
+make eval        # Recall@1/3/5/10, MRR, latency over repeated runs, not-found analysis
+make eval-sweep  # index recall and latency for several mhnsw_ef_search values vs. exact search
 ```
 
-Keep the `ORDER BY` on the bare distance function. Wrapping it in an expression makes MariaDB ignore the vector index.
+Results are saved in `eval/results/` as JSON and Markdown. The method and the metric definitions are in [Evaluation](./docs/evaluation/Home.md).

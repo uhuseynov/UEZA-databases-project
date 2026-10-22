@@ -104,3 +104,9 @@ def article_response():
         }
 
     return create
+
+
+@pytest.fixture
+def anyio_backend():
+    """Run async tests (marked with @pytest.mark.anyio) on asyncio only."""
+    return "asyncio"

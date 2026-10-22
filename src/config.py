@@ -47,8 +47,10 @@ class Settings(BaseSettings):
     chunk_overlap: int = Field(default=150, ge=0)
 
     # Vector & Embeddings Configuration
-    embedding_model_name: str = "sentence-transformers/all-MiniLM-L6-v2"
-    embedding_dimension: int = Field(default=384, ge=1)
+    embedding_model_name: str = "BAAI/bge-base-en-v1.5"
+    embedding_dimension: int = Field(default=768, ge=1)
+    embedding_query_prefix: str = "Represent this sentence for searching relevant passages: "
+    embedding_passage_prefix: str = ""
     vector_search_top_k: int = Field(default=5, ge=1)
 
     # LLM / RAG Configuration
@@ -56,6 +58,12 @@ class Settings(BaseSettings):
     llm_api_key: str = ""
     llm_model: str = "gpt-4o-mini"
     llm_temperature: float = Field(default=0.2, ge=0.0, le=2.0)
+    llm_timeout_seconds: float = Field(default=60.0, gt=0)
+
+    # RAG & Evaluation Configuration
+    rag_max_distance: float = Field(default=0.5, gt=0.0, le=2.0)
+    ground_truth_path: str = "data/ground_truth.csv"
+    eval_results_dir: str = "eval/results"
 
     model_config = SettingsConfigDict(
         env_file=".env",
