@@ -5,9 +5,11 @@ CREATE TABLE articles (
     page_id        INT UNSIGNED NOT NULL UNIQUE,      -- MediaWiki page id
     title          VARCHAR(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL UNIQUE,
     url            VARCHAR(500),
+    root_category  VARCHAR(100),                      -- dataset group, from data/articles.csv
     article_length INT UNSIGNED NOT NULL,             -- size reported by MediaWiki
     revision_id    BIGINT UNSIGNED NOT NULL,          -- stored revision, compared during sync
     last_edit_date DATETIME NOT NULL,                 -- time of that revision (UTC)
+    INDEX idx_articles_root_category (root_category),
     INDEX idx_articles_article_length (article_length),
     INDEX idx_articles_last_edit_date (last_edit_date)
 );
