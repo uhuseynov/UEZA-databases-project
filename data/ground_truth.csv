@@ -1,0 +1,60 @@
+id,question,correct_article,needs_filter,filter_description,answerable
+1,"Which algorithm updates action values using the maximum estimated value of the next state?",Q-learning,N,,Y
+2,"What technique finds the hyperplane that separates classes with the largest margin?",Support vector machine,N,,Y
+3,"Which method averages many decision trees trained on random subsets of the data?",Random forest,N,,Y
+4,"What problem happens when a model memorizes training data and performs poorly on new data?",Overfitting,N,,Y
+5,"Which iterative method repeatedly moves parameters in the direction of the negative gradient of a loss?",Gradient descent,N,,Y
+6,"How do neural networks compute gradients of the loss with respect to each weight layer by layer?",Backpropagation,N,,Y
+7,"Which architecture introduced gating cells to remember information over long sequences?",Long short-term memory,N,,Y
+8,"Which network uses skip connections so very deep models can be trained?",Residual neural network,N,,Y
+9,"Which model type learns to generate images by gradually removing noise?",Diffusion model,N,,Y
+10,"What thought experiment argues that running a program is not the same as understanding?",Chinese room,N,,Y
+11,"In which paper did Turing replace the question of whether machines can think with an imitation game?",Computing Machinery and Intelligence,N,,Y
+12,"Which 1956 summer event is often considered the birth of AI as a field?",Dartmouth workshop,N,,Y
+13,"What clustering method assigns points to the nearest of k centroids?",K-means clustering,N,,Y
+14,"Which technique reduces dimensions by projecting data onto directions of maximum variance?",Principal component analysis,N,,Y
+15,"What is it called when a language model produces confident but false statements?",Hallucination (artificial intelligence),N,,Y
+16,"Which method trains a policy by directly following the gradient of expected reward?",Policy gradient method,N,,Y
+17,"Which dataset of labeled photographs drove progress in image classification contests?",ImageNet,N,,Y
+18,"What algorithm detects scale-independent keypoints in images?",Scale-invariant feature transform,N,,Y
+19,"Which approach combines retrieved documents with a language model to produce answers?",Retrieval-augmented generation,N,,Y
+20,"Which statistical model discovers topics in a collection of documents using Dirichlet priors?",Latent Dirichlet allocation,N,,Y
+21,"What task decides which meaning of an ambiguous word is intended in a sentence?",Word-sense disambiguation,N,,Y
+22,"Which empirical law says a word's frequency is inversely related to its rank in a frequency table?",Zipf's law,N,,Y
+23,"What technique represents words as dense vectors so that similar meanings lie close together?",Word embedding,N,,Y
+24,"Which program defeated a top professional Go player in 2016?",AlphaGo,N,,Y
+25,"Which system predicts the 3D shape of proteins from their amino acid sequence?",AlphaFold,N,,Y
+26,"What approach trains a shared model across many devices without collecting their raw data?",Federated learning,N,,Y
+27,"Which hypothesis says that almost-human robots can provoke a feeling of eeriness?",Uncanny valley,N,,Y
+28,"What is the hypothetical point at which AI-driven technological growth becomes uncontrollable?",Technological singularity,N,,Y
+29,"Which idea says an AI may pursue sub-goals like self-preservation whatever its final goal is?",Instrumental convergence,N,,Y
+30,"What happens when an AI exploits flaws in its reward function instead of doing the intended task?",Reward hacking,N,,Y
+31,"Which problem models choosing between slot machines to balance exploration and exploitation?",Multi-armed bandit,N,,Y
+32,"Which transform finds lines in an image by voting in a parameter space?",Hough transform,N,,Y
+33,"Which algorithm estimates the state of a system from a series of noisy measurements?",Kalman filter,N,,Y
+34,"Which technique fine-tunes a language model using human preference judgments as the reward signal?",Reinforcement learning from human feedback,N,,Y
+35,"Which method transfers knowledge from a large teacher model to a smaller student model?",Knowledge distillation,N,,Y
+36,"Among articles in the Reinforcement learning group, which describes methods that optimize the policy directly?",Policy gradient method,Y,root_category = Reinforcement learning,Y
+37,"Which article longer than 250000 characters gives a broad overview of the whole field?",Artificial intelligence,Y,length > 250000,Y
+38,"Among articles last edited before 2026-01-01, which one is about increasing the resolution of video?",Video super-resolution,Y,last_edit < 2026-01-01,Y
+39,"In the Computer vision group, which article describes estimating the apparent motion of pixels between frames?",Optical flow,Y,root_category = Computer vision,Y
+40,"Among NLP articles shorter than 30000 characters, which one covers finding names of people and organizations in text?",Named-entity recognition,Y,root_category = Natural language processing AND length < 30000,Y
+41,"Among Philosophy articles longer than 150000 characters, which one covers laws and rules governing AI?",Regulation of artificial intelligence,Y,root_category = Philosophy of artificial intelligence AND length > 150000,Y
+42,"Among articles edited on or after 2026-10-04, which one describes AI-designed chip floorplanning?",AlphaChip,Y,last_edit >= 2026-10-04,Y
+43,"In the Core group, which article explains building weak learners one after another to reduce errors?",Gradient boosting,Y,root_category = Core,Y
+44,"In the category Text-to-video generation, which article describes OpenAI's video model?",Sora (text-to-video model),Y,category = Text-to-video generation,Y
+45,"In the category Deepfakes, which article describes synthetic speech that imitates a person's voice?",Audio deepfake,Y,category = Deepfakes,Y
+46,"In the category Google DeepMind, which article is an open-weights language model family?",Gemma (language model),Y,category = Google DeepMind,Y
+47,"Among articles shorter than 10000 characters, which one covers an agent improving by playing against itself?",Self-play,Y,length < 10000,Y
+48,"Among articles edited before 2026-03-01, which one describes a statistical model of 3D faces?",3D Morphable Model,Y,last_edit < 2026-03-01,Y
+49,"Among articles linked from Large language model, which one covers crafting inputs to steer a model?",Prompt engineering,Y,linked_from = Large language model (verify with links table),Y
+50,"Among articles linked from Artificial intelligence, which one covers testing whether a machine can imitate human conversation?",Turing test,Y,linked_from = Artificial intelligence (verify with links table),Y
+51,"Among articles linked from Convolutional neural network, which one is a large labeled image dataset?",ImageNet,Y,linked_from = Convolutional neural network (verify with links table),Y
+52,"Among Machine learning articles longer than 100000 characters, which one covers projecting data onto directions of maximum variance?",Principal component analysis,Y,root_category = Machine learning AND length > 100000,Y
+54,"How does the offside rule work in football?",,N,,N
+55,"What is the difference between a zone defense and man-to-man marking in football?",,N,,N
+56,"How many players are on the pitch for each team in a football match?",,N,,N
+57,"What is the best way to train for a football penalty shootout?",,N,,N
+58,"Which formation did the Netherlands use to popularize total football?",,N,,N
+59,"How does a goalkeeper decide which way to dive during a penalty kick?",,N,,N
+60,"What are the rules of the tie-break in a tennis match?",,N,,N
