@@ -1,0 +1,128 @@
+MariaDB: 12.3.3-MariaDB-ubu2404
+Data: 17338 chunks, k = 10, median of 3 runs
+
+PLANS WITHOUT A FILTER
+  scan   (retriever.py)   : a index key=page_id [Using index; Using temporary; Using filesort] | c ref key=uq_chunks_position []
+  single (no join)        : c index key=embedding []
+  first  (chunks first)   : c index key=embedding [] | a eq_ref key=PRIMARY []
+  overfetch 200           : <derived2> ALL key=NULL [Using filesort] | a eq_ref key=PRIMARY [] | c index key=embedding []
+AFTER ANALYZE TABLE
+  scan   (retriever.py)   : c index key=embedding [] | a eq_ref key=PRIMARY []
+  single (no join)        : c index key=embedding []
+  first  (chunks first)   : c index key=embedding [] | a eq_ref key=PRIMARY []
+  overfetch 200           : <derived2> ALL key=NULL [Using filesort] | a eq_ref key=PRIMARY [] | c index key=embedding []
+
+CONTROL: no filter, 10 query vectors
+  scan   : rows 10.0/10, overlap with exact 0.67,    21.20 ms
+  single : rows 10.0/10, overlap with exact 0.33,     1.04 ms
+
+== length >= 50000: 12230 chunks (70.5%), 115 articles
+   plan scan           : a range key=idx_articles_article_length [Using where; Using index; Using temporary; Using filesort] | c ref key=uq_chunks_position []
+   plan first          : c index key=embedding [] | a eq_ref key=PRIMARY [Using where]
+   plan overfetch 50   : <derived2> ALL key=NULL [Using filesort] | a eq_ref key=PRIMARY [Using where] | c index key=embedding []
+   plan overfetch 200  : <derived2> ALL key=NULL [Using filesort] | a eq_ref key=PRIMARY [Using where] | c index key=embedding []
+   plan overfetch 1000 : a range key=idx_articles_article_length [Using where; Using index; Using temporary; Using filesort] | <derived2> ref key=key0 [] | c index key=embedding []
+   inside  scan           : rows 10.0/10, overlap with exact 1.00,   484.62 ms
+   inside  first          : rows 10.0/10, overlap with exact 0.70,    17.70 ms
+   inside  overfetch 50   : rows 10.0/10, overlap with exact 0.52,     3.15 ms
+   inside  overfetch 200  : rows 10.0/10, overlap with exact 0.52,    11.21 ms
+   inside  overfetch 1000 : rows 10.0/10, overlap with exact 0.52,    40.62 ms
+   outside scan           : rows 10.0/10, overlap with exact 1.00,   482.22 ms
+   outside first          : rows 10.0/10, overlap with exact 0.42,    21.98 ms
+   outside overfetch 50   : rows  7.2/10, overlap with exact 0.12,     3.02 ms
+   outside overfetch 200  : rows 10.0/10, overlap with exact 0.28,    11.21 ms
+   outside overfetch 1000 : rows 10.0/10, overlap with exact 0.28,    40.57 ms
+
+== group = Reinforcement learning: 235 chunks (1.4%), 14 articles
+   plan scan           : a ref key=idx_articles_root_category [Using where; Using index; Using temporary; Using filesort] | c ref key=uq_chunks_position []
+   plan first          : c index key=embedding [] | a eq_ref key=idx_articles_root_category [Using where; Using index]
+   plan overfetch 50   : <derived2> ALL key=NULL [Using filesort] | a eq_ref key=idx_articles_root_category [Using where; Using index] | c index key=embedding []
+   plan overfetch 200  : a ref key=idx_articles_root_category [Using where; Using index; Using temporary; Using filesort] | <derived2> ref key=key0 [] | c index key=embedding []
+   plan overfetch 1000 : a ref key=idx_articles_root_category [Using where; Using index; Using temporary; Using filesort] | <derived2> ref key=key0 [] | c index key=embedding []
+   inside  scan           : rows 10.0/10, overlap with exact 1.00,    12.72 ms
+   inside  first          : rows 10.0/10, overlap with exact 0.64,    22.09 ms
+   inside  overfetch 50   : rows  8.2/10, overlap with exact 0.38,     2.92 ms
+   inside  overfetch 200  : rows  9.0/10, overlap with exact 0.42,    11.22 ms
+   inside  overfetch 1000 : rows 10.0/10, overlap with exact 0.54,    40.66 ms
+   outside scan           : rows 10.0/10, overlap with exact 1.00,    12.81 ms
+   outside first          : rows 10.0/10, overlap with exact 0.56,    24.84 ms
+   outside overfetch 50   : rows  0.0/10, overlap with exact 0.00,     3.10 ms
+   outside overfetch 200  : rows  0.2/10, overlap with exact 0.00,    11.59 ms
+   outside overfetch 1000 : rows  0.6/10, overlap with exact 0.02,    40.82 ms
+
+== category = Deep learning (most common): 1357 chunks (7.8%), 29 articles
+   plan scan           : ac ref key=idx_article_categories_category [Using where; Using index; Using temporary; Using filesort] | a eq_ref key=PRIMARY [] | c ref key=uq_chunks_position []
+   plan first          : ac ref key=idx_article_categories_category [Using where; Using index; Using temporary; Using filesort] | c ref key=uq_chunks_position [] | a eq_ref key=PRIMARY []
+   plan overfetch 50   : <derived2> ALL key=NULL [Using filesort] | a eq_ref key=PRIMARY [] | ac eq_ref key=idx_article_categories_category [Using where; Using index] | c index key=embedding []
+   plan overfetch 200  : ac ref key=idx_article_categories_category [Using where; Using index; Using temporary; Using filesort] | a eq_ref key=PRIMARY [] | <derived2> ref key=key0 [] | c index key=embedding []
+   plan overfetch 1000 : ac ref key=idx_article_categories_category [Using where; Using index; Using temporary; Using filesort] | a eq_ref key=PRIMARY [] | <derived2> ref key=key0 [] | c index key=embedding []
+   inside  scan           : rows 10.0/10, overlap with exact 1.00,    53.92 ms
+   inside  first          : rows 10.0/10, overlap with exact 1.00,    53.67 ms
+   inside  overfetch 50   : rows 10.0/10, overlap with exact 0.80,     3.19 ms
+   inside  overfetch 200  : rows 10.0/10, overlap with exact 0.82,    11.48 ms
+   inside  overfetch 1000 : rows 10.0/10, overlap with exact 0.82,    40.55 ms
+   outside scan           : rows 10.0/10, overlap with exact 1.00,    54.06 ms
+   outside first          : rows 10.0/10, overlap with exact 1.00,    53.69 ms
+   outside overfetch 50   : rows  2.0/10, overlap with exact 0.12,     3.17 ms
+   outside overfetch 200  : rows  2.6/10, overlap with exact 0.12,     9.14 ms
+   outside overfetch 1000 : rows  2.6/10, overlap with exact 0.12,    40.83 ms
+
+== category = Bayesian networks (1 article): 66 chunks (0.4%), 1 articles
+   plan scan           : ac ref key=idx_article_categories_category [Using where; Using index; Using temporary; Using filesort] | a eq_ref key=PRIMARY [] | c ref key=uq_chunks_position []
+   plan first          : ac ref key=idx_article_categories_category [Using where; Using index; Using temporary; Using filesort] | c ref key=uq_chunks_position [] | a eq_ref key=PRIMARY []
+   plan overfetch 50   : ac ref key=idx_article_categories_category [Using where; Using index; Using temporary; Using filesort] | a eq_ref key=PRIMARY [] | <derived2> ref key=key0 [] | c index key=embedding []
+   plan overfetch 200  : ac ref key=idx_article_categories_category [Using where; Using index; Using temporary; Using filesort] | a eq_ref key=PRIMARY [] | <derived2> ref key=key0 [] | c index key=embedding []
+   plan overfetch 1000 : ac ref key=idx_article_categories_category [Using where; Using index; Using temporary; Using filesort] | a eq_ref key=PRIMARY [] | <derived2> ref key=key0 [] | c index key=embedding []
+   inside  scan           : rows 10.0/10, overlap with exact 1.00,     3.88 ms
+   inside  first          : rows 10.0/10, overlap with exact 1.00,     3.74 ms
+   inside  overfetch 50   : rows  7.0/10, overlap with exact 0.20,     2.94 ms
+   inside  overfetch 200  : rows  8.8/10, overlap with exact 0.28,    11.52 ms
+   inside  overfetch 1000 : rows 10.0/10, overlap with exact 0.38,    40.91 ms
+   outside scan           : rows 10.0/10, overlap with exact 1.00,     3.66 ms
+   outside first          : rows 10.0/10, overlap with exact 1.00,     3.69 ms
+   outside overfetch 50   : rows  0.0/10, overlap with exact 0.00,     3.24 ms
+   outside overfetch 200  : rows  0.2/10, overlap with exact 0.02,    11.66 ms
+   outside overfetch 1000 : rows  2.8/10, overlap with exact 0.12,    41.42 ms
+
+SUMMARY (inside = the question is about articles that pass the filter, outside = it is not)
+filter                                       side     shape            rows overlap       ms
+length >= 50000                              inside   scan             10.0    1.00   484.62
+length >= 50000                              inside   first            10.0    0.70    17.70
+length >= 50000                              inside   overfetch 50     10.0    0.52     3.15
+length >= 50000                              inside   overfetch 200    10.0    0.52    11.21
+length >= 50000                              inside   overfetch 1000   10.0    0.52    40.62
+length >= 50000                              outside  scan             10.0    1.00   482.22
+length >= 50000                              outside  first            10.0    0.42    21.98
+length >= 50000                              outside  overfetch 50      7.2    0.12     3.02
+length >= 50000                              outside  overfetch 200    10.0    0.28    11.21
+length >= 50000                              outside  overfetch 1000   10.0    0.28    40.57
+group = Reinforcement learning               inside   scan             10.0    1.00    12.72
+group = Reinforcement learning               inside   first            10.0    0.64    22.09
+group = Reinforcement learning               inside   overfetch 50      8.2    0.38     2.92
+group = Reinforcement learning               inside   overfetch 200     9.0    0.42    11.22
+group = Reinforcement learning               inside   overfetch 1000   10.0    0.54    40.66
+group = Reinforcement learning               outside  scan             10.0    1.00    12.81
+group = Reinforcement learning               outside  first            10.0    0.56    24.84
+group = Reinforcement learning               outside  overfetch 50      0.0    0.00     3.10
+group = Reinforcement learning               outside  overfetch 200     0.2    0.00    11.59
+group = Reinforcement learning               outside  overfetch 1000    0.6    0.02    40.82
+category = Deep learning (most common)       inside   scan             10.0    1.00    53.92
+category = Deep learning (most common)       inside   first            10.0    1.00    53.67
+category = Deep learning (most common)       inside   overfetch 50     10.0    0.80     3.19
+category = Deep learning (most common)       inside   overfetch 200    10.0    0.82    11.48
+category = Deep learning (most common)       inside   overfetch 1000   10.0    0.82    40.55
+category = Deep learning (most common)       outside  scan             10.0    1.00    54.06
+category = Deep learning (most common)       outside  first            10.0    1.00    53.69
+category = Deep learning (most common)       outside  overfetch 50      2.0    0.12     3.17
+category = Deep learning (most common)       outside  overfetch 200     2.6    0.12     9.14
+category = Deep learning (most common)       outside  overfetch 1000    2.6    0.12    40.83
+category = Bayesian networks (1 article)     inside   scan             10.0    1.00     3.88
+category = Bayesian networks (1 article)     inside   first            10.0    1.00     3.74
+category = Bayesian networks (1 article)     inside   overfetch 50      7.0    0.20     2.94
+category = Bayesian networks (1 article)     inside   overfetch 200     8.8    0.28    11.52
+category = Bayesian networks (1 article)     inside   overfetch 1000   10.0    0.38    40.91
+category = Bayesian networks (1 article)     outside  scan             10.0    1.00     3.66
+category = Bayesian networks (1 article)     outside  first            10.0    1.00     3.69
+category = Bayesian networks (1 article)     outside  overfetch 50      0.0    0.00     3.24
+category = Bayesian networks (1 article)     outside  overfetch 200     0.2    0.02    11.66
+category = Bayesian networks (1 article)     outside  overfetch 1000    2.8    0.12    41.42

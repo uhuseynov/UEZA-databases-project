@@ -1,0 +1,61 @@
+MariaDB: 12.3.3-MariaDB-ubu2404
+  mhnsw_default_distance = euclidean
+  mhnsw_default_m = 6
+  mhnsw_ef_search = 20
+  mhnsw_max_cache_size = 16777216
+Data: 262 articles, 17338 chunks, k = 10, 3 timing repetitions (median), 5+5 query vectors per filter
+
+== no filter: 17338 chunks (100.0%), 262 articles
+   EXPLAIN index: table=a type=ALL key=NULL rows=262 extra=Using temporary; Using filesort
+   EXPLAIN index: table=c type=ref key=uq_chunks_position rows=1 extra=
+   EXPLAIN exact: table=a type=ALL key=NULL rows=262 extra=Using temporary; Using filesort
+   EXPLAIN exact: table=c type=ref key=uq_chunks_position rows=1 extra=
+   query vectors inside : index returns 10.0/10 rows, overlap with exact top 10 = 1.00, index  682.20 ms, exact 1348.87 ms
+
+== length >= 50000: 12230 chunks (70.5%), 115 articles
+   EXPLAIN index: table=a type=range key=idx_articles_article_length rows=115 extra=Using index condition; Using temporary; Using filesort
+   EXPLAIN index: table=c type=ref key=uq_chunks_position rows=1 extra=
+   EXPLAIN exact: table=a type=range key=idx_articles_article_length rows=115 extra=Using index condition; Using temporary; Using filesort
+   EXPLAIN exact: table=c type=ref key=uq_chunks_position rows=1 extra=
+   query vectors inside : index returns 10.0/10 rows, overlap with exact top 10 = 1.00, index  485.33 ms, exact  958.09 ms
+   query vectors outside: index returns 10.0/10 rows, overlap with exact top 10 = 1.00, index  482.48 ms, exact  951.49 ms
+
+== group = Reinforcement learning: 235 chunks (1.4%), 14 articles
+   EXPLAIN index: table=a type=ref key=idx_articles_root_category rows=14 extra=Using index condition; Using temporary; Using filesort
+   EXPLAIN index: table=c type=ref key=uq_chunks_position rows=1 extra=
+   EXPLAIN exact: table=a type=ref key=idx_articles_root_category rows=14 extra=Using index condition; Using temporary; Using filesort
+   EXPLAIN exact: table=c type=ref key=uq_chunks_position rows=1 extra=
+   query vectors inside : index returns 10.0/10 rows, overlap with exact top 10 = 1.00, index   12.83 ms, exact   19.11 ms
+   query vectors outside: index returns 10.0/10 rows, overlap with exact top 10 = 1.00, index    9.93 ms, exact   19.05 ms
+
+== category = Deep learning (most common): 1357 chunks (7.8%), 29 articles
+   EXPLAIN index: table=ac type=ref key=idx_article_categories_category rows=29 extra=Using where; Using index; Using temporary; Using filesort
+   EXPLAIN index: table=c type=ref key=uq_chunks_position rows=1 extra=
+   EXPLAIN index: table=a type=eq_ref key=PRIMARY rows=1 extra=
+   EXPLAIN exact: table=ac type=ref key=idx_article_categories_category rows=29 extra=Using where; Using index; Using temporary; Using filesort
+   EXPLAIN exact: table=c type=ref key=uq_chunks_position rows=1 extra=
+   EXPLAIN exact: table=a type=eq_ref key=PRIMARY rows=1 extra=
+   query vectors inside : index returns 10.0/10 rows, overlap with exact top 10 = 1.00, index   53.85 ms, exact  105.94 ms
+   query vectors outside: index returns 10.0/10 rows, overlap with exact top 10 = 1.00, index   53.88 ms, exact  105.89 ms
+
+== category = Bayesian networks (1 article): 66 chunks (0.4%), 1 articles
+   EXPLAIN index: table=ac type=ref key=idx_article_categories_category rows=1 extra=Using where; Using index; Using temporary; Using filesort
+   EXPLAIN index: table=c type=ref key=uq_chunks_position rows=1 extra=
+   EXPLAIN index: table=a type=eq_ref key=PRIMARY rows=1 extra=
+   EXPLAIN exact: table=ac type=ref key=idx_article_categories_category rows=1 extra=Using where; Using index; Using temporary; Using filesort
+   EXPLAIN exact: table=c type=ref key=uq_chunks_position rows=1 extra=
+   EXPLAIN exact: table=a type=eq_ref key=PRIMARY rows=1 extra=
+   query vectors inside : index returns 10.0/10 rows, overlap with exact top 10 = 1.00, index    3.76 ms, exact    7.37 ms
+   query vectors outside: index returns 10.0/10 rows, overlap with exact top 10 = 1.00, index    3.68 ms, exact    7.17 ms
+
+SUMMARY (inside = the query is about articles that pass the filter, outside = it is not)
+filter                                       side      chunks  rows recall   idx ms  exact ms
+no filter                                    inside     17338  10.0   1.00   682.20   1348.87
+length >= 50000                              inside     12230  10.0   1.00   485.33    958.09
+length >= 50000                              outside    12230  10.0   1.00   482.48    951.49
+group = Reinforcement learning               inside       235  10.0   1.00    12.83     19.11
+group = Reinforcement learning               outside      235  10.0   1.00     9.93     19.05
+category = Deep learning (most common)       inside      1357  10.0   1.00    53.85    105.94
+category = Deep learning (most common)       outside     1357  10.0   1.00    53.88    105.89
+category = Bayesian networks (1 article)     inside        66  10.0   1.00     3.76      7.37
+category = Bayesian networks (1 article)     outside       66  10.0   1.00     3.68      7.17
