@@ -85,7 +85,7 @@ CREATE TABLE article_chunks (
     embedding   VECTOR(768) NOT NULL,
     UNIQUE KEY uq_chunks_position (article_id, chunk_index),
     CONSTRAINT fk_chunks_article FOREIGN KEY (article_id) REFERENCES articles(id),
-    VECTOR INDEX (embedding) DISTANCE=cosine
+    VECTOR INDEX (embedding) M=16 DISTANCE=cosine
 );
 ```
 
@@ -132,6 +132,23 @@ LIMIT 5;
 The application builds the same kind of statement in `src/rag/retriever.py`. See [Retrieval and RAG](./docs/rag/Home.md).
 
 Keep the `ORDER BY` on the bare distance function (or its alias). Wrapping it in an expression makes MariaDB ignore the vector index.
+
+## Vector Index and Filtered Search
+
+The index is created with `M=16` and `DISTANCE=cosine`. Measured on 17,338 chunks (real article metadata, generated vectors) with MariaDB 12.3.3, for the retriever statement without a filter:
+
+| M | Index build | Recall@10 against exact search | Search time |
+| --- | --- | --- | --- |
+| 6 (MariaDB default) | 3.8 s | 0.74 | 20 ms |
+| 8 | 6.0 s | 0.84 | 24 ms |
+| 16 | 11.9 s | 1.00 | 35 ms |
+
+Two rules follow from the experiments:
+
+- Run `ANALYZE TABLE articles, article_chunks, article_categories, article_links;` after loading data. Without fresh statistics MariaDB scanned all chunks instead of using the vector index.
+- With a selective SQL filter, MariaDB chooses an exact filter-first plan (4 to 54 ms in our tests) instead of the vector index.
+
+Details, method and limits are in [Vector Search and Index Parameters](./docs/database/Vector-Search.md). The numbers come from generated vectors and will be repeated on the real embeddings.
 
 ## Asking Questions
 
