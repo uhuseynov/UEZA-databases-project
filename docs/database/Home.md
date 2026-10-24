@@ -46,6 +46,6 @@ MariaDB
 
 [Migrations →](./Migrations.md)
 
-## Vector Search
+## Schema and Vector Search
 
-The project is intended to use MariaDB-native vector functionality. Vector columns, vector indexes, distance functions, and their migrations should be documented once the schema is implemented rather than being described as completed behavior before that point.
+The schema lives in [`schema.sql`](../../schema.sql): four tables for articles, their categories, their links and the text chunks with their vectors. MariaDB creates it automatically on the first start of an empty database volume. The vector index, its parameters and the way MariaDB plans a search with SQL filters are described in [Vector Search and Index Parameters](./Vector-Search.md).

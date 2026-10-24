@@ -38,5 +38,5 @@ CREATE TABLE article_chunks (
     embedding   VECTOR(768) NOT NULL,
     UNIQUE KEY uq_chunks_position (article_id, chunk_index),
     CONSTRAINT fk_chunks_article FOREIGN KEY (article_id) REFERENCES articles(id),
-    VECTOR INDEX (embedding) DISTANCE=cosine
+    VECTOR INDEX (embedding) M=16 DISTANCE=cosine
 );
