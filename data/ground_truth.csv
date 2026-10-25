@@ -51,10 +51,12 @@ id,question,correct_article,needs_filter,filter_description,answerable
 50,"Among articles linked from Artificial intelligence, which one covers testing whether a machine can imitate human conversation?",Turing test,Y,linked_from = Artificial intelligence (verify with links table),Y
 51,"Among articles linked from Convolutional neural network, which one is a large labeled image dataset?",ImageNet,Y,linked_from = Convolutional neural network (verify with links table),Y
 52,"Among Machine learning articles longer than 100000 characters, which one covers projecting data onto directions of maximum variance?",Principal component analysis,Y,root_category = Machine learning AND length > 100000,Y
-54,"How does the offside rule work in football?",,N,,N
-55,"What is the difference between a zone defense and man-to-man marking in football?",,N,,N
-56,"How many players are on the pitch for each team in a football match?",,N,,N
-57,"What is the best way to train for a football penalty shootout?",,N,,N
-58,"Which formation did the Netherlands use to popularize total football?",,N,,N
-59,"How does a goalkeeper decide which way to dive during a penalty kick?",,N,,N
-60,"What are the rules of the tie-break in a tennis match?",,N,,N
+53,"Which AI system developed at Stanford in the 1970s was designed to diagnose bacterial infections?",,N,,N
+54,"What was the name of the first chatbot created by Joseph Weizenbaum in 1966?",,N,,N
+55,"Which AI program developed by Terry Winograd could manipulate virtual blocks using natural language commands?",,N,,N
+56,"Which expert system was developed to identify potential mineral deposits using geological data?",,N,,N
+57,"What programming language created by John McCarthy became an early foundation of symbolic AI research?",,N,,N
+58,"Which early AI program was designed to solve algebra word problems using symbolic reasoning?",,N,,N
+59,"What was the name of the expert system developed for configuring computer systems at Digital Equipment Corporation?",,N,,N
+60,"Which early AI system used a blackboard architecture to understand spoken language?",,N,,N
+61,"What was the name of the AI program developed to analyze mass spectrometry data and identify chemical structures?",,N,,N
