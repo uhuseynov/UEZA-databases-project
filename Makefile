@@ -218,6 +218,42 @@ eval-explain: ## Prints the query plans: is the vector index used, with and with
 
 
 # =============================================================================
+##@ Ingestion
+# =============================================================================
+
+INGEST_CONFIG ?= A
+INGEST_CSV ?= data/articles.csv
+INGEST_LIMIT ?=
+
+.PHONY: ingest
+ingest: db-up ## Load Wikipedia articles into MariaDB
+	@$(UV) run python -m src.ingestion ingest \
+		--csv $(INGEST_CSV) \
+		--config $(INGEST_CONFIG) \
+		$(if $(INGEST_LIMIT),--limit $(INGEST_LIMIT),)
+
+.PHONY: ingest-latest
+ingest-latest: db-up ## Ingest latest Wikipedia revisions
+	@$(UV) run python -m src.ingestion ingest \
+		--csv $(INGEST_CSV) \
+		--config $(INGEST_CONFIG) \
+		--latest \
+		$(if $(INGEST_LIMIT),--limit $(INGEST_LIMIT),)
+
+.PHONY: ingest-check
+ingest-check: db-up ## Validate ingested database records
+	@$(UV) run python -m src.ingestion check \
+		--csv $(INGEST_CSV)
+
+.PHONY: ingest-test
+ingest-test: db-up ## Ingest only three articles
+	@$(UV) run python -m src.ingestion ingest \
+		--csv $(INGEST_CSV) \
+		--config $(INGEST_CONFIG) \
+		--limit 3
+
+
+# =============================================================================
 ##@ Database
 # =============================================================================
 

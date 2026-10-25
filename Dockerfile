@@ -1,3 +1,4 @@
+
 # =============================================================================
 # Builder
 # =============================================================================
@@ -9,6 +10,13 @@ ENV UV_COMPILE_BYTECODE=1 \
     UV_PROJECT_ENVIRONMENT=/app/.venv
 
 WORKDIR /app
+
+# Build dependencies for native Python extensions (mwparserfromhell).
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends \
+        gcc \
+        libc6-dev \
+    && rm -rf /var/lib/apt/lists/*
 
 RUN pip install --no-cache-dir uv
 
@@ -28,7 +36,7 @@ FROM python:3.14-slim AS runtime
 
 ENV PYTHONUNBUFFERED=1 \
     PYTHONDONTWRITEBYTECODE=1 \
-    PYTHONPATH=/app/src \
+    PYTHONPATH=/app \
     PATH="/app/.venv/bin:$PATH"
 
 WORKDIR /app
@@ -36,6 +44,7 @@ WORKDIR /app
 COPY --from=builder /app/.venv /app/.venv
 
 COPY src ./src
+COPY data ./data
 COPY alembic.ini ./
 COPY scripts/entrypoint.sh ./scripts/entrypoint.sh
 

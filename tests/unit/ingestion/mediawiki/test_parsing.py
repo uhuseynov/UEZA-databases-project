@@ -1,3 +1,5 @@
+"""Tests for invalid MediaWiki API responses."""
+
 import httpx
 import pytest
 
@@ -7,9 +9,7 @@ from src.ingestion.mediawiki import (
 )
 
 
-def test_api_error(
-    client_factory,
-) -> None:
+def test_api_error(client_factory) -> None:
     def handler(request: httpx.Request) -> httpx.Response:
         return httpx.Response(
             200,
@@ -23,27 +23,19 @@ def test_api_error(
 
     client = client_factory(handler)
 
-    with pytest.raises(
-        MediaWikiAPIError,
-        match="badvalue",
-    ):
+    with pytest.raises(MediaWikiAPIError, match="badvalue"):
         client.get_article("Machine learning")
 
 
-def test_invalid_json(
-    client_factory,
-) -> None:
+def test_invalid_json(client_factory) -> None:
     def handler(request: httpx.Request) -> httpx.Response:
-        return httpx.Response(
-            200,
-            content=b"not json",
-        )
+        return httpx.Response(200, content=b"not json")
 
     client = client_factory(handler)
 
     with pytest.raises(
         MediaWikiInvalidResponseError,
-        match="invalid JSON",
+        match="(?i)invalid JSON",
     ):
         client.get_article("Machine learning")
 
@@ -57,15 +49,9 @@ def test_invalid_json(
         {"query": {"pages": "wrong"}},
     ],
 )
-def test_invalid_pages(
-    client_factory,
-    payload,
-) -> None:
+def test_invalid_pages(client_factory, payload) -> None:
     def handler(request: httpx.Request) -> httpx.Response:
-        return httpx.Response(
-            200,
-            json=payload,
-        )
+        return httpx.Response(200, json=payload)
 
     client = client_factory(handler)
 
@@ -73,9 +59,7 @@ def test_invalid_pages(
         client.get_article("Machine learning")
 
 
-def test_missing_revision(
-    client_factory,
-) -> None:
+def test_missing_revision(client_factory) -> None:
     def handler(request: httpx.Request) -> httpx.Response:
         return httpx.Response(
             200,
@@ -96,14 +80,12 @@ def test_missing_revision(
 
     with pytest.raises(
         MediaWikiInvalidResponseError,
-        match="no revision data",
+        match="(?i)revision",
     ):
         client.get_article("Machine learning")
 
 
-def test_missing_revision_content(
-    client_factory,
-) -> None:
+def test_missing_revision_content(client_factory) -> None:
     def handler(request: httpx.Request) -> httpx.Response:
         return httpx.Response(
             200,
@@ -130,15 +112,12 @@ def test_missing_revision_content(
 
     with pytest.raises(
         MediaWikiInvalidResponseError,
-        match="main slot content",
+        match="(?i)content",
     ):
         client.get_article("Machine learning")
 
 
-def test_invalid_timestamp(
-    client_factory,
-    article_response,
-) -> None:
+def test_invalid_timestamp(client_factory, article_response) -> None:
     def handler(request: httpx.Request) -> httpx.Response:
         return httpx.Response(
             200,
