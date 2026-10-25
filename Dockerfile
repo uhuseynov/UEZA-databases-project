@@ -1,3 +1,4 @@
+
 # =============================================================================
 # Builder
 # =============================================================================
@@ -28,7 +29,7 @@ FROM python:3.14-slim AS runtime
 
 ENV PYTHONUNBUFFERED=1 \
     PYTHONDONTWRITEBYTECODE=1 \
-    PYTHONPATH=/app/src \
+    PYTHONPATH=/app \
     PATH="/app/.venv/bin:$PATH"
 
 WORKDIR /app
@@ -36,6 +37,7 @@ WORKDIR /app
 COPY --from=builder /app/.venv /app/.venv
 
 COPY src ./src
+COPY data ./data
 COPY alembic.ini ./
 COPY scripts/entrypoint.sh ./scripts/entrypoint.sh
 

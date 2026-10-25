@@ -1,54 +1,128 @@
+"""Disk cache for MediaWiki articles."""
+
+import hashlib
 import json
+import os
+import tempfile
 from dataclasses import asdict
 from datetime import UTC, datetime
 from pathlib import Path
 
-from .mediawiki import WikiArticle
+from .mediawiki.models import WikiArticle
 
 
 class ArticleCache:
-    """Stores fetched WikiArticles on disk to prevent redundant API calls."""
+    """Cache latest Wikipedia articles on disk."""
 
-    def __init__(self, cache_dir: str = ".cache/articles", ttl_seconds: int = 86400) -> None:
+    def __init__(
+        self,
+        cache_dir: str = ".cache/articles",
+        ttl_seconds: int = 86400,
+    ) -> None:
+        if ttl_seconds < 0:
+            raise ValueError("ttl_seconds cannot be negative")
+
         self.cache_path = Path(cache_dir)
-        self.cache_path.mkdir(parents=True, exist_ok=True)
+        self.cache_path.mkdir(
+            parents=True,
+            exist_ok=True,
+        )
         self.ttl_seconds = ttl_seconds
 
-    def _get_file_path(self, title: str) -> Path:
-        safe_title = "".join(c if c.isalnum() or c in ("-", "_") else "_" for c in title.lower())
-        return self.cache_path / f"{safe_title}.json"
+    def _get_file_path(
+        self,
+        title: str,
+    ) -> Path:
+        """Generate a collision-resistant cache filename."""
 
-    def get(self, title: str) -> WikiArticle | None:
-        file_path = self._get_file_path(title)
-        if not file_path.exists():
+        digest = hashlib.sha256(title.encode("utf-8")).hexdigest()
+
+        return self.cache_path / f"{digest}.json"
+
+    def get(
+        self,
+        title: str,
+    ) -> WikiArticle | None:
+        """Return cached article if still valid."""
+
+        if not title.strip():
+            raise ValueError("Article title cannot be empty")
+
+        path = self._get_file_path(title)
+
+        if not path.is_file():
             return None
 
-        # TTL kontrolü
-        age = datetime.now(UTC).timestamp() - file_path.stat().st_mtime
-        if age > self.ttl_seconds:
+        age = datetime.now(UTC).timestamp() - path.stat().st_mtime
+
+        if age >= self.ttl_seconds:
             return None
 
         try:
-            with open(file_path, "r", encoding="utf-8") as f:
-                data = json.load(f)
+            with path.open(
+                "r",
+                encoding="utf-8",
+            ) as handle:
+                data = json.load(handle)
 
-            return WikiArticle(
-                page_id=data["page_id"],
-                title=data["title"],
-                text=data["text"],
-                length=data["length"],
-                revision_id=data["revision_id"],
+            article = WikiArticle(
+                page_id=int(data["page_id"]),
+                title=str(data["title"]),
+                text=str(data["text"]),
+                length=int(data["length"]),
+                revision_id=int(data["revision_id"]),
                 last_modified=datetime.fromisoformat(data["last_modified"]),
                 categories=tuple(data["categories"]),
                 links=tuple(data["links"]),
             )
-        except OSError, KeyError, TypeError, ValueError:
+
+            if article.page_id <= 0:
+                return None
+
+            return article
+
+        except (
+            OSError,
+            ValueError,
+            TypeError,
+            KeyError,
+        ):
             return None
 
-    def set(self, article: WikiArticle) -> None:
-        file_path = self._get_file_path(article.title)
+    def set(
+        self,
+        article: WikiArticle,
+    ) -> None:
+        """Atomically write an article to disk."""
+
+        path = self._get_file_path(article.title)
+
         data = asdict(article)
         data["last_modified"] = article.last_modified.isoformat()
 
-        with open(file_path, "w", encoding="utf-8") as f:
-            json.dump(data, f, ensure_ascii=False, indent=2)
+        temporary_path = None
+
+        try:
+            with tempfile.NamedTemporaryFile(
+                mode="w",
+                encoding="utf-8",
+                dir=self.cache_path,
+                suffix=".tmp",
+                delete=False,
+            ) as handle:
+                temporary_path = Path(handle.name)
+
+                json.dump(
+                    data,
+                    handle,
+                    ensure_ascii=False,
+                )
+
+            os.replace(
+                temporary_path,
+                path,
+            )
+
+        finally:
+            if temporary_path is not None and temporary_path.exists():
+                temporary_path.unlink()

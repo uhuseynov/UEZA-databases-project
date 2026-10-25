@@ -1,10 +1,12 @@
+"""Wikipedia MediaWiki API client."""
+
 from __future__ import annotations
 
 import logging
 import random
 import time
 from collections.abc import Iterable
-from datetime import datetime
+from datetime import UTC, datetime
 from email.utils import parsedate_to_datetime
 from typing import TYPE_CHECKING, Any, Self
 
@@ -21,8 +23,9 @@ from .models import WikiArticle
 from .rate_limiter import RateLimiter
 
 if TYPE_CHECKING:
-    from ingestion.cache import ArticleCache
-    from logger import AppLogger
+    from src.ingestion.cache import ArticleCache
+    from src.logger import AppLogger
+
 
 type JsonObject = dict[str, Any]
 
@@ -45,15 +48,12 @@ class MediaWikiClient:
     ) -> None:
         if not user_agent.strip():
             raise ValueError("user_agent cannot be empty")
-
         if max_retries < 0:
             raise ValueError("max_retries cannot be negative")
-
         if maxlag < 0:
             raise ValueError("maxlag cannot be negative")
-
         if batch_size <= 0:
-            raise ValueError("batch_size must be greater than 0")
+            raise ValueError("batch_size must be positive")
 
         self._max_retries = max_retries
         self._maxlag = maxlag
@@ -61,7 +61,6 @@ class MediaWikiClient:
 
         self._rate_limiter = RateLimiter(requests_per_second)
         self._owns_client = client is None
-
         self._logger = logger.get_logger(__name__) if logger else logging.getLogger(__name__)
         self._cache = cache
 
@@ -83,26 +82,38 @@ class MediaWikiClient:
         if self._owns_client:
             self._client.close()
 
-    def get_article(self, title: str) -> WikiArticle:
+    def get_article(
+        self,
+        title: str,
+        *,
+        as_of: datetime | None = None,
+    ) -> WikiArticle:
+        """Fetch a latest or historical Wikipedia article."""
+
         title = title.strip()
 
         if not title:
             raise ValueError("title cannot be empty")
 
-        if self._cache:
+        if as_of is not None:
+            if as_of.tzinfo is None:
+                raise ValueError("as_of must be timezone-aware")
+            as_of = as_of.astimezone(UTC)
+
+        # Only latest requests use the TTL cache.
+        if as_of is None and self._cache:
             cached = self._cache.get(title)
             if cached is not None:
-                self._logger.info(
-                    "Cache hit for article: '%s' (Page ID: %d)", title, cached.page_id
-                )
+                self._logger.info("Cache hit: %s", title)
                 return cached
 
-        self._logger.info("Cache miss. Fetching article from MediaWiki API: '%s'", title)
-        article = self._fetch_article(title)
+        article = self._fetch_article(
+            title,
+            as_of=as_of,
+        )
 
-        if self._cache:
+        if as_of is None and self._cache:
             self._cache.set(article)
-            self._logger.debug("Article cached: '%s'", article.title)
 
         return article
 
@@ -110,66 +121,93 @@ class MediaWikiClient:
         self,
         titles: Iterable[str],
     ) -> list[WikiArticle]:
+        """Fetch the latest versions of multiple articles."""
+
         normalized = self._normalize_titles(titles)
+
         if not normalized:
             return []
 
-        articles: list[WikiArticle] = []
-        titles_to_fetch: list[str] = []
+        result = []
+        pending = []
 
-        if self._cache:
-            for title in normalized:
-                cached = self._cache.get(title)
-                if cached is not None:
-                    self._logger.info(
-                        "Cache hit for article: '%s' (Page ID: %d)", title, cached.page_id
-                    )
-                    articles.append(cached)
-                else:
-                    titles_to_fetch.append(title)
-        else:
-            titles_to_fetch = normalized
+        for title in normalized:
+            cached = self._cache.get(title) if self._cache else None
 
-        if titles_to_fetch:
-            self._logger.info("Fetching %d articles in batches from API...", len(titles_to_fetch))
-            for batch in self._batched(titles_to_fetch, self._batch_size):
-                fetched = self._fetch_batch(batch)
-                for article in fetched:
-                    if self._cache:
-                        self._cache.set(article)
-                    articles.append(article)
+            if cached is not None:
+                result.append(cached)
+            else:
+                pending.append(title)
 
-        return articles
+        for batch in self._batched(pending, self._batch_size):
+            fetched = self._fetch_batch(batch)
 
-    def _fetch_article(self, title: str) -> WikiArticle:
-        params = self._query_params(title)
+            for article in fetched:
+                if self._cache:
+                    self._cache.set(article)
 
-        first_response = self._request(params)
-        page = self._extract_single_page(first_response, title)
+            result.extend(fetched)
 
-        return self._build_article_with_continuation(
+        return result
+
+    def _fetch_article(
+        self,
+        title: str,
+        *,
+        as_of: datetime | None = None,
+    ) -> WikiArticle:
+        """Fetch the requested revision and current page metadata."""
+
+        # First request: fetch ONLY the selected revision.
+        params = {
+            "action": "query",
+            "format": "json",
+            "formatversion": "2",
+            "titles": title,
+            "redirects": "1",
+            "prop": "info|revisions",
+            "rvprop": "ids|timestamp|content",
+            "rvslots": "main",
+            "rvlimit": "1",
+        }
+
+        if as_of is not None:
+            params.update(
+                {
+                    "rvstart": as_of.isoformat().replace("+00:00", "Z"),
+                    "rvdir": "older",
+                }
+            )
+
+        data = self._request(params)
+        page = self._extract_single_page(data, title)
+
+        revision = self._extract_revision(page)
+        raw_text = self._extract_text(revision)
+
+        # Second phase: fetch categories and links separately.
+        # This prevents revision pagination from leaking
+        # into metadata continuation requests.
+        categories, links = self._fetch_article_metadata(title)
+
+        return self._build_article(
             page=page,
-            first_response=first_response,
-            params=params,
-            requested_title=title,
+            revision=revision,
+            raw_text=raw_text,
+            categories=categories,
+            links=links,
         )
 
     def _fetch_batch(
         self,
         titles: list[str],
     ) -> list[WikiArticle]:
+        """Fetch latest revisions in batches."""
+
         if not titles:
             return []
 
-        #
-        # Important:
-        #
-        # Fetch the basic article data in a single request, then finish each
-        # article independently. This keeps continuation handling simple and
-        # predictable.
-        #
-
-        params: dict[str, Any] = {
+        params = {
             "action": "query",
             "format": "json",
             "formatversion": "2",
@@ -182,8 +220,7 @@ class MediaWikiClient:
 
         data = self._request(params)
         pages = self._extract_pages(data)
-
-        articles: list[WikiArticle] = []
+        articles = []
 
         for page in pages:
             if page.get("missing") is True:
@@ -192,26 +229,19 @@ class MediaWikiClient:
             title = page.get("title")
 
             if not isinstance(title, str):
-                raise MediaWikiInvalidResponseError("MediaWiki page is missing a valid title")
+                raise MediaWikiInvalidResponseError("Page title is missing")
 
-            #
-            # Categories and links can independently require continuation.
-            # Fetching them per canonical article keeps the implementation
-            # understandable.
-            #
-
-            metadata = self._fetch_article_metadata(title)
+            categories, links = self._fetch_article_metadata(title)
 
             revision = self._extract_revision(page)
-            text = self._extract_text(revision)
 
             articles.append(
                 self._build_article(
                     page=page,
                     revision=revision,
-                    text=text,
-                    categories=metadata[0],
-                    links=metadata[1],
+                    raw_text=self._extract_text(revision),
+                    categories=categories,
+                    links=links,
                 )
             )
 
@@ -221,7 +251,7 @@ class MediaWikiClient:
         self,
         title: str,
     ) -> tuple[list[str], list[str]]:
-        params: dict[str, Any] = {
+        params = {
             "action": "query",
             "format": "json",
             "formatversion": "2",
@@ -233,98 +263,29 @@ class MediaWikiClient:
             "plnamespace": "0",
         }
 
-        categories: list[str] = []
-        links: list[str] = []
+        categories = []
+        links = []
 
         while True:
-            data = self._request(params)
-            page = self._extract_single_page(data, title)
+            response = self._request(params)
+            page = self._extract_single_page(response, title)
 
             categories.extend(self._extract_categories(page))
             links.extend(self._extract_links(page))
 
-            continuation = data.get("continue")
-
+            continuation = response.get("continue")
             if not isinstance(continuation, dict):
                 break
 
-            params = params | continuation
+            params = {**params, **continuation}
 
         return (
             self._deduplicate(categories),
             self._deduplicate(links),
         )
 
-    def _build_article_with_continuation(
-        self,
-        *,
-        page: JsonObject,
-        first_response: JsonObject,
-        params: dict[str, Any],
-        requested_title: str,
-    ) -> WikiArticle:
-        categories = self._extract_categories(page)
-        links = self._extract_links(page)
-
-        continuation = first_response.get("continue")
-
-        while isinstance(continuation, dict):
-            continued_params = params | continuation
-
-            # Content is already available from the first request.
-            continued_params["rvprop"] = "ids|timestamp"
-
-            response = self._request(continued_params)
-
-            continued_page = self._extract_single_page(
-                response,
-                requested_title,
-            )
-
-            categories.extend(self._extract_categories(continued_page))
-
-            links.extend(self._extract_links(continued_page))
-
-            continuation = response.get("continue")
-
-        revision = self._extract_revision(page)
-        text = self._extract_text(revision)
-
-        return self._build_article(
-            page=page,
-            revision=revision,
-            text=text,
-            categories=self._deduplicate(categories),
-            links=self._deduplicate(links),
-        )
-
-    def _build_article(
-        self,
-        *,
-        page: JsonObject,
-        revision: JsonObject,
-        text: str,
-        categories: list[str],
-        links: list[str],
-    ) -> WikiArticle:
-        try:
-            return WikiArticle(
-                page_id=int(page["pageid"]),
-                title=str(page["title"]),
-                text=text,
-                length=int(page["length"]),
-                revision_id=int(revision["revid"]),
-                last_modified=datetime.fromisoformat(str(revision["timestamp"])),
-                categories=tuple(categories),
-                links=tuple(links),
-            )
-        except (KeyError, TypeError, ValueError) as exc:
-            raise MediaWikiInvalidResponseError(
-                "MediaWiki response is missing required article fields"
-            ) from exc
-
     @staticmethod
-    def _query_params(title: str) -> dict[str, Any]:
+    def _query_params(title: str) -> JsonObject:
         return {
             "action": "query",
             "format": "json",
@@ -339,10 +300,7 @@ class MediaWikiClient:
             "plnamespace": "0",
         }
 
-    def _request(
-        self,
-        params: dict[str, Any],
-    ) -> JsonObject:
+    def _request(self, params: JsonObject) -> JsonObject:
         request_params = {
             **params,
             "maxlag": self._maxlag,
@@ -358,88 +316,54 @@ class MediaWikiClient:
                 )
             except httpx.RequestError as exc:
                 if attempt == self._max_retries:
-                    self._logger.error("MediaWiki request failed permanently: %s", exc)
-                    raise MediaWikiRequestError(f"MediaWiki request failed: {exc}") from exc
+                    raise MediaWikiRequestError(f"Network request failed: {exc}") from exc
 
-                self._logger.warning(
-                    "Network error on attempt %d: %s. Retrying...", attempt + 1, exc
-                )
                 self._backoff(attempt)
                 continue
 
-            if response.status_code == 429:
+            if response.status_code in {429, 502, 503, 504}:
                 if attempt == self._max_retries:
-                    self._logger.error("MediaWiki 429 rate limit exhausted.")
-                    raise MediaWikiRateLimitError("MediaWiki rate limit exceeded")
+                    if response.status_code == 429:
+                        raise MediaWikiRateLimitError("MediaWiki rate limit exceeded")
+                    raise MediaWikiRequestError(f"HTTP {response.status_code}")
 
-                self._logger.warning(
-                    "Received HTTP 429 on attempt %d. Waiting for retry...", attempt + 1
-                )
-                self._wait_for_retry(response, attempt)
-                continue
-
-            if response.status_code in {502, 503, 504}:
-                if attempt == self._max_retries:
-                    self._logger.error("MediaWiki HTTP %d retries exhausted.", response.status_code)
-                    raise MediaWikiRequestError(f"MediaWiki returned HTTP {response.status_code}")
-
-                self._logger.warning(
-                    "Received HTTP %d on attempt %d. Waiting for retry...",
-                    response.status_code,
-                    attempt + 1,
-                )
                 self._wait_for_retry(response, attempt)
                 continue
 
             try:
                 response.raise_for_status()
             except httpx.HTTPStatusError as exc:
-                self._logger.error("MediaWiki non-retryable HTTP error: %s", exc)
-                raise MediaWikiRequestError(
-                    f"MediaWiki returned HTTP {response.status_code}"
-                ) from exc
+                raise MediaWikiRequestError(f"HTTP {response.status_code}") from exc
 
             try:
                 data = response.json()
             except ValueError as exc:
-                raise MediaWikiInvalidResponseError("MediaWiki returned invalid JSON") from exc
+                raise MediaWikiInvalidResponseError("Invalid JSON response") from exc
 
             if not isinstance(data, dict):
-                raise MediaWikiInvalidResponseError("MediaWiki response is not a JSON object")
+                raise MediaWikiInvalidResponseError("Expected JSON object")
 
             error = data.get("error")
 
             if isinstance(error, dict):
                 code = str(error.get("code", "unknown"))
-                info = str(
-                    error.get(
-                        "info",
-                        "Unknown MediaWiki API error",
-                    )
-                )
+                info = str(error.get("info", "Unknown error"))
 
                 if code == "maxlag":
                     if attempt == self._max_retries:
-                        self._logger.error("MediaWiki maxlag persisted: %s", info)
-                        raise MediaWikiAPIError(f"MediaWiki maxlag persisted: {info}")
-
-                    self._logger.warning(
-                        "MediaWiki maxlag hit on attempt %d: %s. Retrying...", attempt + 1, info
-                    )
+                        raise MediaWikiAPIError(f"maxlag: {info}")
                     self._wait_for_retry(response, attempt)
                     continue
 
-                self._logger.error("MediaWiki API error [%s]: %s", code, info)
-                raise MediaWikiAPIError(f"MediaWiki API error [{code}]: {info}")
+                raise MediaWikiAPIError(f"{code}: {info}")
 
             return data
 
-        raise MediaWikiRequestError("MediaWiki request failed after retries")
+        raise MediaWikiRequestError("All retry attempts exhausted")
 
     @staticmethod
     def _backoff(attempt: int) -> None:
-        delay = (2**attempt) + random.uniform(0.0, 0.5)
-        time.sleep(delay)
+        time.sleep(2**attempt + random.uniform(0, 0.5))
 
     @classmethod
     def _wait_for_retry(
@@ -447,36 +371,29 @@ class MediaWikiClient:
         response: httpx.Response,
         attempt: int,
     ) -> None:
-        retry_after = response.headers.get("Retry-After")
+        value = response.headers.get("Retry-After")
 
-        if retry_after is not None:
-            delay = cls._parse_retry_after(retry_after)
-
-            if delay is not None:
-                time.sleep(delay)
+        if value:
+            try:
+                time.sleep(max(0, float(value)))
                 return
+            except ValueError:
+                pass
+
+            try:
+                retry_at = parsedate_to_datetime(value)
+                now = datetime.now(retry_at.tzinfo)
+                time.sleep(
+                    max(
+                        0,
+                        (retry_at - now).total_seconds(),
+                    )
+                )
+                return
+            except TypeError, ValueError:
+                pass
 
         cls._backoff(attempt)
-
-    @staticmethod
-    def _parse_retry_after(
-        value: str,
-    ) -> float | None:
-        try:
-            return max(0.0, float(value))
-        except ValueError:
-            pass
-
-        try:
-            retry_at = parsedate_to_datetime(value)
-            now = datetime.now(retry_at.tzinfo)
-
-            return max(
-                0.0,
-                (retry_at - now).total_seconds(),
-            )
-        except TypeError, ValueError:
-            return None
 
     @staticmethod
     def _extract_pages(
@@ -485,16 +402,13 @@ class MediaWikiClient:
         try:
             pages = data["query"]["pages"]
         except (KeyError, TypeError) as exc:
-            raise MediaWikiInvalidResponseError(
-                "MediaWiki response does not contain query.pages"
-            ) from exc
+            raise MediaWikiInvalidResponseError("Missing query.pages") from exc
 
         if not isinstance(pages, list):
-            raise MediaWikiInvalidResponseError("MediaWiki query.pages is not a list")
+            raise MediaWikiInvalidResponseError("query.pages must be a list")
 
-        for page in pages:
-            if not isinstance(page, dict):
-                raise MediaWikiInvalidResponseError("MediaWiki returned an invalid page object")
+        if not all(isinstance(page, dict) for page in pages):
+            raise MediaWikiInvalidResponseError("Invalid page structure")
 
         return pages
 
@@ -506,13 +420,13 @@ class MediaWikiClient:
     ) -> JsonObject:
         pages = cls._extract_pages(data)
 
-        if not pages:
-            raise MediaWikiInvalidResponseError("MediaWiki response contains no pages")
+        if len(pages) != 1:
+            raise MediaWikiInvalidResponseError(f"Expected one page for {requested_title}")
 
         page = pages[0]
 
         if page.get("missing") is True:
-            raise MediaWikiPageNotFoundError(f"Wikipedia page not found: {requested_title}")
+            raise MediaWikiPageNotFoundError(f"Article not found: {requested_title}")
 
         return page
 
@@ -523,12 +437,12 @@ class MediaWikiClient:
         revisions = page.get("revisions")
 
         if not isinstance(revisions, list) or not revisions:
-            raise MediaWikiInvalidResponseError("Article has no revision data")
+            raise MediaWikiInvalidResponseError("Article has no accessible revision")
 
         revision = revisions[0]
 
         if not isinstance(revision, dict):
-            raise MediaWikiInvalidResponseError("Invalid revision data")
+            raise MediaWikiInvalidResponseError("Invalid revision object")
 
         return revision
 
@@ -537,58 +451,66 @@ class MediaWikiClient:
         revision: JsonObject,
     ) -> str:
         try:
-            text = revision["slots"]["main"]["content"]
+            content = revision["slots"]["main"]["content"]
         except (KeyError, TypeError) as exc:
-            raise MediaWikiInvalidResponseError(
-                "Revision does not contain main slot content"
-            ) from exc
+            raise MediaWikiInvalidResponseError("Revision content missing") from exc
 
-        if not isinstance(text, str):
-            raise MediaWikiInvalidResponseError("Article content is not a string")
+        if not isinstance(content, str):
+            raise MediaWikiInvalidResponseError("Revision content must be text")
 
-        return text
+        return content
 
     @staticmethod
     def _extract_categories(
         page: JsonObject,
     ) -> list[str]:
-        categories = page.get("categories", [])
+        values = page.get("categories", [])
 
-        if not isinstance(categories, list):
-            raise MediaWikiInvalidResponseError("Invalid categories response")
+        if not isinstance(values, list):
+            raise MediaWikiInvalidResponseError("Invalid categories")
 
-        return [
-            title.removeprefix("Category:")
-            for category in categories
-            if isinstance(category, dict)
-            and isinstance(
-                title := category.get("title"),
-                str,
-            )
-        ]
+        result = []
+
+        for category in values:
+            if not isinstance(category, dict):
+                raise MediaWikiInvalidResponseError("Invalid category entry")
+
+            title = category.get("title")
+
+            if not isinstance(title, str):
+                raise MediaWikiInvalidResponseError("Category title missing")
+
+            result.append(title.removeprefix("Category:"))
+
+        return result
 
     @staticmethod
     def _extract_links(
         page: JsonObject,
     ) -> list[str]:
-        links = page.get("links", [])
+        values = page.get("links", [])
 
-        if not isinstance(links, list):
-            raise MediaWikiInvalidResponseError("Invalid links response")
+        if not isinstance(values, list):
+            raise MediaWikiInvalidResponseError("Invalid links")
 
-        return [
-            title
-            for link in links
-            if isinstance(link, dict)
-            and isinstance(
-                title := link.get("title"),
-                str,
-            )
-        ]
+        result = []
+
+        for link in values:
+            if not isinstance(link, dict):
+                raise MediaWikiInvalidResponseError("Invalid link entry")
+
+            title = link.get("title")
+
+            if not isinstance(title, str):
+                raise MediaWikiInvalidResponseError("Link title missing")
+
+            result.append(title)
+
+        return result
 
     @staticmethod
     def _deduplicate(
-        values: Iterable[str],
+        values: list[str],
     ) -> list[str]:
         return list(dict.fromkeys(values))
 
@@ -596,14 +518,50 @@ class MediaWikiClient:
     def _normalize_titles(
         titles: Iterable[str],
     ) -> list[str]:
-        normalized = [title.strip() for title in titles if title.strip()]
+        result = []
 
-        return list(dict.fromkeys(normalized))
+        for title in titles:
+            if not isinstance(title, str):
+                raise TypeError("Article titles must be strings")
+
+            normalized = title.strip()
+
+            if not normalized:
+                raise ValueError("Article title cannot be empty")
+
+            result.append(normalized)
+
+        return list(dict.fromkeys(result))
 
     @staticmethod
     def _batched(
         values: list[str],
-        size: int,
+        batch_size: int,
     ) -> Iterable[list[str]]:
-        for start in range(0, len(values), size):
-            yield values[start : start + size]
+        for index in range(0, len(values), batch_size):
+            yield values[index : index + batch_size]
+
+    @staticmethod
+    def _build_article(
+        *,
+        page: JsonObject,
+        revision: JsonObject,
+        raw_text: str,
+        categories: list[str],
+        links: list[str],
+    ) -> WikiArticle:
+        try:
+            return WikiArticle(
+                page_id=int(page["pageid"]),
+                title=str(page["title"]),
+                text=raw_text,
+                length=int(page["length"]),
+                revision_id=int(revision["revid"]),
+                last_modified=datetime.fromisoformat(
+                    str(revision["timestamp"]).replace("Z", "+00:00")
+                ),
+                categories=tuple(categories),
+                links=tuple(links),
+            )
+        except (KeyError, TypeError, ValueError) as exc:
+            raise MediaWikiInvalidResponseError("Incomplete article metadata") from exc

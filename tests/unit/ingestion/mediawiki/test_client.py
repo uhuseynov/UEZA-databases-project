@@ -1,20 +1,29 @@
+"""Tests for the MediaWiki article client."""
+
 import httpx
 import pytest
 
-from src.ingestion.mediawiki import (
-    MediaWikiPageNotFoundError,
-)
+from src.ingestion.mediawiki import MediaWikiPageNotFoundError
 
 
-def test_get_article(
-    client_factory,
-    article_response,
-) -> None:
+def test_get_article(client_factory, article_response) -> None:
+    requests = []
+
     def handler(request: httpx.Request) -> httpx.Response:
-        assert request.url.params["action"] == "query"
-        assert request.url.params["titles"] == "Machine learning"
-        assert request.url.params["redirects"] == "1"
-        assert request.url.params["plnamespace"] == "0"
+        params = request.url.params
+        requests.append(params["prop"])
+
+        assert params["action"] == "query"
+        assert params["titles"] == "Machine learning"
+        assert params["redirects"] == "1"
+
+        if params["prop"] == "info|revisions":
+            assert params["rvprop"] == "ids|timestamp|content"
+            assert params["rvslots"] == "main"
+            return httpx.Response(200, json=article_response())
+
+        assert params["prop"] == "categories|links"
+        assert params["plnamespace"] == "0"
 
         return httpx.Response(
             200,
@@ -31,113 +40,69 @@ def test_get_article(
         )
 
     client = client_factory(handler)
-
     article = client.get_article("Machine learning")
 
+    assert requests == ["info|revisions", "categories|links"]
     assert article.page_id == 233488
     assert article.title == "Machine learning"
     assert article.length == 1000
     assert article.revision_id == 12345
-
-    assert article.last_modified.isoformat() == ("2026-10-01T12:00:00+00:00")
-
+    assert article.last_modified.isoformat() == "2026-10-01T12:00:00+00:00"
     assert article.text == "'''Machine learning''' is..."
-
     assert article.categories == (
         "Machine learning",
         "Artificial intelligence",
     )
-
     assert article.links == (
         "Artificial intelligence",
         "Deep learning",
     )
 
 
-def test_get_article_strips_title(
-    client_factory,
-    article_response,
-) -> None:
+def test_get_article_strips_title(client_factory, article_response) -> None:
     def handler(request: httpx.Request) -> httpx.Response:
         assert request.url.params["titles"] == "Machine learning"
-
-        return httpx.Response(
-            200,
-            json=article_response(),
-        )
+        return httpx.Response(200, json=article_response())
 
     client = client_factory(handler)
+    article = client.get_article("   Machine learning   ")
 
-    client.get_article("   Machine learning   ")
+    assert article.title == "Machine learning"
 
 
-def test_get_article_rejects_empty_title(
-    client_factory,
-) -> None:
+def test_get_article_rejects_empty_title(client_factory) -> None:
     def handler(request: httpx.Request) -> httpx.Response:
         pytest.fail("HTTP request should not be made")
 
     client = client_factory(handler)
 
-    with pytest.raises(
-        ValueError,
-        match="title cannot be empty",
-    ):
+    with pytest.raises(ValueError, match="title cannot be empty"):
         client.get_article("   ")
 
 
-def test_missing_page(
-    client_factory,
-) -> None:
+def test_missing_page(client_factory) -> None:
     def handler(request: httpx.Request) -> httpx.Response:
         return httpx.Response(
             200,
-            json={
-                "query": {
-                    "pages": [
-                        {
-                            "title": "DoesNotExist123",
-                            "missing": True,
-                        }
-                    ]
-                }
-            },
+            json={"query": {"pages": [{"title": "DoesNotExist123", "missing": True}]}},
         )
 
     client = client_factory(handler)
 
-    with pytest.raises(
-        MediaWikiPageNotFoundError,
-        match="DoesNotExist123",
-    ):
+    with pytest.raises(MediaWikiPageNotFoundError, match="DoesNotExist123"):
         client.get_article("DoesNotExist123")
 
 
-def test_redirect(
-    client_factory,
-    article_response,
-) -> None:
+def test_redirect(client_factory, article_response) -> None:
     def handler(request: httpx.Request) -> httpx.Response:
         assert request.url.params["redirects"] == "1"
 
-        data = article_response(
-            title="Machine learning",
-        )
+        data = article_response(title="Machine learning")
+        data["query"]["redirects"] = [{"from": "ML", "to": "Machine learning"}]
 
-        data["query"]["redirects"] = [
-            {
-                "from": "ML",
-                "to": "Machine learning",
-            }
-        ]
-
-        return httpx.Response(
-            200,
-            json=data,
-        )
+        return httpx.Response(200, json=data)
 
     client = client_factory(handler)
-
     article = client.get_article("ML")
 
     assert article.title == "Machine learning"

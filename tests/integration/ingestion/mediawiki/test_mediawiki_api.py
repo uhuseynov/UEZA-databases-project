@@ -1,103 +1,112 @@
-import httpx
+"""Integration-style tests for the MediaWiki client."""
 
+import httpx
 import pytest
 
-from src.ingestion.mediawiki import (
-    MediaWikiClient,
-    MediaWikiPageNotFoundError,
-)
+from src.ingestion.mediawiki import MediaWikiPageNotFoundError
 
 pytestmark = pytest.mark.integration
 
 
-def test_fetch_article(
-    client_factory,
-    article_response,
-) -> None:
+def test_fetch_article(client_factory, article_response) -> None:
+    seen = []
+
+    content = (
+        "Machine learning is a field of study in artificial intelligence "
+        "that uses data and algorithms to improve performance over time."
+    )
+
     def handler(request: httpx.Request) -> httpx.Response:
+        params = request.url.params
+        seen.append(params["prop"])
+
         assert request.url.host == "en.wikipedia.org"
         assert request.url.path == "/w/api.php"
         assert request.headers["User-Agent"].startswith("UEZA-Databases-Project/")
-        assert request.url.params["action"] == "query"
-        assert request.url.params["format"] == "json"
-        assert request.url.params["formatversion"] == "2"
-        assert request.url.params["titles"] == "Machine learning"
-        assert request.url.params["redirects"] == "1"
-        assert request.url.params["prop"] == "info|revisions|categories|links"
-        assert request.url.params["rvprop"] == "ids|timestamp|content"
-        assert request.url.params["rvslots"] == "main"
-        assert request.url.params["cllimit"] == "max"
-        assert request.url.params["pllimit"] == "max"
-        assert request.url.params["plnamespace"] == "0"
-        assert request.url.params["maxlag"] == "5"
+        assert params["action"] == "query"
+        assert params["format"] == "json"
+        assert params["formatversion"] == "2"
+        assert params["titles"] == "Machine learning"
+        assert params["redirects"] == "1"
+        assert params["maxlag"] == "5"
+
+        if params["prop"] == "info|revisions":
+            assert params["rvprop"] == "ids|timestamp|content"
+            assert params["rvslots"] == "main"
+            assert params["rvlimit"] == "1"
+
+            return httpx.Response(
+                200,
+                json=article_response(content=content),
+            )
+
+        assert params["prop"] == "categories|links"
+        assert params["cllimit"] == "max"
+        assert params["pllimit"] == "max"
+        assert params["plnamespace"] == "0"
 
         return httpx.Response(
             200,
             json=article_response(
-                categories=["Machine learning", "Artificial intelligence"],
-                links=["Artificial intelligence", "Deep learning"],
-                content=(
-                    "Machine learning is a field of study in artificial intelligence "
-                    "that uses data and algorithms to improve performance over time."
-                ),
+                categories=[
+                    "Machine learning",
+                    "Artificial intelligence",
+                ],
+                links=[
+                    "Artificial intelligence",
+                    "Deep learning",
+                ],
             ),
         )
 
     client = client_factory(handler)
     article = client.get_article("Machine learning")
 
-    assert article.page_id > 0
+    assert seen == ["info|revisions", "categories|links"]
+    assert article.page_id == 233488
     assert article.title == "Machine learning"
     assert article.length > 0
     assert article.revision_id > 0
+    assert article.text == content
+    assert article.categories == (
+        "Machine learning",
+        "Artificial intelligence",
+    )
+    assert article.links == (
+        "Artificial intelligence",
+        "Deep learning",
+    )
 
-    assert article.text
-    assert len(article.text) > 100
 
-    assert article.categories
-    assert article.links
-
-
-def test_redirect(
-    client_factory,
-    article_response,
-) -> None:
+def test_redirect(client_factory, article_response) -> None:
     def handler(request: httpx.Request) -> httpx.Response:
         assert request.url.params["titles"] == "ML"
         assert request.url.params["redirects"] == "1"
 
         data = article_response(title="Machine learning")
         data["query"]["redirects"] = [{"from": "ML", "to": "Machine learning"}]
+
         return httpx.Response(200, json=data)
 
     client = client_factory(handler)
     article = client.get_article("ML")
 
-    assert article.page_id > 0
+    assert article.page_id == 233488
     assert article.title == "Machine learning"
-    assert article.title
 
 
-def test_missing_page(
-    client_factory,
-) -> None:
+def test_missing_page(client_factory) -> None:
+    title = "ThisPageShouldNotExistEgehan123456789"
+
     def handler(request: httpx.Request) -> httpx.Response:
-        assert request.url.params["titles"] == "ThisPageShouldNotExistEgehan123456789"
+        assert request.url.params["titles"] == title
+
         return httpx.Response(
             200,
-            json={
-                "query": {
-                    "pages": [
-                        {
-                            "title": "ThisPageShouldNotExistEgehan123456789",
-                            "missing": True,
-                        }
-                    ]
-                }
-            },
+            json={"query": {"pages": [{"title": title, "missing": True}]}},
         )
 
     client = client_factory(handler)
 
     with pytest.raises(MediaWikiPageNotFoundError):
-        client.get_article("ThisPageShouldNotExistEgehan123456789")
+        client.get_article(title)
