@@ -1,10 +1,39 @@
 """Transactional persistence for Wikipedia articles."""
 
+import re
+import time
 from datetime import UTC
 
 from sqlalchemy import text
 
 from src.rag.retriever import vector_to_text
+
+
+_VECTOR_KEY = re.compile(r"VECTOR KEY `(?P<name>\w+)` \(`embedding`\)(?P<options>[^\n]*)")
+_INDEX_M = re.compile(r"`?M`?\s*=\s*'?(?P<m>\d+)'?")
+_INDEX_DISTANCE = re.compile(r"`?DISTANCE`?\s*=\s*'?(?P<distance>[a-z]+)'?")
+
+
+def vector_index_definition(create_table: str) -> tuple[str, int | None, str | None]:
+    """Name, M and distance of the vector index in a SHOW CREATE TABLE statement."""
+
+    match = _VECTOR_KEY.search(create_table)
+    if match is None:
+        raise ValueError("article_chunks has no vector index on embedding")
+
+    options = match["options"]
+    m = _INDEX_M.search(options)
+    distance = _INDEX_DISTANCE.search(options)
+
+    m_value = int(m["m"]) if m else None
+    if m_value is not None and not 3 <= m_value <= 200:
+        raise ValueError(f"unexpected M for the vector index: {m_value}")
+
+    distance_value = distance["distance"] if distance else None
+    if distance_value not in (None, "cosine", "euclidean"):
+        raise ValueError(f"unexpected distance for the vector index: {distance_value}")
+
+    return match["name"], m_value, distance_value
 
 
 class ArticleRepository:
@@ -18,8 +47,12 @@ class ArticleRepository:
         csv_row,
         chunks,
         vectors,
-    ):
-        """Atomically replace an article and its related rows."""
+    ) -> bool:
+        """Atomically replace an article and its related rows.
+
+        Returns True when the article was already stored, so its old chunks were
+        deleted and new ones inserted.
+        """
 
         if not chunks:
             raise ValueError("Article must contain chunks")
@@ -43,6 +76,7 @@ class ArticleRepository:
             )
 
             article_id = existing.scalar_one_or_none()
+            replaced = article_id is not None
 
             params = self._article_params(wiki, csv_row)
 
@@ -165,6 +199,8 @@ class ArticleRepository:
                     },
                 )
 
+        return replaced
+
     @staticmethod
     def _article_params(wiki, csv_row):
         return {
@@ -195,3 +231,29 @@ class ArticleRepository:
                 "article_chunks",
             ):
                 await session.execute(text(f"ANALYZE TABLE {table}"))
+
+    async def rebuild_vector_index(self) -> float:
+        """Drop and re-create the vector index with its current M and distance.
+
+        After many chunks were deleted and inserted again (a re-ingest), searches
+        were twice as slow until the index was rebuilt; a restart and OPTIMIZE TABLE
+        did not help (see docs/database/Index-State.md). Returns the seconds it took.
+        """
+
+        async with self.database.get_session() as session:
+            row = (await session.execute(text("SHOW CREATE TABLE article_chunks"))).one()
+            name, m, distance = vector_index_definition(row[1])
+
+            options = ""
+            if m is not None:
+                options += f" M={m}"
+            if distance is not None:
+                options += f" DISTANCE={distance}"
+
+            start = time.perf_counter()
+            await session.execute(text(f"ALTER TABLE article_chunks DROP INDEX `{name}`"))
+            await session.execute(
+                text(f"ALTER TABLE article_chunks ADD VECTOR INDEX `{name}` (embedding){options}")
+            )
+            await session.execute(text("ANALYZE TABLE article_chunks"))
+            return time.perf_counter() - start

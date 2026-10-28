@@ -19,6 +19,7 @@ The project explores native vector search and retrieval-augmented generation usi
 - [Connection and Sessions](./database/Connection.md)
 - [Migrations](./database/Migrations.md)
 - [Vector Search and Index Parameters](./database/Vector-Search.md)
+- [Vector Index State](./database/Index-State.md)
 
 ### Ingestion
 

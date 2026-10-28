@@ -20,6 +20,11 @@ async def run(args: argparse.Namespace) -> None:
     await database.connect()
 
     try:
+        if args.action == "reindex":
+            seconds = await ArticleRepository(database=database).rebuild_vector_index()
+            print(f"\nVector index rebuilt in {seconds:.1f} s.")
+            return
+
         if args.action == "check":
             result = await check_database(
                 database=database,
@@ -72,7 +77,7 @@ def main() -> None:
 
     parser.add_argument(
         "action",
-        choices=["ingest", "check"],
+        choices=["ingest", "check", "reindex"],
         help="Operation to perform",
     )
 
