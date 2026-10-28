@@ -65,11 +65,11 @@ Why it is written this way:
 
 The model is never asked when nothing relevant was found:
 
-1. Chunks with a cosine distance above `RAG_MAX_DISTANCE` (default 0.5; 0 = identical, 2 = opposite) are dropped.
+1. Chunks with a cosine distance above `RAG_MAX_DISTANCE` (default 0.42; 0 = identical, 2 = opposite) are dropped.
 2. If no chunk is left, the answer is "not found" and the LLM is not called.
 3. Otherwise the model is told to reply `NOT_FOUND` when the passages do not contain the answer, and that reply is reported as "not found" as well.
 
-The threshold is a measured value, not a guess: `make eval` reports the closest-chunk distance for answerable and unanswerable questions and the cut-off that separates them best.
+The threshold is a measured value, not a guess: `make eval` reports the closest-chunk distance for answerable and unanswerable questions and the cut-off that separates them best. At 0.42, 97% of the answerable questions keep their context and all off-topic questions are rejected. Questions that are close to the topic but not answered by the articles mostly pass the threshold, so for them the model's `NOT_FOUND` is the check that counts (see the [README](../../README.md#not-found)).
 
 ## The prompt
 
@@ -117,7 +117,7 @@ The embedding model is loaded on the first request (a few seconds, once). It loa
 | `EMBEDDING_MODEL_NAME` | `BAAI/bge-base-en-v1.5` | embedding model (must match the ingest) |
 | `EMBEDDING_DIMENSION` | `768` | must match `VECTOR(768)` in `schema.sql` |
 | `VECTOR_SEARCH_TOP_K` | `5` | default number of chunks |
-| `RAG_MAX_DISTANCE` | `0.5` | not-found threshold |
+| `RAG_MAX_DISTANCE` | `0.42` | not-found threshold |
 | `LLM_API_BASE_URL`, `LLM_API_KEY`, `LLM_MODEL`, `LLM_TEMPERATURE`, `LLM_TIMEOUT_SECONDS` | OpenAI | language model |
 
 ## Requirements on the schema
