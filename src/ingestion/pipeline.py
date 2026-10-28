@@ -91,6 +91,9 @@ class IngestionPipeline:
 
         self.tokenizer = embedder.model.tokenizer
 
+        # Articles whose old chunks were deleted and inserted again in this run.
+        self.replaced = 0
+
     async def ingest_one(
         self,
         row: dict[str, str],
@@ -155,12 +158,15 @@ class IngestionPipeline:
             raise ValueError(f"Embedding count mismatch: {title}")
 
         # Repository owns the atomic database replacement.
-        await self.repository.replace_article(
+        replaced = await self.repository.replace_article(
             wiki=wiki,
             csv_row=row,
             chunks=chunks,
             vectors=vectors,
         )
+
+        if replaced:
+            self.replaced += 1
 
         return len(chunks)
 
@@ -183,6 +189,7 @@ class IngestionPipeline:
 
         total_articles = len(rows)
         total_chunks = 0
+        self.replaced = 0
         successful = 0
         failures = []
 
@@ -227,6 +234,16 @@ class IngestionPipeline:
         # (docs/database/Vector-Search.md).
         if successful:
             await self.repository.analyze()
+
+            # Deleting and re-inserting chunks left the vector index twice as slow
+            # until it was rebuilt (docs/database/Index-State.md).
+            if self.replaced:
+                seconds = await self.repository.rebuild_vector_index()
+                logger.info(
+                    "Rebuilt the vector index after replacing %d articles (%.1f s)",
+                    self.replaced,
+                    seconds,
+                )
 
         if failures:
             details = "\n".join(f"- {title}: {error}" for title, error in failures)

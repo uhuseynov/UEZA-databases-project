@@ -15,12 +15,19 @@ Broken article,2,1000,2026-09-01T10:00:00Z,Core,Core
 class FakeRepository:
     def __init__(self) -> None:
         self.analyzed = 0
+        self.rebuilt = 0
 
     async def analyze(self) -> None:
         self.analyzed += 1
 
+    async def rebuild_vector_index(self) -> float:
+        self.rebuilt += 1
+        return 0.1
 
-def make_pipeline(repository: FakeRepository, failing: set[str]) -> IngestionPipeline:
+
+def make_pipeline(
+    repository: FakeRepository, failing: set[str], already_stored: set[str] = frozenset()
+) -> IngestionPipeline:
     # Skip __init__, which loads the tokenizer of the embedding model.
     pipeline = IngestionPipeline.__new__(IngestionPipeline)
     pipeline.repository = repository
@@ -28,6 +35,8 @@ def make_pipeline(repository: FakeRepository, failing: set[str]) -> IngestionPip
     async def ingest_one(row, config="A", snapshot=True):
         if row["title"] in failing:
             raise ValueError("Unclosed MediaWiki table")
+        if row["title"] in already_stored:
+            pipeline.replaced += 1
         return 3
 
     pipeline.ingest_one = ingest_one
@@ -69,3 +78,25 @@ async def test_nothing_to_analyze_when_every_article_fails(tmp_path) -> None:
         await pipeline.ingest_all(csv_path=str(csv_path))
 
     assert repository.analyzed == 0
+
+
+async def test_vector_index_is_rebuilt_when_stored_articles_were_replaced(tmp_path) -> None:
+    csv_path = tmp_path / "articles.csv"
+    csv_path.write_text(CSV, encoding="utf-8")
+    repository = FakeRepository()
+    pipeline = make_pipeline(repository, failing=set(), already_stored={"Good article"})
+
+    await pipeline.ingest_all(csv_path=str(csv_path))
+
+    assert repository.rebuilt == 1
+
+
+async def test_first_load_does_not_rebuild_the_index(tmp_path) -> None:
+    csv_path = tmp_path / "articles.csv"
+    csv_path.write_text(CSV, encoding="utf-8")
+    repository = FakeRepository()
+    pipeline = make_pipeline(repository, failing=set())
+
+    await pipeline.ingest_all(csv_path=str(csv_path))
+
+    assert repository.rebuilt == 0

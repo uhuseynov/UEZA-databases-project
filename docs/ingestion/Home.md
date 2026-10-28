@@ -29,11 +29,12 @@ make ingest-test     # the first 3 articles of the CSV
 make ingest          # all articles
 make ingest-latest   # the latest revisions instead of the snapshot
 make ingest-check    # every article present, chunks complete, no orphan rows
+make reindex         # rebuild the vector index with the same M and distance
 ```
 
 The settings come from `.env`: `ARTICLES_CSV_PATH`, `CHUNK_CONFIG` (A, B or C) and `INGESTION_SNAPSHOT`. The command is `uv run python -m src.ingestion ingest` (or `check`) with `--csv`, `--config`, `--latest` and `--limit`, for machines without `make`.
 
-Each article is processed on its own, and a failure is logged and reported at the end without stopping the others. The command then exits with an error that lists the failed articles. `ANALYZE TABLE` runs at the end in either case, because MariaDB can ignore the vector index with stale statistics (see [Vector Search](../database/Vector-Search.md)).
+Each article is processed on its own, and a failure is logged and reported at the end without stopping the others. The command then exits with an error that lists the failed articles. `ANALYZE TABLE` runs at the end in either case, because MariaDB can ignore the vector index with stale statistics (see [Vector Search](../database/Vector-Search.md)). If the run replaced articles that were already stored, the vector index is also dropped and added again: after its chunks were deleted and inserted, searches were twice as slow until a rebuild (see [Vector Index State](../database/Index-State.md)).
 
 ## The stages
 

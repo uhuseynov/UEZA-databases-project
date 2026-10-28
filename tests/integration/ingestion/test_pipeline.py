@@ -447,3 +447,32 @@ async def test_chunk_positions_are_sequential(
         indexes = list(result.scalars().all())
 
     assert indexes == [0, 1, 2, 3, 4]
+
+
+async def test_replace_reports_whether_the_article_existed(database: Database) -> None:
+    repository = ArticleRepository(database)
+    arguments = dict(
+        wiki=make_article(),
+        csv_row=csv_row(),
+        chunks=["Title: Test\n\nFirst chunk."],
+        vectors=[make_vector(0)],
+    )
+
+    assert await repository.replace_article(**arguments) is False
+    assert await repository.replace_article(**arguments) is True
+
+
+async def test_rebuild_keeps_the_vector_index_definition(database: Database) -> None:
+    repository = ArticleRepository(database)
+
+    async def index_line() -> str:
+        async with database.get_session() as session:
+            create = (await session.execute(text("SHOW CREATE TABLE article_chunks"))).one()[1]
+        return next(line for line in create.splitlines() if "VECTOR KEY" in line)
+
+    before = await index_line()
+    seconds = await repository.rebuild_vector_index()
+
+    assert seconds >= 0
+    assert await index_line() == before
+
