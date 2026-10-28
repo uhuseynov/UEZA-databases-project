@@ -34,7 +34,7 @@ Each run writes `eval/results/<timestamp>_<label>.json` (every number and every 
 | `length > n`, `>=`, `<`, `<=`, `=` | `min_length` / `max_length` (inclusive) |
 | `last_edit < date`, `>=`, `>`, `<=`, `=` | `edited_since` (inclusive) / `edited_before` (exclusive) |
 
-The current set has 59 questions: 35 plain, 17 with filters and 7 without an answer in the corpus.
+The current set has 71 questions: 43 plain, 17 with filters and 11 without an answer in the corpus. Of those 11, seven are off topic (football and tennis) and four are about AI but not answered by any of the articles; for each of the four, the key term was checked to have no match in `article_chunks`.
 
 ## Method
 
@@ -78,7 +78,6 @@ Every report stores the MariaDB version, the number of articles and chunks, the 
 
 ## Known limits
 
-- **Dataset groups.** Six filter questions use `root_category`, which needs an `articles.root_category` column (from `data/articles.csv`) in the schema and the ingest. Until then they appear under errors.
 - **Edit dates move.** Questions with `last_edit` filters assume the edit dates of the snapshot the ground truth was written against. After a re-ingest or a live sync, an article can move across the date, and the question has to be checked again.
-- **Links.** Questions 49–51 (`linked_from`) need the links table filled by the ingest.
+- **Links.** Questions 49–51 (`linked_from`) use the links of the current article, while the text is the snapshot revision, so a link added or removed since the snapshot can change their answer.
 - **Recall is chunk-based.** k counts chunks, not articles, because chunks are what the model receives. Two chunks of the same article both use up places in the top k.

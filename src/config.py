@@ -102,7 +102,7 @@ class Settings(BaseSettings):
     # RAG / Evaluation
     # ---------------------------------------------------------
 
-    rag_max_distance: float = Field(default=0.5, gt=0.0, le=2.0)
+    rag_max_distance: float = Field(default=0.42, gt=0.0, le=2.0)
 
     ground_truth_path: str = "data/ground_truth.csv"
     eval_results_dir: str = "eval/results"
