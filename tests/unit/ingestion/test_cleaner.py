@@ -233,3 +233,22 @@ Machine learning enables systems to learn from data.
     assert "computer science" in cleaned
     assert "Machine learning enables systems" in cleaned
     assert "'''" not in cleaned
+
+
+def test_math_with_table_like_markup_is_not_a_table() -> None:
+    # "{|" inside a formula used to be taken for the start of a wiki table and the
+    # whole article failed with "Unclosed MediaWiki table".
+    source = """
+The set <math>\\{|x| : x \\in S\\}</math> is used.
+
+The ratio <math>\\frac{|S_v|}{|S|}</math> weights each subset.
+
+This paragraph must remain.
+"""
+
+    cleaned = clean_wikitext(source)
+
+    assert "The set" in cleaned
+    assert "weights each subset." in cleaned
+    assert "This paragraph must remain." in cleaned
+    assert "{|" not in cleaned

@@ -13,7 +13,6 @@ ENV/
 
 # Ingestion / Application Cache & Local Data
 .cache/
-data/
 *.sqlite3
 
 # Environment Variables & Secrets

@@ -4,6 +4,7 @@ import argparse
 import asyncio
 import logging
 
+from src.config import settings
 from src.containers import Container
 from src.database.repositories.articles import ArticleRepository
 from src.ingestion.consistency import check_database
@@ -77,20 +78,21 @@ def main() -> None:
 
     parser.add_argument(
         "--csv",
-        default="data/articles.csv",
+        default=settings.articles_csv_path,
         help="Article CSV path",
     )
 
     parser.add_argument(
         "--config",
         choices=["A", "B", "C"],
-        default="A",
+        default=settings.chunk_config,
         help="Chunking configuration",
     )
 
     parser.add_argument(
         "--latest",
         action="store_true",
+        default=not settings.ingestion_snapshot,
         help="Fetch latest revisions instead of CSV snapshots",
     )
 

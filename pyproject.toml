@@ -28,6 +28,11 @@ dependencies = [
 [tool.uv]
 package = false
 
+# mwparserfromhell has no wheels for Python 3.14, so uv builds it from source. Its C
+# tokenizer then needs a compiler (Visual C++ on Windows); the pure-Python one needs none.
+[tool.uv.extra-build-variables]
+mwparserfromhell = { WITH_EXTENSION = "0" }
+
 [tool.uv.sources]
 torch = [{ index = "pytorch-cpu", marker = "sys_platform == 'linux'" }]
 
