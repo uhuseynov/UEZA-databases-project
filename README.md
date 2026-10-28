@@ -16,12 +16,10 @@ UEZA answers questions about 262 English Wikipedia articles on artificial intell
 You need Docker with Compose, `make` and [uv](https://docs.astral.sh/uv/). uv installs Python 3.14 by itself. The database is the `mariadb:12.3.3` image from `docker-compose.yml`, the version everything here was developed and measured with.
 
 ```bash
-cp .env.example .env   # local settings; the defaults work as they are
-make setup             # Python environment and git hooks
-make db-up             # MariaDB 12.3.3; schema.sql runs on the first start
-make ingest-test       # loads 3 articles; the first run also downloads the embedding model (about 440 MB)
-make run               # http://localhost:8000
+make quickstart
 ```
+
+That one command copies `.env.example` to `.env`, installs the Python environment, starts MariaDB (`schema.sql` runs on the first start), loads 3 articles and starts the web app. The first run also downloads the embedding model, about 440 MB. The same steps one by one: `make setup`, `make db-up`, `make ingest-test`, `make run`.
 
 Open <http://localhost:8000>, type a question and press **Search only**. The page shows the closest chunks with their cosine distance and needs no language model. The same search is available as `GET /search?q=...`.
 
@@ -41,13 +39,7 @@ make ingest-check      # every article present, chunks complete, no orphan rows
 make eval              # Recall@K, MRR, latency, not-found analysis
 ```
 
-If port 3306 is already taken, for example by a MariaDB installed on the machine, set `MARIADB_PORT=3307` in `.env`. On Windows without `make`, run the commands behind each target in the [Makefile](./Makefile), and set `$env:WITH_EXTENSION = "0"` before `uv sync`, otherwise uv tries to compile `mwparserfromhell` with Visual C++.
-
-**Known issue:** 4 of the 262 articles fail to ingest (Cluster analysis, Feature selection, Transformer (deep learning), Decision tree learning). The cleaner mistakes `{|` inside a math formula for the start of a table. `make ingest` then ends with an error that lists them and skips `ANALYZE TABLE`, so run it by hand until the fix is merged:
-
-```bash
-docker compose exec db mariadb -uueza -pueza_password ueza_db -e "ANALYZE TABLE articles, article_chunks, article_categories, article_links;"
-```
+If port 3306 is already taken, for example by a MariaDB installed on the machine, set `MARIADB_PORT=3307` in `.env`. On Windows without `make`, run the commands behind each target in the [Makefile](./Makefile); [Ingestion](./docs/ingestion/Home.md) lists the ingest command and its options.
 
 ## One search, one statement
 
@@ -67,7 +59,7 @@ The other filters are ordinary SQL in the same `WHERE`: article length, edit dat
 
 ## Results
 
-Measured twice on the same laptop (Windows 11, 12 logical CPUs, Docker Desktop), on 26 and 28 October 2026, with MariaDB 12.3.3, the embedding model `BAAI/bge-base-en-v1.5` (768 dimensions), chunks of 256 tokens with 32 tokens overlap, `M=16` and `mhnsw_ef_search` 20. The corpus is 258 of the 262 articles (see the known issue above), 5,992 chunks. The questions are [data/ground_truth.csv](./data/ground_truth.csv): 71 questions, 43 plain, 17 with SQL filters and 11 whose answer is not in the articles. Each run embeds all questions first, discards one warm-up pass and then times 3 passes.
+Measured twice on the same laptop (Windows 11, 12 logical CPUs, Docker Desktop), on 26 and 28 October 2026, with MariaDB 12.3.3, the embedding model `BAAI/bge-base-en-v1.5` (768 dimensions), chunks of 256 tokens with 32 tokens overlap, `M=16` and `mhnsw_ef_search` 20. The corpus is 258 of the 262 articles, 5,992 chunks: four articles failed to ingest because the cleaner took `{|` inside a math formula for a table, which is fixed now, and the measurements will be repeated on all 262. The questions are [data/ground_truth.csv](./data/ground_truth.csv): 71 questions, 43 plain, 17 with SQL filters and 11 whose answer is not in the articles. Each run embeds all questions first, discards one warm-up pass and then times 3 passes.
 
 ### Retrieval quality
 
@@ -181,7 +173,7 @@ Done: schema and vector index, ingest of a fixed snapshot, hybrid search, the qu
 
 Next:
 
-- fix the 4 articles that fail to ingest, then repeat the measurements on all 262
+- repeat the measurements on all 262 articles
 - live sync with Wikipedia
 - the FAISS baseline on the same vectors
 - smaller `M` values on the real embeddings (build time against recall)

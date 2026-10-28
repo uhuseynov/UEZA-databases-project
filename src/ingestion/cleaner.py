@@ -30,6 +30,9 @@ EXCLUDED_TAGS = {
     "source",
     "imagemap",
     "chem",
+    # mwparserfromhell parses {| ... |} wiki tables as "table" tags, nested ones
+    # included. A hand-written scanner mistook "{|" inside <math> for a table.
+    "table",
 }
 
 MEDIA_NAMESPACES = (
@@ -65,35 +68,6 @@ def _remove_excluded_sections(text: str) -> str:
             output.append(line)
 
     return "\n".join(output)
-
-
-def _remove_tables(text: str) -> str:
-    """Remove MediaWiki tables, including nested tables."""
-
-    output = []
-    position = 0
-    depth = 0
-
-    while position < len(text):
-        if text.startswith("{|", position):
-            depth += 1
-            position += 2
-            continue
-
-        if text.startswith("|}", position) and depth:
-            depth -= 1
-            position += 2
-            continue
-
-        if depth == 0:
-            output.append(text[position])
-
-        position += 1
-
-    if depth:
-        raise ValueError("Unclosed MediaWiki table")
-
-    return "".join(output)
 
 
 def _remove_nodes(code) -> None:
@@ -144,7 +118,6 @@ def clean_wikitext(raw_text: str) -> str:
         return ""
 
     text = _remove_excluded_sections(raw_text)
-    text = _remove_tables(text)
 
     code = mwparserfromhell.parse(text)
     _remove_nodes(code)

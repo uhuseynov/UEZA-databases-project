@@ -2,9 +2,9 @@
 
 [← Documentation Home](../Home.md)
 
-The ingestion layer retrieves external source data and will eventually transform it into data suitable for storage and retrieval in MariaDB.
+The ingestion layer loads the 262 articles of `data/articles.csv` from Wikipedia, turns them into chunks and vectors and stores them in MariaDB.
 
-## Intended Pipeline
+## Pipeline
 
 ```text
 MediaWiki
@@ -22,26 +22,56 @@ Embedding
 MariaDB
 ```
 
-## Implemented Components
+## Running it
 
-### MediaWiki
+```bash
+make ingest-test     # the first 3 articles of the CSV
+make ingest          # all articles
+make ingest-latest   # the latest revisions instead of the snapshot
+make ingest-check    # every article present, chunks complete, no orphan rows
+```
 
-Retrieves Wikipedia articles and metadata through the MediaWiki API.
+The settings come from `.env`: `ARTICLES_CSV_PATH`, `CHUNK_CONFIG` (A, B or C) and `INGESTION_SNAPSHOT`. The command is `uv run python -m src.ingestion ingest` (or `check`) with `--csv`, `--config`, `--latest` and `--limit`, for machines without `make`.
 
-[MediaWiki Documentation →](./mediawiki/Home.md)
+Each article is processed on its own, and a failure is logged and reported at the end without stopping the others. The command then exits with an error that lists the failed articles. `ANALYZE TABLE` runs at the end in either case, because MariaDB can ignore the vector index with stale statistics (see [Vector Search](../database/Vector-Search.md)).
 
-### Article Cache
+## The stages
 
-Stores fetched `WikiArticle` snapshots on disk with a configurable TTL to avoid unnecessary repeated API requests.
+### 1. Fetch (`src/ingestion/mediawiki/`)
 
-[Article Cache →](./Cache.md)
+The MediaWiki client fetches the wikitext of one revision, then the article's categories and links. It handles rate limits, retries and pagination.
 
-## Planned Stages
+- **Snapshot (default).** For each article the client asks for the revision that was current at the `last_edit` time in the CSV (`rvstart` with `rvdir=older` and `rvlimit=1`). Every machine therefore loads the same text, and the questions in the ground truth that filter on edit dates keep their answers. `article_length` is the size of that revision.
+- **Latest** (`make ingest-latest`) takes the current revision. Only this mode uses the [article cache](./Cache.md).
+- Categories and links always describe the current page, because the API returns them only for the latest revision. Hidden maintenance categories ("Articles with short description" and the like) are skipped.
+- The stored title is the one from the CSV, because the ground truth uses those titles. If MediaWiki returns another page ID for it, the article is rejected.
 
-Cleaning, chunking, embedding, and MariaDB persistence are planned stages. They are intentionally not documented as completed implementations until their code exists.
+[MediaWiki client →](./mediawiki/Home.md)
 
-## Separation of Responsibilities
+### 2. Clean (`src/ingestion/cleaner.py`)
 
-The MediaWiki adapter retrieves source data. The cache avoids redundant source requests. Neither component decides how text should be cleaned, chunked, embedded, or persisted.
+The rules come from [Data decisions](../data_decisions.md). With `mwparserfromhell` the cleaner removes templates and infoboxes, tables, `<ref>`, `<math>` and similar tags, file and image links, comments and leftover HTML, and drops the sections References, External links, See also, Further reading, Notes, Bibliography, Sources, Footnotes and Citations. Section headings stay as plain lines, and links keep their visible text.
 
-This separation allows later chunking and embedding experiments without rewriting the source integration.
+### 3. Chunk (`src/ingestion/chunker.py`)
+
+Chunks are counted in tokens of the embedding model's own tokenizer, so a chunk never exceeds what the model reads. Every chunk starts with `Title: <article title>`, and the splitter prefers paragraph, line and sentence boundaries.
+
+| Config | Size | Overlap |
+| --- | --- | --- |
+| A (default) | 256 tokens | 32 |
+| B | 512 tokens | 64 |
+| C | one paragraph, at most 512 tokens | 0 |
+
+In C a section heading is its own paragraph, so it becomes a very short chunk of its own.
+
+### 4. Embed
+
+`src.rag.embedder.Embedder` with `kind="passage"`, the same class the search uses with `kind="query"`, so questions and chunks always go through the same model (`BAAI/bge-base-en-v1.5`, 768 dimensions, normalised vectors).
+
+### 5. Store (`src/database/repositories/articles.py`)
+
+One transaction per article: the old chunks, categories and links are deleted (the schema has no `ON DELETE CASCADE`), the article row is inserted or updated, and the new rows are written, the vectors through `VEC_FromText`. Running the ingest again replaces articles instead of duplicating them.
+
+## Separation of responsibilities
+
+The MediaWiki client only retrieves source data and the cache only avoids repeated requests. Cleaning, chunking, embedding and storage are separate modules, so chunking and embedding experiments do not touch the source integration.

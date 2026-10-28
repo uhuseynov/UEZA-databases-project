@@ -31,7 +31,7 @@ def test_fetch_article(client_factory, article_response) -> None:
         assert params["maxlag"] == "5"
 
         if params["prop"] == "info|revisions":
-            assert params["rvprop"] == "ids|timestamp|content"
+            assert params["rvprop"] == "ids|timestamp|size|content"
             assert params["rvslots"] == "main"
             assert params["rvlimit"] == "1"
 

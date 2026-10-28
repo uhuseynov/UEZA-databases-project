@@ -63,6 +63,7 @@ def article_response():
         content: str = "'''Machine learning''' is...",
         categories: list[str] | None = None,
         links: list[str] | None = None,
+        size: int | None = None,
     ) -> dict[str, Any]:
         page: dict[str, Any] = {
             "pageid": page_id,
@@ -80,6 +81,9 @@ def article_response():
                 }
             ],
         }
+
+        if size is not None:
+            page["revisions"][0]["size"] = size
 
         if categories is not None:
             page["categories"] = [

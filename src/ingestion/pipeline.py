@@ -222,13 +222,16 @@ class IngestionPipeline:
 
                 failures.append((title, str(exc)))
 
+        # Refresh the optimizer statistics even if some articles failed. With stale
+        # statistics MariaDB can skip the vector index and scan every chunk
+        # (docs/database/Vector-Search.md).
+        if successful:
+            await self.repository.analyze()
+
         if failures:
             details = "\n".join(f"- {title}: {error}" for title, error in failures)
 
             raise RuntimeError(f"Ingestion incomplete: {len(failures)} failures\n{details}")
-
-        # Update optimizer statistics after successful ingest.
-        await self.repository.analyze()
 
         logger.info(
             "Ingestion complete: %d articles, %d chunks",

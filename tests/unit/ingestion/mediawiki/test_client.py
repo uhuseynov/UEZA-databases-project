@@ -1,5 +1,7 @@
 """Tests for the MediaWiki article client."""
 
+from datetime import UTC, datetime
+
 import httpx
 import pytest
 
@@ -18,7 +20,7 @@ def test_get_article(client_factory, article_response) -> None:
         assert params["redirects"] == "1"
 
         if params["prop"] == "info|revisions":
-            assert params["rvprop"] == "ids|timestamp|content"
+            assert params["rvprop"] == "ids|timestamp|size|content"
             assert params["rvslots"] == "main"
             return httpx.Response(200, json=article_response())
 
@@ -107,3 +109,25 @@ def test_redirect(client_factory, article_response) -> None:
 
     assert article.title == "Machine learning"
     assert article.page_id == 233488
+
+
+def test_snapshot_uses_the_revision_size_and_skips_hidden_categories(
+    client_factory, article_response
+) -> None:
+    def handler(request: httpx.Request) -> httpx.Response:
+        params = request.url.params
+
+        if params["prop"] == "info|revisions":
+            assert params["rvstart"] == "2026-01-01T00:00:00Z"
+            assert params["rvdir"] == "older"
+            # The page is 5000 bytes today; the revision at the snapshot date was 4200.
+            return httpx.Response(200, json=article_response(length=5000, size=4200))
+
+        assert params["clshow"] == "!hidden"
+        return httpx.Response(200, json=article_response())
+
+    client = client_factory(handler)
+    snapshot = datetime(2026, 1, 1, tzinfo=UTC)
+    article = client.get_article("Machine learning", as_of=snapshot)
+
+    assert article.length == 4200

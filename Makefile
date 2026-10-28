@@ -116,6 +116,15 @@ help: ## Shows this help message
 ##@ Development
 # =============================================================================
 
+.PHONY: quickstart
+quickstart: ## One command: .env, dependencies, MariaDB, 3 articles, then the web app on localhost:8000
+	@test -f .env || cp .env.example .env
+	@$(MAKE) --no-print-directory setup
+	@$(MAKE) --no-print-directory ingest-test
+	@printf "$(GREEN)✅ Open http://localhost:$(or $(APP_PORT),8000) and press Search only. Ctrl+C stops the app.$(RESET)\n"
+	@$(MAKE) --no-print-directory run
+
+
 .PHONY: setup
 setup: sync hooks ## Sets up locked dependencies and repository Git hooks
 	@printf "$(GREEN)✅ Development environment ready.$(RESET)\n"
@@ -221,8 +230,8 @@ eval-explain: ## Prints the query plans: is the vector index used, with and with
 ##@ Ingestion
 # =============================================================================
 
-INGEST_CONFIG ?= A
-INGEST_CSV ?= data/articles.csv
+INGEST_CONFIG ?= $(or $(CHUNK_CONFIG),A)
+INGEST_CSV ?= $(or $(ARTICLES_CSV_PATH),data/articles.csv)
 INGEST_LIMIT ?=
 
 .PHONY: ingest

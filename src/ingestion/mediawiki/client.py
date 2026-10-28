@@ -166,7 +166,7 @@ class MediaWikiClient:
             "titles": title,
             "redirects": "1",
             "prop": "info|revisions",
-            "rvprop": "ids|timestamp|content",
+            "rvprop": "ids|timestamp|size|content",
             "rvslots": "main",
             "rvlimit": "1",
         }
@@ -214,7 +214,7 @@ class MediaWikiClient:
             "titles": "|".join(titles),
             "redirects": "1",
             "prop": "info|revisions",
-            "rvprop": "ids|timestamp|content",
+            "rvprop": "ids|timestamp|size|content",
             "rvslots": "main",
         }
 
@@ -259,6 +259,9 @@ class MediaWikiClient:
             "redirects": "1",
             "prop": "categories|links",
             "cllimit": "max",
+            # Maintenance categories ("Articles with short description", ...)
+            # are hidden on Wikipedia and are useless as search filters.
+            "clshow": "!hidden",
             "pllimit": "max",
             "plnamespace": "0",
         }
@@ -293,9 +296,10 @@ class MediaWikiClient:
             "titles": title,
             "redirects": "1",
             "prop": "info|revisions|categories|links",
-            "rvprop": "ids|timestamp|content",
+            "rvprop": "ids|timestamp|size|content",
             "rvslots": "main",
             "cllimit": "max",
+            "clshow": "!hidden",
             "pllimit": "max",
             "plnamespace": "0",
         }
@@ -555,7 +559,9 @@ class MediaWikiClient:
                 page_id=int(page["pageid"]),
                 title=str(page["title"]),
                 text=raw_text,
-                length=int(page["length"]),
+                # The size of the fetched revision, so a snapshot keeps the length it
+                # had at the snapshot date; the page's current length is the fallback.
+                length=int(revision.get("size", page["length"])),
                 revision_id=int(revision["revid"]),
                 last_modified=datetime.fromisoformat(
                     str(revision["timestamp"]).replace("Z", "+00:00")
