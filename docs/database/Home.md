@@ -48,7 +48,7 @@ MariaDB
 
 ## Schema and Vector Search
 
-The schema lives in [`schema.sql`](../../schema.sql): four tables for articles, their categories, their links and the text chunks with their vectors. MariaDB creates it automatically on the first start of an empty database volume. The vector index, its parameters and the way MariaDB plans a search with SQL filters are described in [Vector Search and Index Parameters](./Vector-Search.md). How the speed and the results of the index depend on its history (a rebuild, a restart, replaced chunks) is in [Vector Index State](./Index-State.md).
+The schema lives in [`schema.sql`](../../schema.sql): four tables for articles, their categories, their links and the text chunks with their vectors. MariaDB creates it automatically on the first start of an empty database volume. The vector index, its parameters and the way MariaDB plans a search with SQL filters are described in [Vector Search and Index Parameters](./Vector-Search.md). How the speed and the results of the index depend on its history (a rebuild, a restart, replaced chunks), and the two causes we found (deleted vectors and the 16 MB index cache, the graph table's statistics after a rebuild), are in [Vector Index State](./Index-State.md). `docker-compose.yml` starts MariaDB with `mhnsw_ef_search=40` and a 64 MB index cache because of these measurements.
 
 ### Where the columns come from
 

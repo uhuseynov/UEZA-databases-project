@@ -16,7 +16,7 @@ Method:
 
 import asyncio
 import time
-from collections.abc import Sequence
+from collections.abc import Awaitable, Callable, Sequence
 from dataclasses import asdict, dataclass, field
 from datetime import UTC, datetime
 from typing import Any, Protocol
@@ -33,6 +33,13 @@ from src.evaluation.metrics import (
     recall_at_k,
 )
 from src.rag.models import RetrievedChunk, SearchFilters
+from src.rag.retriever import (
+    DEFAULT_SHAPE,
+    DEFAULT_VECTOR_FORMAT,
+    SHAPES,
+    SearchShape,
+    VectorFormat,
+)
 
 K_VALUES = (1, 3, 5, 10)
 
@@ -50,6 +57,8 @@ class RetrieverLike(Protocol):
         *,
         exact: bool = False,
         ef_search: int | None = None,
+        shape: SearchShape = DEFAULT_SHAPE,
+        vector_format: VectorFormat = DEFAULT_VECTOR_FORMAT,
     ) -> list[RetrievedChunk]: ...
 
 
@@ -62,6 +71,8 @@ class EvalConfig:
     ef_search: int | None = None
     exact: bool = False
     not_found_threshold: float = 0.5
+    shape: SearchShape = DEFAULT_SHAPE
+    vector_format: VectorFormat = DEFAULT_VECTOR_FORMAT
 
     def __post_init__(self) -> None:
         if self.runs < 1:
@@ -127,6 +138,8 @@ async def run_questions(
             question.filters,
             exact=config.exact,
             ef_search=config.ef_search,
+            shape=config.shape,
+            vector_format=config.vector_format,
         )
 
     for _ in range(config.warmup_runs):
@@ -249,6 +262,25 @@ async def evaluate(
     }
 
 
+async def _exact_baseline(
+    questions: Sequence[Question],
+    vectors: Sequence[Sequence[float]],
+    retriever: RetrieverLike,
+    *,
+    runs: int,
+    warmup_runs: int,
+    k: int,
+    vector_format: VectorFormat,
+) -> tuple[dict[str, Any], dict[str, list[int]], tuple[int, ...]]:
+    """The exact search (full scan, no index): the true nearest neighbours."""
+    k_values = tuple(sorted({kv for kv in K_VALUES if kv <= k} | {k}))
+    config = EvalConfig(label="exact", k_values=k_values, runs=runs, warmup_runs=warmup_runs,
+                        exact=True, vector_format=vector_format)
+    exact = await run_questions(questions, vectors, retriever, config)
+    exact_ids = {r.id: r.chunk_ids for r in exact if r.error is None}
+    return _sweep_row("exact", exact, config, exact_ids, k), exact_ids, k_values
+
+
 async def ef_search_sweep(
     questions: Sequence[Question],
     embedder: EmbedderLike,
@@ -259,6 +291,8 @@ async def ef_search_sweep(
     warmup_runs: int = 1,
     k: int = 10,
     environment: dict[str, Any] | None = None,
+    shape: SearchShape = DEFAULT_SHAPE,
+    vector_format: VectorFormat = DEFAULT_VECTOR_FORMAT,
 ) -> dict[str, Any]:
     """Recall and latency for several mhnsw_ef_search values, next to exact search.
 
@@ -266,25 +300,90 @@ async def ef_search_sweep(
     "index recall" is the share of those the HNSW index also returned.
     """
     vectors, _ = await embed_questions(embedder, questions)
-    k_values = tuple(sorted({kv for kv in K_VALUES if kv <= k} | {k}))
+    exact_row, exact_ids, k_values = await _exact_baseline(
+        questions, vectors, retriever, runs=runs, warmup_runs=warmup_runs, k=k,
+        vector_format=vector_format,
+    )
 
-    exact_config = EvalConfig(label="exact", k_values=k_values, runs=runs,
-                              warmup_runs=warmup_runs, exact=True)
-    exact = await run_questions(questions, vectors, retriever, exact_config)
-    exact_ids = {r.id: r.chunk_ids for r in exact if r.error is None}
-
-    rows = [_sweep_row("exact", exact, exact_config, exact_ids, k)]
+    rows = [exact_row]
     for ef in ef_values:
         config = EvalConfig(label=f"ef={ef}", k_values=k_values, runs=runs,
-                            warmup_runs=warmup_runs, ef_search=ef)
+                            warmup_runs=warmup_runs, ef_search=ef, shape=shape,
+                            vector_format=vector_format)
         results = await run_questions(questions, vectors, retriever, config)
         rows.append(_sweep_row(ef, results, config, exact_ids, k))
 
     return {
         "kind": "ef_search_sweep",
         "created_at": datetime.now(UTC).isoformat(timespec="seconds"),
-        "config": {"ef_values": list(ef_values), "runs": runs, "warmup_runs": warmup_runs, "k": k},
+        "config": {"ef_values": list(ef_values), "runs": runs, "warmup_runs": warmup_runs, "k": k,
+                   "shape": shape, "vector_format": vector_format},
         "environment": environment or {},
+        "rows": rows,
+    }
+
+
+async def m_sweep(
+    questions: Sequence[Question],
+    embedder: EmbedderLike,
+    retriever: RetrieverLike,
+    m_values: Sequence[int],
+    ef_values: Sequence[int],
+    *,
+    rebuild: Callable[[int], Awaitable[float]],
+    restart: Callable[[], Awaitable[None]] | None = None,
+    shapes: Sequence[SearchShape] = SHAPES,
+    runs: int = 3,
+    warmup_runs: int = 1,
+    k: int = 10,
+    vector_format: VectorFormat = DEFAULT_VECTOR_FORMAT,
+    environment: dict[str, Any] | None = None,
+) -> dict[str, Any]:
+    """Index recall and latency for several M values of the vector index.
+
+    For every M the index is rebuilt (``rebuild(m)`` returns the seconds it took) and
+    measured right after the build ("built") and, if ``restart`` is given, again after a
+    server restart ("restarted"). Only the questions without a filter are used: a
+    filtered search does not use the vector index, so M cannot change it. The exact
+    answers are computed once, since they do not depend on the index.
+    """
+    plain = [q for q in questions if not q.filtered]
+    vectors, _ = await embed_questions(embedder, plain)
+    exact_row, exact_ids, k_values = await _exact_baseline(
+        plain, vectors, retriever, runs=runs, warmup_runs=warmup_runs, k=k,
+        vector_format=vector_format,
+    )
+
+    rows: list[dict[str, Any]] = [{"m": None, "state": None, "shape": "exact", **exact_row}]
+    builds: list[dict[str, Any]] = []
+    for m in m_values:
+        seconds = await rebuild(m)
+        builds.append({"m": m, "build_seconds": round(seconds, 2)})
+        states: list[tuple[str, Callable[[], Awaitable[None]] | None]] = [("built", None)]
+        if restart is not None:
+            states.append(("restarted", restart))
+        for state, before in states:
+            if before is not None:
+                await before()
+            for shape in shapes:
+                for ef in ef_values:
+                    config = EvalConfig(label=f"M={m} {state} {shape} ef={ef}", k_values=k_values,
+                                        runs=runs, warmup_runs=warmup_runs, ef_search=ef,
+                                        shape=shape, vector_format=vector_format)
+                    results = await run_questions(plain, vectors, retriever, config)
+                    rows.append({"m": m, "state": state, "shape": shape,
+                                 **_sweep_row(ef, results, config, exact_ids, k)})
+
+    return {
+        "kind": "m_sweep",
+        "label": "m-sweep",
+        "created_at": datetime.now(UTC).isoformat(timespec="seconds"),
+        "config": {"m_values": list(m_values), "ef_values": list(ef_values),
+                   "shapes": list(shapes), "runs": runs, "warmup_runs": warmup_runs, "k": k,
+                   "vector_format": vector_format, "questions": len(plain),
+                   "restarted": restart is not None},
+        "environment": environment or {},
+        "builds": builds,
         "rows": rows,
     }
 
@@ -311,6 +410,7 @@ def _sweep_row(
         f"index_recall@{k}_filtered": index_recall([r for r in ok if r.filtered]),
         "retrieval": summary["retrieval"]["all"],
         "latency": summary["latency"]["all"],
+        "latency_plain": summary["latency"]["plain"],
         "latency_filtered": summary["latency"]["filtered"],
         "filtered_with_fewer_than_k_results": summary["filtered_with_fewer_than_k_results"],
         "errors": summary["errors"],

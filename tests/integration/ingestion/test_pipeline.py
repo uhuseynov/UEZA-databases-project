@@ -471,8 +471,32 @@ async def test_rebuild_keeps_the_vector_index_definition(database: Database) -> 
         return next(line for line in create.splitlines() if "VECTOR KEY" in line)
 
     before = await index_line()
+    async with database.get_session() as session:
+        chunks = (await session.execute(text("SELECT COUNT(*) FROM article_chunks"))).scalar_one()
     seconds = await repository.rebuild_vector_index()
 
     assert seconds >= 0
     assert await index_line() == before
+    # the chunk inserted and deleted to refresh the graph statistics is gone again
+    async with database.get_session() as session:
+        after = (await session.execute(text("SELECT COUNT(*) FROM article_chunks"))).scalar_one()
+        leftover = (
+            await session.execute(text("SELECT COUNT(*) FROM article_chunks WHERE chunk_index < 0"))
+        ).scalar_one()
+    assert after == chunks
+    assert leftover == 0
+
+
+async def test_rebuild_with_another_m_and_back(database: Database) -> None:
+    repository = ArticleRepository(database)
+    name, m, distance = await repository.vector_index()
+    other = 8 if m != 8 else 12
+
+    try:
+        await repository.rebuild_vector_index(other)
+        assert await repository.vector_index() == (name, other, distance)
+    finally:
+        await repository.rebuild_vector_index(m)
+
+    assert await repository.vector_index() == (name, m, distance)
 

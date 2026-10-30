@@ -3,8 +3,8 @@ import json
 import pytest
 
 from src.evaluation.ground_truth import Question
-from src.evaluation.report import render_evaluation, render_sweep, write_report
-from src.evaluation.runner import EvalConfig, ef_search_sweep, evaluate
+from src.evaluation.report import render_evaluation, render_m_sweep, render_sweep, write_report
+from src.evaluation.runner import EvalConfig, ef_search_sweep, evaluate, m_sweep
 from src.rag.models import RetrievedChunk, SearchFilters
 
 pytestmark = pytest.mark.anyio
@@ -50,8 +50,10 @@ class FakeRetriever:
         self.calls: list[dict] = []
         self.vector_to_question = {index: text for text, index in INDEX.items()}
 
-    async def retrieve(self, query_vector, k=5, filters=None, *, exact=False, ef_search=None):
-        self.calls.append({"k": k, "filters": filters, "exact": exact, "ef_search": ef_search})
+    async def retrieve(self, query_vector, k=5, filters=None, *, exact=False, ef_search=None,
+                       shape="join", vector_format="text"):
+        self.calls.append({"k": k, "filters": filters, "exact": exact, "ef_search": ef_search,
+                           "shape": shape, "vector_format": vector_format})
         question = self.vector_to_question[query_vector[0]]
         chunks = RESULTS[question][:k]
         if not exact and ef_search is not None and ef_search < 20 and question == "q2":
@@ -60,10 +62,12 @@ class FakeRetriever:
 
 
 class FailingRetriever(FakeRetriever):
-    async def retrieve(self, query_vector, k=5, filters=None, *, exact=False, ef_search=None):
+    async def retrieve(self, query_vector, k=5, filters=None, *, exact=False, ef_search=None,
+                       shape="join", vector_format="text"):
         if filters is not None and filters.root_category:
             raise RuntimeError("Unknown column 'a.root_category'")
-        return await super().retrieve(query_vector, k, filters, exact=exact, ef_search=ef_search)
+        return await super().retrieve(query_vector, k, filters, exact=exact, ef_search=ef_search,
+                                      shape=shape, vector_format=vector_format)
 
 
 async def test_evaluate_computes_recall_mrr_and_latency():
@@ -171,6 +175,62 @@ def test_render_evaluation_lists_errors():
 
     assert "exact search (no index)" in markdown
     assert "- 3: `RuntimeError: boom`" in markdown
+
+
+async def test_evaluate_passes_shape_and_vector_format_to_every_search():
+    retriever = FakeRetriever()
+    config = EvalConfig(runs=1, shape="nearest_first", vector_format="binary")
+
+    report = await evaluate(QUESTIONS, FakeEmbedder(), retriever, config)
+
+    assert {(c["shape"], c["vector_format"]) for c in retriever.calls} == {("nearest_first", "binary")}
+    assert report["config"]["shape"] == "nearest_first"
+
+
+async def test_m_sweep_rebuilds_measures_and_restarts_for_every_m():
+    retriever = FakeRetriever()
+    events = []
+
+    async def rebuild(m):
+        events.append(("rebuild", m))
+        return 1.5
+
+    async def restart():
+        events.append(("restart",))
+
+    report = await m_sweep(
+        QUESTIONS, FakeEmbedder(), retriever, [6, 16], [10, 40],
+        rebuild=rebuild, restart=restart, shapes=["join", "nearest_first"], runs=1, k=3,
+    )
+
+    assert events == [("rebuild", 6), ("restart",), ("rebuild", 16), ("restart",)]
+    assert report["builds"] == [{"m": 6, "build_seconds": 1.5}, {"m": 16, "build_seconds": 1.5}]
+    assert report["config"]["questions"] == 3  # the filtered question is left out
+    assert all(call["filters"].is_empty() for call in retriever.calls)
+    rows = report["rows"]
+    assert rows[0]["shape"] == "exact"
+    # exact + 2 M x 2 states x 2 shapes x 2 ef values
+    assert len(rows) == 1 + 16
+    row = next(r for r in rows if (r["m"], r["state"], r["shape"], r["ef_search"])
+               == (16, "restarted", "nearest_first", 10))
+    # ef=10 returns 1 of the 2 exact neighbours for q2: (1 + 0.5 + 1) / 3
+    assert row["index_recall@3"] == pytest.approx(0.8333, abs=1e-4)
+    assert "latency_plain" in row
+
+    markdown = render_m_sweep(report)
+    assert "| 16 | restarted | nearest_first | 10 |" in markdown
+    assert "## Index build" in markdown
+
+
+async def test_m_sweep_without_restart_measures_only_after_the_build():
+    async def rebuild(m):
+        return 0.1
+
+    report = await m_sweep(QUESTIONS, FakeEmbedder(), FakeRetriever(), [8], [20],
+                           rebuild=rebuild, shapes=["join"], runs=1, k=3)
+
+    assert [row["state"] for row in report["rows"]] == [None, "built"]
+    assert report["config"]["restarted"] is False
 
 
 def test_config_validation():

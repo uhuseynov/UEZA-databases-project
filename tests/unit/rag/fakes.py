@@ -14,6 +14,11 @@ class FakeResult:
     def all(self) -> list[dict[str, Any]]:
         return self._rows
 
+    def scalar_one(self) -> Any:
+        (row,) = self._rows
+        (value,) = row.values()
+        return value
+
 
 class FakeSession:
     def __init__(self, rows: list[dict[str, Any]]) -> None:

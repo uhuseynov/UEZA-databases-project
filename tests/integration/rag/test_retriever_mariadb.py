@@ -7,6 +7,8 @@ whose titles start with a test prefix and removes them again afterwards.
 
 The filter tests use exact search, so they check the SQL predicates themselves and do
 not depend on how many candidates the HNSW index visits when a filter is very selective.
+The index searches use a large mhnsw_ef_search, since the test vectors are far from every
+real chunk when the database also holds the loaded articles.
 """
 
 from datetime import datetime
@@ -124,7 +126,7 @@ async def database():
 async def test_nearest_chunk_comes_first(database):
     retriever = VectorRetriever(database)
 
-    chunks = await retriever.retrieve(basis_vector(1, noise=0.001), k=3)
+    chunks = await retriever.retrieve(basis_vector(1, noise=0.001), k=3, ef_search=200)
 
     assert chunks[0].title == f"{PREFIX}Beta"
     assert chunks[0].distance < 0.01
@@ -135,7 +137,7 @@ async def test_exact_search_agrees_with_the_index_on_the_top_hit(database):
     retriever = VectorRetriever(database)
     query = basis_vector(2, noise=0.001)
 
-    indexed = await retriever.retrieve(query, k=1)
+    indexed = await retriever.retrieve(query, k=1, ef_search=200)
     exact = await retriever.retrieve(query, k=1, exact=True)
 
     assert indexed[0].chunk_id == exact[0].chunk_id
@@ -177,3 +179,50 @@ async def test_length_and_date_filters_combine(database):
     )
 
     assert [c.title for c in chunks] == [f"{PREFIX}Beta"]
+
+
+async def test_binary_query_vector_gives_the_same_results_as_text(database):
+    retriever = VectorRetriever(database)
+    query = basis_vector(1, noise=0.001)
+
+    for shape in ("join", "nearest_first"):
+        for exact in (False, True):
+            as_text = await retriever.retrieve(
+                query, k=3, exact=exact, shape=shape, vector_format="text", ef_search=200
+            )
+            as_binary = await retriever.retrieve(
+                query, k=3, exact=exact, shape=shape, vector_format="binary", ef_search=200
+            )
+
+            assert [c.chunk_id for c in as_binary] == [c.chunk_id for c in as_text]
+            assert [c.distance for c in as_binary] == pytest.approx(
+                [c.distance for c in as_text]
+            )
+
+
+async def test_binary_query_vector_works_with_a_filter(database):
+    retriever = VectorRetriever(database)
+
+    chunks = await retriever.retrieve(
+        basis_vector(0), k=5, filters=SearchFilters(linked_from=f"{PREFIX}Alpha"),
+        vector_format="binary",
+    )
+
+    assert [c.title for c in chunks] == [f"{PREFIX}Gamma"]
+
+
+async def test_nearest_first_finds_the_same_nearest_chunk(database):
+    retriever = VectorRetriever(database)
+    query = basis_vector(2, noise=0.001)
+
+    joined = await retriever.retrieve(query, k=1, exact=True)
+    for vector_format in ("text", "binary"):
+        for exact in (False, True):
+            nearest = await retriever.retrieve(
+                query, k=1, exact=exact, shape="nearest_first", vector_format=vector_format,
+                ef_search=200,
+            )
+            assert nearest[0].chunk_id == joined[0].chunk_id
+            assert nearest[0].title == f"{PREFIX}Gamma"
+            assert nearest[0].text == f"chunk of {PREFIX}Gamma"
+

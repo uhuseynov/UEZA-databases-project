@@ -21,8 +21,10 @@ async def run(args: argparse.Namespace) -> None:
 
     try:
         if args.action == "reindex":
-            seconds = await ArticleRepository(database=database).rebuild_vector_index()
-            print(f"\nVector index rebuilt in {seconds:.1f} s.")
+            repository = ArticleRepository(database=database)
+            seconds = await repository.rebuild_vector_index(args.m)
+            _, m, distance = await repository.vector_index()
+            print(f"\nVector index rebuilt in {seconds:.1f} s (M={m}, DISTANCE={distance}).")
             return
 
         if args.action == "check":
@@ -72,6 +74,13 @@ async def run(args: argparse.Namespace) -> None:
         await database.disconnect()
 
 
+def _index_m(value: str) -> int:
+    m = int(value)
+    if not 3 <= m <= 200:
+        raise argparse.ArgumentTypeError(f"M must be from 3 to 200, got {m}")
+    return m
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(description="Wikipedia article ingestion")
 
@@ -106,6 +115,13 @@ def main() -> None:
         type=int,
         default=None,
         help="Limit number of articles for testing",
+    )
+
+    parser.add_argument(
+        "--m",
+        type=_index_m,
+        default=None,
+        help="reindex only: build the vector index with this M (3 to 200) instead of the current one",
     )
 
     args = parser.parse_args()

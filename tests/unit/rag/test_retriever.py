@@ -1,16 +1,33 @@
+import json
+import math
+import struct
 from datetime import datetime
 
 import pytest
 
 from src.rag.models import SearchFilters
-from src.rag.retriever import MAX_K, VectorRetriever, build_search_query, vector_to_text
+from src.rag.retriever import (
+    MAX_K,
+    VectorRetriever,
+    build_search_query,
+    vector_to_bytes,
+    vector_to_hex_literal,
+    vector_to_text,
+)
 from tests.unit.rag.fakes import FakeDatabase, chunk_row
 
 VECTOR = [0.1, 0.2, 0.3]
 
 
-def test_query_without_filters_orders_by_distance_alias_so_the_index_can_be_used():
+def test_defaults_are_nearest_first_with_a_binary_vector():
     query = build_search_query(VECTOR, k=5)
+
+    assert "FROM (SELECT id, VEC_DISTANCE_COSINE(embedding, X'" in query.sql
+    assert "VEC_FromText" not in query.sql
+
+
+def test_query_without_filters_orders_by_distance_alias_so_the_index_can_be_used():
+    query = build_search_query(VECTOR, k=5, shape="join", vector_format="text")
 
     assert "WHERE" not in query.sql
     assert "ORDER BY distance\n" in query.sql
@@ -19,7 +36,7 @@ def test_query_without_filters_orders_by_distance_alias_so_the_index_can_be_used
 
 
 def test_exact_query_orders_by_an_expression_to_force_a_full_scan():
-    query = build_search_query(VECTOR, k=5, exact=True)
+    query = build_search_query(VECTOR, k=5, exact=True, shape="join", vector_format="text")
 
     assert "ORDER BY VEC_DISTANCE_COSINE(c.embedding, VEC_FromText(:query_vector)) + 0" in query.sql
     assert "ORDER BY distance\n" not in query.sql
@@ -141,3 +158,89 @@ def test_vector_text_never_uses_exponents():
 def test_vector_text_rejects_nan():
     with pytest.raises(ValueError):
         vector_to_text([0.1, float("nan")])
+
+
+def test_nearest_first_takes_the_k_nearest_chunks_before_the_join():
+    query = build_search_query(VECTOR, k=5, shape="nearest_first", vector_format="text")
+
+    assert (
+        "FROM (SELECT id, VEC_DISTANCE_COSINE(embedding, VEC_FromText(:query_vector)) AS distance "
+        "FROM article_chunks ORDER BY distance LIMIT :k) n"
+    ) in query.sql
+    assert "JOIN article_chunks c ON c.id = n.id" in query.sql
+    assert query.sql.endswith("ORDER BY n.distance")
+    assert query.sql.count("LIMIT") == 1
+
+
+def test_nearest_first_exact_orders_the_inner_query_by_an_expression():
+    query = build_search_query(VECTOR, k=5, shape="nearest_first", exact=True,
+                               vector_format="text")
+
+    assert "ORDER BY VEC_DISTANCE_COSINE(embedding, VEC_FromText(:query_vector)) + 0 LIMIT :k" in query.sql
+
+
+def test_nearest_first_keeps_the_join_when_there_is_a_filter():
+    filters = SearchFilters(category="Deepfakes")
+
+    nearest = build_search_query(VECTOR, k=5, filters=filters, shape="nearest_first")
+    joined = build_search_query(VECTOR, k=5, filters=filters)
+
+    assert nearest == joined
+
+
+def test_binary_vector_is_written_as_a_hex_literal_of_float32_values():
+    query = build_search_query(VECTOR, k=5, shape="join", vector_format="binary")
+    literal = "X'" + struct.pack("<3f", 0.1, 0.2, 0.3).hex() + "'"
+
+    assert "VEC_FromText" not in query.sql
+    assert f"VEC_DISTANCE_COSINE(c.embedding, {literal}) AS distance" in query.sql
+    assert query.params == {"k": 5}
+
+
+def test_hex_literal_contains_only_hex_digits():
+    literal = vector_to_hex_literal([1.0, -0.5])
+
+    assert literal == "X'0000803f000000bf'"
+
+
+def test_binary_vector_round_trips():
+    data = vector_to_bytes([1.0, -0.5, 1e-05])
+
+    assert len(data) == 12
+    assert struct.unpack("<3f", data) == pytest.approx((1.0, -0.5, 1e-05))
+
+
+def test_binary_vector_rejects_infinity():
+    with pytest.raises(ValueError):
+        vector_to_bytes([0.1, math.inf])
+
+
+@pytest.mark.parametrize("option", [{"shape": "chunks"}, {"vector_format": "hex"}])
+def test_rejects_unknown_shape_or_vector_format(option):
+    with pytest.raises(ValueError):
+        build_search_query(VECTOR, k=5, **option)
+
+
+@pytest.mark.anyio
+async def test_retrieve_passes_shape_and_vector_format_through():
+    database = FakeDatabase([chunk_row(1, "A", 0.1)])
+    retriever = VectorRetriever(database)
+
+    await retriever.retrieve(VECTOR, k=1, shape="nearest_first", vector_format="binary")
+
+    sql, params = database.session.statements[0]
+    assert "FROM (SELECT id, VEC_DISTANCE_COSINE(embedding, X'" in sql
+    assert params == {"k": 1}
+
+
+@pytest.mark.anyio
+async def test_analyze_runs_the_statement_under_analyze_format_json():
+    plan = {"query_block": {"r_total_time_ms": 1.5}}
+    database = FakeDatabase([{"ANALYZE": json.dumps(plan)}])
+    retriever = VectorRetriever(database)
+
+    result = await retriever.analyze(VECTOR, k=3, vector_format="binary")
+
+    assert database.session.statements[0][0].startswith("ANALYZE FORMAT=JSON SELECT")
+    assert result == plan
+
