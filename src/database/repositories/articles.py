@@ -232,21 +232,34 @@ class ArticleRepository:
             ):
                 await session.execute(text(f"ANALYZE TABLE {table}"))
 
-    async def rebuild_vector_index(self) -> float:
-        """Drop and re-create the vector index with its current M and distance.
-
-        After many chunks were deleted and inserted again (a re-ingest), searches
-        were twice as slow until the index was rebuilt; a restart and OPTIMIZE TABLE
-        did not help (see docs/database/Index-State.md). Returns the seconds it took.
-        """
+    async def vector_index(self) -> tuple[str, int | None, str | None]:
+        """Name, M and distance of the vector index on article_chunks.embedding."""
 
         async with self.database.get_session() as session:
             row = (await session.execute(text("SHOW CREATE TABLE article_chunks"))).one()
-            name, m, distance = vector_index_definition(row[1])
+            return vector_index_definition(row[1])
+
+    async def rebuild_vector_index(self, m: int | None = None) -> float:
+        """Drop and re-create the vector index, with its current M and distance.
+
+        ``m`` builds it with another M instead (3 to 200, as MariaDB allows).
+
+        After many chunks were deleted and inserted again (a re-ingest), searches
+        were three times as slow until the index was rebuilt: deleted vectors stay in
+        the graph, which then no longer fits into MariaDB's index cache (see
+        docs/database/Index-State.md). Returns the seconds it took.
+        """
+
+        if m is not None and (isinstance(m, bool) or not isinstance(m, int) or not 3 <= m <= 200):
+            raise ValueError(f"M must be an integer from 3 to 200, got {m!r}")
+
+        async with self.database.get_session() as session:
+            row = (await session.execute(text("SHOW CREATE TABLE article_chunks"))).one()
+            name, current_m, distance = vector_index_definition(row[1])
 
             options = ""
-            if m is not None:
-                options += f" M={m}"
+            if m is not None or current_m is not None:
+                options += f" M={m if m is not None else current_m}"
             if distance is not None:
                 options += f" DISTANCE={distance}"
 
@@ -256,4 +269,31 @@ class ArticleRepository:
                 text(f"ALTER TABLE article_chunks ADD VECTOR INDEX `{name}` (embedding){options}")
             )
             await session.execute(text("ANALYZE TABLE article_chunks"))
-            return time.perf_counter() - start
+
+        await self.refresh_graph_statistics()
+        return time.perf_counter() - start
+
+    async def refresh_graph_statistics(self) -> None:
+        """Make InnoDB recalculate the statistics of the table that holds the HNSW graph.
+
+        ALTER TABLE ... ADD VECTOR INDEX fills that hidden table without counting the rows
+        as modified, so InnoDB keeps the statistics of the empty table (n_rows = 0), and
+        ANALYZE TABLE article_chunks does not reach it. After a restart MariaDB takes the
+        size of the graph from these statistics, and searches then skip part of the graph
+        (measured in docs/database/Index-State.md).
+
+        One inserted and deleted chunk counts as a modification of the graph table, and
+        InnoDB then recalculates its statistics in the background within seconds. The
+        deleted node stays in the graph, like every deleted chunk until the next rebuild.
+        """
+
+        async with self.database.get_session() as session:
+            await session.execute(
+                text(
+                    "INSERT INTO article_chunks (article_id, chunk_index, chunk_text, embedding) "
+                    "SELECT article_id, -1, 'statistics refresh', embedding "
+                    "FROM article_chunks ORDER BY id LIMIT 1"
+                )
+            )
+        async with self.database.get_session() as session:
+            await session.execute(text("DELETE FROM article_chunks WHERE chunk_index = -1"))

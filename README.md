@@ -6,10 +6,10 @@ UEZA answers questions about 262 English Wikipedia articles on artificial intell
 
 **Main results** (details in [Results](#results)):
 
-- The right article is among the 10 closest chunks for 95% of the 60 answerable test questions, and in first place for 62%.
-- A search without filters takes 9 ms in MariaDB, about 50 times less than a full scan, and returns 92 to 94% of the exact 10 nearest chunks.
-- The vector index has a history: after its chunks were deleted and inserted again, every search took 70 ms until the index was rebuilt, and right after a rebuild searches took 36 ms and were exact until the next restart ([Vector Index State](./docs/database/Index-State.md)).
-- A filter turns the search into an exact one over the matching articles (median 17 to 24 ms); the "linked from" filter takes 190 to 285 ms.
+- The right article is among the 10 closest chunks for 95% of the 60 answerable test questions, and in first place for 62%: the same as an exact search over every chunk.
+- A search takes 8 ms on average without a filter and 12 ms with one (p95 12 and 24 ms), measured from Python against MariaDB in Docker. The vector index returns 95% of the exact 10 nearest chunks.
+- Three things about MariaDB's vector search made it up to 25 times faster or more accurate on our data, each tested by changing that one thing ([What we learned](#what-we-learned-about-the-vector-index)): sending the query vector as binary instead of text, taking the nearest chunks before the join, and keeping the index's cache and statistics right.
+- `M=16` with `mhnsw_ef_search` 40: `M=32` returns 4 more of every 100 exact neighbours but takes 4.5 times as long to build, and does not find the right article more often ([M sweep](./docs/database/Vector-Search.md#choosing-m-and-ef_search)).
 - A distance threshold rejects every off-topic question before the language model is called, but not questions that are close to the topic and still not answered by the articles.
 
 ## Quick start
@@ -41,15 +41,28 @@ make eval              # Recall@K, MRR, latency, not-found analysis
 make reindex           # rebuild the vector index; make ingest does it after replacing articles
 ```
 
+`docker-compose.yml` starts MariaDB with two vector settings, `mhnsw_ef_search=40` and a 64 MB index cache. If your database container was created before they were added, `docker compose up -d --wait db` recreates it with them; the data stays in its volume.
+
 If port 3306 is already taken, for example by a MariaDB installed on the machine, set `MARIADB_PORT=3307` in `.env`. On Windows without `make`, run the commands behind each target in the [Makefile](./Makefile); [Ingestion](./docs/ingestion/Home.md) lists the ingest command and its options.
 
 ## One search, one statement
 
-This is the statement `src/rag/retriever.py` sends for every question, here with one filter:
+A question without a filter becomes this statement ([src/rag/retriever.py](./src/rag/retriever.py)):
+
+```sql
+SELECT c.id, a.title, c.chunk_text, n.distance
+FROM (SELECT id, VEC_DISTANCE_COSINE(embedding, X'3a1f...') AS distance
+      FROM article_chunks ORDER BY distance LIMIT 10) n
+JOIN article_chunks c ON c.id = n.id
+JOIN articles a ON a.id = c.article_id
+ORDER BY n.distance;
+```
+
+The derived table gives the vector index its own `LIMIT 10`. `X'...'` is the query vector itself, 768 float32 values in the binary format of a `VECTOR` column; every filter value is a bound parameter. A question with filters keeps them in one `WHERE`:
 
 ```sql
 SELECT c.id, a.title, c.chunk_text,
-       VEC_DISTANCE_COSINE(c.embedding, VEC_FromText(:query_vector)) AS distance
+       VEC_DISTANCE_COSINE(c.embedding, X'3a1f...') AS distance
 FROM article_chunks c
 JOIN articles a ON a.id = c.article_id
 WHERE a.root_category = 'Reinforcement learning'
@@ -61,9 +74,9 @@ The other filters are ordinary SQL in the same `WHERE`: article length, edit dat
 
 ## Results
 
-Measured on 28 October 2026 on our laptop (Windows 11, 12 logical CPUs, Docker Desktop) with MariaDB 12.3.3, the embedding model `BAAI/bge-base-en-v1.5` (768 dimensions), chunks of 256 tokens with 32 tokens overlap, `M=16` and `mhnsw_ef_search` 20. The corpus is all 262 articles, 6,144 chunks. The questions are [data/ground_truth.csv](./data/ground_truth.csv): 71 questions, 43 plain, 17 with SQL filters and 11 whose answer is not in the articles. Each run embeds all questions first, discards one warm-up pass and then times 3 passes.
+Measured on 30 October 2026 on our laptop (Windows 11, 12 logical CPUs, Docker Desktop) with MariaDB 12.3.3, the embedding model `BAAI/bge-base-en-v1.5` (768 dimensions), chunks of 256 tokens with 32 tokens overlap, `M=16`, `mhnsw_ef_search` 40 and a 64 MB index cache. The corpus is all 262 articles, 6,144 chunks. The questions are [data/ground_truth.csv](./data/ground_truth.csv): 71 questions, 43 plain, 17 with SQL filters and 11 whose answer is not in the articles. The run embeds all questions first, discards one warm-up pass and then times 5 passes. It was taken after a restart of the database, the state a running service is in.
 
-The numbers are taken after a restart of the database, the state a running service is in. Measured right after loading or rebuilding the index they look different, see [What we learned](#what-we-learned-about-the-vector-index). The raw output is committed: [run 1](./eval/results/20261028-173442_all262-restarted.md), [run 2](./eval/results/20261028-173930_all262-restarted-run2.md), two `mhnsw_ef_search` sweeps ([first](./eval/results/20261028-173907_ef-sweep.md) and [second restart](./eval/results/20261028-174225_ef-sweep.md)) and the [query plans](./eval/results/explain.md), with a JSON file next to each run that holds every question.
+Raw output: the [run](./eval/results/20261030-204715_final.md), the [`mhnsw_ef_search` sweep](./eval/results/20261030-204644_final-ef-sweep.md), the [M sweep](./eval/results/20261030-203723_m-sweep.md) and the [query plans](./eval/results/20261030-195010_explain.md), with a JSON file next to each run that holds every question.
 
 ### Retrieval quality
 
@@ -71,53 +84,57 @@ Recall@k is the share of answerable questions where a chunk of a correct article
 
 | Questions | n | Recall@1 | Recall@3 | Recall@5 | Recall@10 | MRR |
 | --- | --- | --- | --- | --- | --- | --- |
-| all answerable | 60 | 0.617 | 0.817 | 0.883 | 0.950 | 0.736 |
-| plain | 43 | 0.605 | 0.861 | 0.930 | 0.977 | 0.748 |
+| all answerable | 60 | 0.617 | 0.800 | 0.867 | 0.950 | 0.733 |
+| plain | 43 | 0.605 | 0.837 | 0.907 | 0.977 | 0.744 |
 | with filters | 17 | 0.647 | 0.706 | 0.765 | 0.882 | 0.703 |
 
-Both runs returned exactly these numbers; a sweep after a second restart lost one more question at k = 10 (0.933). Three questions miss at k = 10. Two of them are filtered (the ImageNet question behind "linked from Convolutional neural network" and the PCA question behind "Machine learning, longer than 100,000 characters"); for the third, the chunks of "Large language model" outrank the article "Hallucination (artificial intelligence)". When the right article is not first, the first result is usually a closely related article: SARSA for the Q-learning question, "Google DeepMind" for AlphaGo, "Decision tree learning" for the random forest question and "Cluster analysis" for k-means.
+These are exactly the numbers of the exact search over every chunk ([full scan](./eval/results/20261030-195546_exact-binary.md)): the 5% of nearest chunks the index misses did not cost a correct article. Three questions miss at k = 10. Two of them are filtered (the ImageNet question behind "linked from Convolutional neural network" and the PCA question behind "Machine learning, longer than 100,000 characters"); for the third, the chunks of "Large language model" outrank the article "Hallucination (artificial intelligence)". When the right article is not first, the first result is usually a closely related article: SARSA for the Q-learning question, "Google DeepMind" for AlphaGo, "Decision tree learning" for the random forest question and "Cluster analysis" for k-means.
 
 ### Latency
 
-Time of the MariaDB statement alone, in milliseconds. Embedding the questions is measured separately (24 and 23 ms per question in the two runs, embedded in one batch).
+Time of the MariaDB statement alone, in milliseconds, measured from Python (the question is embedded beforehand: 35 ms per question, in one batch).
 
-| Run | plain: mean | p50 | p95 | with filters: mean | p50 | p95 | mean of each timed pass |
-| --- | --- | --- | --- | --- | --- | --- | --- |
-| 1 | 9.2 | 8.7 | 12.0 | 68.4 | 24.1 | 280.5 | 22.0, 24.7, 23.5 |
-| 2 | 9.1 | 8.6 | 12.3 | 64.8 | 18.2 | 273.1 | 23.8, 21.8, 21.7 |
+| Questions | searches | mean | p50 | p95 |
+| --- | --- | --- | --- | --- |
+| plain | 270 | 8.4 | 7.4 | 11.7 |
+| with filters | 85 | 11.8 | 9.6 | 24.4 |
+| all | 355 | 9.2 | 7.7 | 19.6 |
 
-Each run has 162 plain and 51 filtered searches; the mean of a pass covers all 213. The full scan took 444 ms per plain question. Earlier runs on 26 and 28 October, before the index was rebuilt, gave 35 to 70 ms for the plain search (see below).
+The five timed passes averaged 8.5, 10.2, 8.6, 9.3 and 9.3 ms. The exact full scan took 19.3 ms per plain question. Inside MariaDB a plain search takes well under a millisecond (0.3 ms for one search under `ANALYZE`); most of the 8 ms is the round trip through the driver and Docker Desktop.
 
-A filtered search never uses the vector index: MariaDB reads the chunks of the matching articles and computes every distance, which is why it is slower than a plain search here but still exact. The slow tail is the "linked from" filter alone: 192 to 282 ms per search, against at most 57 ms for every other filter.
+A filtered search never uses the vector index: MariaDB reads the chunks of the matching articles and computes every distance, so it is exact. Every filter in the ground truth averaged 8 to 21 ms; the slowest is "linked from Artificial intelligence", which covers 141 of the 262 articles.
+
+The same questions on 28 October, before the changes described below, took 9.2 ms without a filter, but the index then returned only 92 to 94% of the exact top 10, and 68 ms with filters (p95 280 ms, "linked from" up to 297 ms).
 
 ### Not found
 
-The distance of the closest chunk is 0.298 on average for the answerable questions (highest 0.461) and 0.444 for the unanswerable ones (lowest 0.309). With `RAG_MAX_DISTANCE=0.42`, 97% of the answerable questions keep their context and 8 of the 11 unanswerable ones are rejected before the language model is called. All seven football and tennis questions are rejected (0.459 to 0.555). Three questions about AI whose answer is not in the articles pass: Leela Chess Zero (0.309, closest article AlphaGo), PROSPECTOR (0.357, Expert system) and Xiaoice (0.389, History of artificial intelligence).
+The distance of the closest chunk is 0.298 on average for the answerable questions (highest 0.461) and 0.438 for the unanswerable ones (lowest 0.309). With `RAG_MAX_DISTANCE=0.42`, 97% of the answerable questions keep their context and 8 of the 11 unanswerable ones are rejected before the language model is called. All seven football and tennis questions are rejected (0.437 to 0.536), and so is the AIBO question (0.439). Three questions about AI whose answer is not in the articles pass: Leela Chess Zero (0.309, closest article AlphaGo), PROSPECTOR (0.357, Expert system) and Xiaoice (0.389, History of artificial intelligence).
 
 So the threshold filters out questions that are off topic, not questions that are close to the corpus. A lower threshold does not fix that: 0.356 rejects 10 of the 11, but it also takes the context away from 12% of the answerable questions. Those questions are left to the second check, the model answering `NOT_FOUND` when the passages do not contain the answer.
 
 ## What we learned about the vector index
 
-- **The index has a history, so measure it after a restart.** With the same index and the same settings, a plain search took three different times. After all chunks were deleted and inserted again, as a re-ingest does, it took 70 ms, and neither `OPTIMIZE TABLE` nor a restart changed that. After dropping and adding the index (5.2 s) it took 36 ms, and after a restart 9 ms. In the first two states the index returned exactly the top 10 of the full scan, after the restart 92 to 94% of it, losing mostly neighbours of questions that are far from every chunk. So we rebuild the index after a re-ingest (`make ingest` does it when it replaced articles, `make reindex` on demand) and report numbers taken after a restart. We have not verified the causes; [Vector Index State](./docs/database/Index-State.md) has every measurement.
-- **`mhnsw_ef_search` hardly helps.** After a restart, raising it from 10 to 160 moved the index recall from about 0.92 to 0.94 for 2 to 3 ms more, and Recall@10 against the ground truth stayed between 0.933 and 0.950. The default of 20 stays.
-- **With a filter, the vector index is not used at all.** `EXPLAIN` on the real data (`make eval-explain`) shows `key = embedding` only for the search without a filter. With a category filter, or with `article_length >= 50000` (about 115 of the 262 articles by the optimizer's estimate), MariaDB starts from the filter's index, reads the chunks of the matching articles and sorts them by distance, and the plan is the same whether the statement could use the vector index or not. So filtered searches are exact: their index recall is always 1.000, and no filtered question returned fewer than 10 rows. On 17,338 generated chunks, the same plan for a filter that kept 70% of the chunks took 485 ms.
-- **Run `ANALYZE TABLE` after a bulk load.** Right after loading, the statistics were stale and MariaDB scanned all chunks instead of using the vector index: 0.68 s for 17,338 chunks, against 20 to 36 ms with fresh statistics (generated vectors, [experiment](./docs/database/Vector-Search.md)). The ingest runs `ANALYZE TABLE` at the end.
-- **`M` matters more than `mhnsw_ef_search`.** On generated vectors, recall against exact search rose from 0.74 (M=6, MariaDB's default) to 1.00 (M=16), and the build time from 3.8 s to 11.9 s; `mhnsw_ef_search` from 10 to 160 changed nothing for the statement with the join. We ship `M=16` for now. After a restart it returns 92 to 94% of the exact top 10, and since `mhnsw_ef_search` hardly changes that, `M` is the setting left to try; the `M` sweep on the real embeddings is the next experiment.
+- **Send the query vector as binary.** MariaDB evaluates `VEC_FromText('[0.0123,...]')` again for every row it compares. Written as a hex literal of the vector's binary value, the same search returned the same chunks for all 71 questions, and the full scan went from 608 to 24 ms, filtered searches from 95 to 12.6 ms on average, and the "linked from" filter from 358 to 23 ms. That filter's plan was fine all along; it covers 3,742 chunks, and each paid for parsing the text. ([Vector Search](./docs/database/Vector-Search.md#the-query-vector-text-or-binary))
+- **Take the nearest chunks first, then join.** With `articles` joined in the same `SELECT`, the index returned the exact top 10 for every `M`, ignored `mhnsw_ef_search` and took 32 to 67 ms: it searched far more of the graph than the 10 rows needed. With the 10 nearest chunks taken from `article_chunks` alone in a derived table, recall follows `M` and `mhnsw_ef_search`, as for any HNSW index, and the search takes 0.3 ms inside MariaDB. ([Statement shape](./docs/database/Vector-Search.md#statement-shape-join-or-nearest-chunks-first))
+- **`M=16`, `mhnsw_ef_search` 40, chosen on the real embeddings.** From `M` 6 to 64, the index recall at `mhnsw_ef_search` 40 rose from 0.87 to 0.99 and the build time from 2 s to 135 s. `M=16` finds the right article as often as the exact search, with 95% of the exact top 10, and builds in 5.5 s; the ingest rebuilds the index after every re-ingest, so build time counts. ([M sweep](./docs/database/Vector-Search.md#choosing-m-and-ef_search))
+- **The index cache has to hold the deleted vectors too.** A deleted chunk stays in the HNSW graph until the index is rebuilt. After all chunks were replaced, a search took 72 ms with MariaDB's default 16 MB index cache, 20 ms with 64 MB and 72 ms again at 16 MB: the graph, deleted nodes included, no longer fit, and MariaDB drops the whole cache after a search that leaves it too large. We run MariaDB with 64 MB and rebuild the index after a re-ingest. ([Vector Index State](./docs/database/Index-State.md#cause-1-deleted-vectors-and-the-index-cache))
+- **After a rebuild, InnoDB thinks the graph is empty.** `ALTER TABLE ... ADD VECTOR INDEX` leaves the hidden graph table with the statistics of an empty table, and after a restart MariaDB sizes every search by them: index recall stayed around 0.9 for every `M` and `mhnsw_ef_search`. Setting the row count right, and nothing else, gave 0.93 to 1.00; setting it back to 0 lost it again. `make reindex` now inserts and deletes one chunk, which makes InnoDB count the table. This was the cause of the "92 to 94%" in our earlier results. ([Vector Index State](./docs/database/Index-State.md#cause-2-the-graph-tables-statistics-after-a-rebuild))
+- **With a filter, the vector index is not used.** MariaDB starts from the filter's index, reads the chunks of the matching articles and sorts them by distance, so filtered searches are exact. Right after a bulk load the statistics were stale and MariaDB scanned every chunk even without a filter; the ingest runs `ANALYZE TABLE` at the end.
 
 ## Why MariaDB and not a separate vector store
 
-- **Filters and the vector search are one statement.** The optimizer decides between the vector index and the filter's index. The usual alternative, "fetch the N nearest chunks, then filter", returned only 0 to 2.8 of 10 rows in our generated-vector experiment when the filter was selective and the question was about other articles, even with N = 1000.
+- **Filters and the vector search are one statement.** With a filter, MariaDB starts from the filter's index and the answer is exact. The usual alternative, "fetch the N nearest chunks, then filter", returned only 0 to 2.8 of 10 rows in our generated-vector experiment when the filter was selective and the question was about other articles, even with N = 1000.
 - **Joins with the rest of the data.** "Linked from article X" is a join over the links table. A separate vector store would need the links copied into its metadata and kept in sync.
 - **One transaction per article.** The ingest replaces an article's metadata, categories, links, chunks and vectors in one transaction ([src/database/repositories/articles.py](./src/database/repositories/articles.py)), so there is no second system to update and no window in which the two disagree.
 - **One system** to run, back up and secure.
 
 ## Where this approach loses
 
-- **The index needs looking after.** Replaced chunks made it twice as slow until it was rebuilt, and its speed and results differ between a fresh build and a restart, so it has to be rebuilt after large changes and measured with care.
-- **The join may cost time.** On generated vectors, the same nearest-neighbour search took about 1 ms on the chunks table alone and 20 to 36 ms with the join to `articles`, measured right after building the index. We have not repeated that after a restart, where the search with the join takes 9 ms.
-- **"Linked from" is slow:** 190 to 285 ms per search, several times the other filters. We have not analysed its plan yet.
-- **Weak filters scan.** The optimizer chooses the exact plan even when the filter keeps most of the table (485 ms above).
-- **Statistics have to be refreshed by hand** after bulk loads, or the index is not used.
+- **The index needs looking after.** Deleted vectors stay in the graph until a rebuild, the default cache is too small for that, and a rebuild leaves the graph table's statistics wrong. We work around all three (64 MB cache, rebuild after a re-ingest, a statistics refresh after the rebuild), but each one first showed up as a puzzling measurement.
+- **Small details decide the speed.** Writing the vector as text made searches up to 25 times slower, and the join in the same `SELECT` made the index search most of the graph. Neither is visible in `EXPLAIN`.
+- **The query vector is part of the SQL text.** aiomysql cannot send bytes as a parameter with the PyMySQL version we use, so the 3,072 bytes of the vector are written into the statement as a hex literal. It is built from validated floats only, but it is 6 KB of SQL per search.
+- **Rebuilds get slow with larger `M`:** 25 s at `M=32` and 135 s at `M=64` for 6,144 chunks.
+- **Weak filters scan.** The optimizer chooses the exact plan even when the filter keeps most of the table. At 6,144 chunks that costs at most about as much as a full scan (19 to 24 ms); it grows with the corpus.
 - **One vector index per table, tied to one dimension.** Comparing a 384-dimensional model needs a second table.
 - **Not measured yet:** the comparison with FAISS on the same vectors, concurrent searches and the memory of the index.
 
@@ -175,16 +192,15 @@ question ──► embedding ──► one SQL statement: vector distance + filt
 
 ## Status
 
-Done: schema and vector index, ingest of a fixed snapshot, hybrid search, the question-answering API and page, evaluation.
+Done: schema and vector index, ingest of a fixed snapshot, hybrid search, the question-answering API and page, evaluation, and the index tuning on the real embeddings (query format, statement shape, `M` and `mhnsw_ef_search`, cache size, graph statistics).
 
 Next:
 
-- how fast the index slows down when only some chunks are replaced, as a live sync does
-- live sync with Wikipedia
+- live sync with Wikipedia, and how fast the index slows down when only some chunks are replaced
 - the FAISS baseline on the same vectors
-- smaller `M` values on the real embeddings (build time against recall)
 - chunk sizes and embedding models compared on the same questions
 - measuring how often the language model answers `NOT_FOUND` for the unanswerable questions
+- reporting the two index behaviours (graph statistics after a rebuild, the whole-cache reset) to MariaDB
 
 ## Team
 

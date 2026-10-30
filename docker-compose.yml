@@ -2,6 +2,11 @@ services:
   db:
     image: mariadb:12.3.3
     restart: unless-stopped
+    # Vector index settings, measured in docs/database/Index-State.md and Vector-Search.md:
+    # 64 MB index cache instead of 16 MB, so deleted vectors (which stay in the graph until
+    # the next rebuild) do not push the graph out of the cache; mhnsw_ef_search 40 instead
+    # of 20 for the nearest-first search.
+    command: ["--mhnsw-max-cache-size=64M", "--mhnsw-ef-search=40"]
 
     environment:
       MARIADB_ROOT_PASSWORD: ${MARIADB_ROOT_PASSWORD:-root_password}

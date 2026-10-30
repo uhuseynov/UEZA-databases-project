@@ -23,11 +23,11 @@ answer + cited source articles + timings
 
 ## The search statement
 
-`VectorRetriever.retrieve()` builds a single statement. With every filter set it looks like this (values are always bound parameters, never part of the SQL text):
+`VectorRetriever.retrieve()` builds a single statement. With every filter set it looks like this (filter values are always bound parameters, never part of the SQL text; `X'...'` is the query vector, see below):
 
 ```sql
 SELECT c.id AS chunk_id, a.id AS article_id, a.title, a.url, c.chunk_index, c.chunk_text,
-       VEC_DISTANCE_COSINE(c.embedding, VEC_FromText(:query_vector)) AS distance
+       VEC_DISTANCE_COSINE(c.embedding, X'3a1f...') AS distance
 FROM article_chunks c
 JOIN articles a ON a.id = c.article_id
 WHERE EXISTS (SELECT 1 FROM article_categories ac
@@ -58,8 +58,10 @@ Why it is written this way:
 - **One statement.** The semantic search and the relational filters run together, inside the database, consistent with the rows they read. A separate vector store would have to over-fetch and filter afterwards, or keep its own copy of the metadata in sync.
 - **`EXISTS` for categories and links.** An article has many categories and links. A plain `JOIN` would return the same chunk once per matching category.
 - **`ORDER BY distance`.** MariaDB uses the HNSW vector index only when the `ORDER BY` is the plain `VEC_DISTANCE_*` call (or its alias) with a `LIMIT`. The index uses `DISTANCE=cosine`, the same function as the query.
+- **Without a filter, the nearest chunks first.** A search without a filter takes the k nearest chunks from `article_chunks` alone, in a derived table with its own `LIMIT`, and joins only those k rows with `articles`. With the join in the same `SELECT`, MariaDB searched most of the HNSW graph and ignored `mhnsw_ef_search` ([Vector Search](../database/Vector-Search.md#statement-shape-join-or-nearest-chunks-first)).
+- **The query vector as binary.** The vector is written as a hex literal of its 768 float32 values, the binary format of a `VECTOR` column. `VEC_FromText('[...]')` is evaluated again for every row MariaDB compares, which made full scans and filtered searches 7 to 25 times slower. aiomysql cannot bind bytes with the PyMySQL version we use, so the literal is part of the SQL text; it is built from validated floats and contains only hex digits. `shape="join"` and `vector_format="text"` keep the old forms for measurements.
 - **Exact search for measurements.** `retrieve(..., exact=True)` orders by `distance + 0`. The optimizer cannot use the index for an expression, so MariaDB scans every chunk and returns the true nearest neighbours. The evaluation uses this as the reference for the index recall. `retriever.explain()` returns the query plan, to confirm which of the two plans MariaDB chose.
-- **`ef_search`.** `retrieve(..., ef_search=80)` sets `mhnsw_ef_search` (how many candidates the index examines) for that one query and resets it afterwards, because database connections are pooled and shared.
+- **`ef_search`.** The server runs with `mhnsw_ef_search` 40 (`docker-compose.yml`), chosen with the M sweep. `retrieve(..., ef_search=80)` sets it (how many candidates the index examines) for that one query and resets it afterwards, because database connections are pooled and shared.
 
 ## Not found
 
