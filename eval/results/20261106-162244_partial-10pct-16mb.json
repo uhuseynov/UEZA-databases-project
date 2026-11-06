@@ -1,0 +1,118 @@
+{
+  "kind": "ef_search_sweep",
+  "created_at": "2026-11-06T16:22:44+00:00",
+  "config": {
+    "ef_values": [
+      40
+    ],
+    "runs": 3,
+    "warmup_runs": 1,
+    "k": 10,
+    "shape": "nearest_first",
+    "vector_format": "binary"
+  },
+  "environment": {
+    "python": "3.14.8",
+    "platform": "Windows-11-10.0.26340-SP0",
+    "cpu_count": 12,
+    "embedding_model": "BAAI/bge-base-en-v1.5",
+    "embedding_dimension": 768,
+    "git_commit": "70bb82c",
+    "mariadb_version": "12.3.3-MariaDB-ubu2404",
+    "mhnsw_ef_search_default": 40,
+    "articles": 262,
+    "chunks": 6144,
+    "mhnsw_max_cache_size": 16777216,
+    "vector_index_m": 16,
+    "vector_index_distance": "cosine"
+  },
+  "rows": [
+    {
+      "ef_search": "exact",
+      "index_recall@10": 1.0,
+      "index_recall@10_plain": 1.0,
+      "index_recall@10_filtered": 1.0,
+      "retrieval": {
+        "questions": 60,
+        "recall@1": 0.6167,
+        "recall@3": 0.8,
+        "recall@5": 0.8667,
+        "recall@10": 0.95,
+        "mrr": 0.7327
+      },
+      "latency": {
+        "samples": 213,
+        "mean_ms": 17.841,
+        "std_ms": 5.08,
+        "p50_ms": 17.908,
+        "p95_ms": 26.737,
+        "min_ms": 7.161,
+        "max_ms": 35.423
+      },
+      "latency_plain": {
+        "samples": 162,
+        "mean_ms": 19.295,
+        "std_ms": 3.528,
+        "p50_ms": 18.183,
+        "p95_ms": 26.278,
+        "min_ms": 14.764,
+        "max_ms": 35.423
+      },
+      "latency_filtered": {
+        "samples": 51,
+        "mean_ms": 13.222,
+        "std_ms": 6.383,
+        "p50_ms": 10.89,
+        "p95_ms": 27.712,
+        "min_ms": 7.161,
+        "max_ms": 30.547
+      },
+      "filtered_with_fewer_than_k_results": [],
+      "errors": {}
+    },
+    {
+      "ef_search": 40,
+      "index_recall@10": 0.9662,
+      "index_recall@10_plain": 0.9556,
+      "index_recall@10_filtered": 1.0,
+      "retrieval": {
+        "questions": 60,
+        "recall@1": 0.6167,
+        "recall@3": 0.8,
+        "recall@5": 0.8667,
+        "recall@10": 0.95,
+        "mrr": 0.7327
+      },
+      "latency": {
+        "samples": 213,
+        "mean_ms": 14.681,
+        "std_ms": 4.644,
+        "p50_ms": 13.59,
+        "p95_ms": 25.004,
+        "min_ms": 6.853,
+        "max_ms": 36.37
+      },
+      "latency_plain": {
+        "samples": 162,
+        "mean_ms": 14.092,
+        "std_ms": 3.781,
+        "p50_ms": 13.412,
+        "p95_ms": 19.827,
+        "min_ms": 6.853,
+        "max_ms": 36.37
+      },
+      "latency_filtered": {
+        "samples": 51,
+        "mean_ms": 16.552,
+        "std_ms": 6.382,
+        "p50_ms": 14.276,
+        "p95_ms": 29.349,
+        "min_ms": 9.021,
+        "max_ms": 31.878
+      },
+      "filtered_with_fewer_than_k_results": [],
+      "errors": {}
+    }
+  ],
+  "label": "partial-10pct-16mb"
+}

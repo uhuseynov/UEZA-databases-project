@@ -20,17 +20,18 @@ The project explores native vector search and retrieval-augmented generation usi
 - [Migrations](./database/Migrations.md)
 - [Vector Search and Index Parameters](./database/Vector-Search.md)
 - [Vector Index State](./database/Index-State.md)
+- [FAISS Baseline](./database/FAISS-Baseline.md)
 
 ### Ingestion
 
-- [Ingestion Overview](./ingestion/Home.md)
+- [Ingestion Overview](./ingestion/Home.md): pipeline, snapshot and live sync
 - [Article Cache](./ingestion/Cache.md)
 - [MediaWiki Integration](./ingestion/mediawiki/Home.md)
 
 ### Retrieval, RAG and Evaluation
 
 - [Retrieval and RAG](./rag/Home.md): hybrid search statement, not-found logic, prompt, API and web UI
-- [Evaluation](./evaluation/Home.md): ground truth, Recall@K, latency method, `mhnsw_ef_search` sweep
+- [Evaluation](./evaluation/Home.md): ground truth, Recall@K, latency method, index sweeps, FAISS, answers with the language model
 
 ### Development
 

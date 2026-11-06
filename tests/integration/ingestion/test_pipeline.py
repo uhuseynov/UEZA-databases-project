@@ -500,3 +500,16 @@ async def test_rebuild_with_another_m_and_back(database: Database) -> None:
 
     assert await repository.vector_index() == (name, m, distance)
 
+
+
+async def test_chunk_counts_cover_every_article(database: Database) -> None:
+    repository = ArticleRepository(database)
+
+    counts = await repository.chunk_counts()
+
+    async with database.get_session() as session:
+        articles = (await session.execute(text("SELECT COUNT(*) FROM articles"))).scalar_one()
+        chunks = (await session.execute(text("SELECT COUNT(*) FROM article_chunks"))).scalar_one()
+    assert len(counts) == articles
+    assert sum(counts.values()) == chunks
+    assert set(counts) == set(await repository.revision_ids())

@@ -8,6 +8,8 @@ make eval-exact    # the same with exact search (full scan, no vector index)
 make eval-sweep    # index recall and latency for several mhnsw_ef_search values
 make eval-explain  # EXPLAIN and ANALYZE for the search: index vs exact, with and without filters
 uv run python -m src.evaluation m-sweep   # rebuild the index for several M values and measure each
+uv run python -m src.evaluation faiss     # FAISS on the same vectors, next to MariaDB
+uv run python -m src.evaluation answers   # every question through the language model: is NOT_FOUND right?
 ```
 
 Each run writes `eval/results/<timestamp>_<label>.json` (every number and every question) and a `.md` file with the tables for the README; `explain` writes a `.md` file only.
@@ -71,6 +73,34 @@ This shows the cost of the approximation and where a larger `ef_search` stops pa
 ### Statement shape and query format
 
 `run`, `ef-sweep` and `m-sweep` take `--shape join|nearest_first` and `--vector-format text|binary` (`m-sweep` takes `--shapes` with one or both). The defaults are what the application uses: the nearest chunks first and the binary vector. The other two exist to measure the difference ([Vector Search](../database/Vector-Search.md)).
+
+## FAISS baseline
+
+`python -m src.evaluation faiss` reads every vector from MariaDB, builds a FAISS exact index and a FAISS HNSW index with the same `M`, and runs every question against them and against MariaDB, filtered questions included. The method and the results are in [FAISS Baseline](../database/FAISS-Baseline.md).
+
+## Answers with the language model
+
+`python -m src.evaluation answers` ([src/evaluation/answers.py](../../src/evaluation/answers.py)) sends every question through `RAGService.answer`, the same code as `POST /ask`, with the question's filters, and records one of three outcomes:
+
+- **rejected**: no chunk is closer than `RAG_MAX_DISTANCE`, so the model is not asked;
+- **not found**: the model replied `NOT_FOUND`;
+- **answered**: the model wrote an answer, and the report lists which articles it cited.
+
+It needs the language model from `.env`. Every reply is kept in the JSON file, so the wrong ones can be read.
+
+Measured on 6 November 2026 with `qwen2.5:3b` in Ollama on the laptop's CPU, the top 5 chunks per question and `RAG_MAX_DISTANCE=0.42` ([report](../../eval/results/20261106-183004_answers.md)):
+
+| Questions | n | answered | of those citing a correct article | `NOT_FOUND` | rejected by distance |
+| --- | --- | --- | --- | --- | --- |
+| answerable | 60 | 40 | 31 | 18 | 2 |
+| unanswerable | 11 | 0 | – | 3 | 8 |
+
+- **No unanswerable question got an answer.** The distance threshold rejected the 8 off-topic ones, and the model answered `NOT_FOUND` for the three that pass it (Leela Chess Zero, PROSPECTOR and Xiaoice), exactly the gap the threshold leaves (see the README).
+- **The model is too cautious.** It answered `NOT_FOUND` for 18 answerable questions, and for 14 of them a chunk of the correct article was among its 5 passages. Six of the 18 are filtered questions such as "Among NLP articles shorter than 30000 characters, which one covers ...", which ask about articles rather than facts.
+- **Of the 40 answers**, 31 cite a passage of a correct article. Of the other 9, three answer correctly without any citation, three name the right thing but cite a related article (Q-learning described in "Reinforcement learning", Gemma found in "Google DeepMind", "Latent diffusion model" for the diffusion question), two consist of only a citation (`[1]`), and one is wrong: "AlphaFold" for the program that analysed mass spectrometry data (Dendral); none of its passages came from the articles that describe Dendral.
+- **Time:** a call took 33.5 s at the median on the CPU, and one call took 29 minutes; 61 of the 71 questions reached the model.
+
+So the two checks together kept every unanswerable question out, but a 3-billion-parameter model on a CPU pays for that with a third of the answerable questions. A larger model or a prompt that is less strict about `NOT_FOUND` is the next thing to try; we have not measured either.
 
 ## Comparing configurations
 

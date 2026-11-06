@@ -220,6 +220,19 @@ class ArticleRepository:
 
             return {int(row[0]): int(row[1]) for row in result.all()}
 
+    async def chunk_counts(self) -> dict[int, int]:
+        """Return page_id -> number of stored chunks."""
+
+        async with self.database.get_session() as session:
+            result = await session.execute(
+                text(
+                    "SELECT a.page_id, COUNT(c.id) FROM articles a "
+                    "LEFT JOIN article_chunks c ON c.article_id = a.id GROUP BY a.page_id"
+                )
+            )
+
+            return {int(row[0]): int(row[1]) for row in result.all()}
+
     async def analyze(self):
         """Refresh database statistics after ingestion."""
 

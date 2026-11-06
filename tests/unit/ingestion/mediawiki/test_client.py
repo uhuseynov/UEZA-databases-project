@@ -131,3 +131,44 @@ def test_snapshot_uses_the_revision_size_and_skips_hidden_categories(
     article = client.get_article("Machine learning", as_of=snapshot)
 
     assert article.length == 4200
+
+
+def test_latest_revisions_asks_for_50_pages_at_a_time_without_content(client_factory) -> None:
+    requests = []
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        params = request.url.params
+        ids = [int(value) for value in params["pageids"].split("|")]
+        requests.append(ids)
+
+        assert params["prop"] == "revisions"
+        assert params["rvprop"] == "ids|timestamp"
+        assert "rvslots" not in params
+
+        pages = [
+            {"pageid": page_id, "missing": True}
+            if page_id == 7
+            else {
+                "pageid": page_id,
+                "title": f"Page {page_id}",
+                "revisions": [{"revid": page_id * 10, "timestamp": "2026-11-01T09:30:00Z"}],
+            }
+            for page_id in ids
+        ]
+        return httpx.Response(200, json={"query": {"pages": pages}})
+
+    client = client_factory(handler)
+
+    latest = client.latest_revisions(range(1, 121))
+
+    assert [len(batch) for batch in requests] == [50, 50, 20]
+    assert len(latest) == 119
+    assert 7 not in latest
+    assert latest[3] == (30, datetime(2026, 11, 1, 9, 30, tzinfo=UTC))
+
+
+def test_latest_revisions_rejects_invalid_page_ids(client_factory) -> None:
+    client = client_factory(lambda request: httpx.Response(500))
+
+    with pytest.raises(ValueError):
+        client.latest_revisions([0])

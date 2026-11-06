@@ -150,6 +150,52 @@ class MediaWikiClient:
 
         return result
 
+    def latest_revisions(
+        self,
+        page_ids: Iterable[int],
+    ) -> dict[int, tuple[int, datetime]]:
+        """Latest revision id and time of each page, without the content.
+
+        Asks for 50 pages per request (the API's limit for ``pageids``). Pages that no
+        longer exist are left out of the result.
+        """
+
+        ids = list(dict.fromkeys(int(page_id) for page_id in page_ids))
+        if any(page_id <= 0 for page_id in ids):
+            raise ValueError("page ids must be positive")
+
+        latest: dict[int, tuple[int, datetime]] = {}
+
+        for batch in self._batched(ids, 50):
+            data = self._request(
+                {
+                    "action": "query",
+                    "format": "json",
+                    "formatversion": "2",
+                    "pageids": "|".join(str(page_id) for page_id in batch),
+                    "prop": "revisions",
+                    "rvprop": "ids|timestamp",
+                }
+            )
+
+            for page in self._extract_pages(data):
+                if page.get("missing") is True or "pageid" not in page:
+                    continue
+
+                revision = self._extract_revision(page)
+
+                try:
+                    latest[int(page["pageid"])] = (
+                        int(revision["revid"]),
+                        datetime.fromisoformat(
+                            str(revision["timestamp"]).replace("Z", "+00:00")
+                        ),
+                    )
+                except (KeyError, TypeError, ValueError) as exc:
+                    raise MediaWikiInvalidResponseError("Incomplete revision") from exc
+
+        return latest
+
     def _fetch_article(
         self,
         title: str,
@@ -538,10 +584,10 @@ class MediaWikiClient:
         return list(dict.fromkeys(result))
 
     @staticmethod
-    def _batched(
-        values: list[str],
+    def _batched[T](
+        values: list[T],
         batch_size: int,
-    ) -> Iterable[list[str]]:
+    ) -> Iterable[list[T]]:
         for index in range(0, len(values), batch_size):
             yield values[index : index + batch_size]
 

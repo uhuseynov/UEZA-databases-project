@@ -1,0 +1,500 @@
+{
+  "kind": "faiss_baseline",
+  "label": "faiss",
+  "created_at": "2026-11-06T17:20:53+00:00",
+  "config": {
+    "m": 16,
+    "ef_construction": 40,
+    "ef_values": [
+      10,
+      20,
+      40,
+      80,
+      160
+    ],
+    "fetch_values": [
+      10,
+      100,
+      1000
+    ],
+    "ef_two_systems": 40,
+    "runs": 3,
+    "warmup_runs": 1,
+    "k": 10,
+    "threads": 1
+  },
+  "environment": {
+    "python": "3.14.8",
+    "platform": "Windows-11-10.0.26340-SP0",
+    "cpu_count": 12,
+    "embedding_model": "BAAI/bge-base-en-v1.5",
+    "embedding_dimension": 768,
+    "git_commit": "70bb82c",
+    "mariadb_version": "12.3.3-MariaDB-ubu2404",
+    "mhnsw_ef_search_default": 40,
+    "articles": 262,
+    "chunks": 6144,
+    "mhnsw_max_cache_size": 67108864,
+    "vector_index_m": 16,
+    "vector_index_distance": "cosine",
+    "faiss_version": "1.15.1"
+  },
+  "corpus": {
+    "chunks": 6144,
+    "dimension": 768,
+    "load_seconds": 1.012
+  },
+  "build": {
+    "flat_seconds": 0.017,
+    "hnsw_seconds": 0.586,
+    "flat_bytes": 18874413,
+    "hnsw_bytes": 19758906
+  },
+  "update": {
+    "chunks": 94,
+    "hnsw_remove": "remove_ids not implemented for this type of index",
+    "flat_remove_ms": 1.613,
+    "flat_add_ms": 1.421,
+    "flat_removed": 94
+  },
+  "exact_agreement": {
+    "plain": 54,
+    "plain_questions": 54,
+    "filtered": 17,
+    "filtered_questions": 17
+  },
+  "filter_ids_sql": {
+    "latency": {
+      "samples": 17,
+      "mean_ms": 16.578,
+      "std_ms": 19.938,
+      "p50_ms": 9.568,
+      "p95_ms": 48.729,
+      "min_ms": 6.254,
+      "max_ms": 85.11
+    },
+    "allowed_chunks": [
+      16,
+      48,
+      87,
+      92,
+      98,
+      100,
+      115,
+      118,
+      142,
+      238,
+      556,
+      607,
+      645,
+      667,
+      2539,
+      3431,
+      3742
+    ]
+  },
+  "mariadb_server_ms": {
+    "plain": {
+      "samples": 54,
+      "mean_ms": 0.459,
+      "std_ms": 0.141,
+      "p50_ms": 0.439,
+      "p95_ms": 0.758,
+      "min_ms": 0.261,
+      "max_ms": 0.966
+    },
+    "filtered": {
+      "samples": 17,
+      "mean_ms": 3.359,
+      "std_ms": 4.669,
+      "p50_ms": 1.176,
+      "p95_ms": 13.74,
+      "min_ms": 0.594,
+      "max_ms": 15.673
+    }
+  },
+  "plain": [
+    {
+      "method": "FAISS flat (exact)",
+      "ef": null,
+      "questions": 54,
+      "index_recall@10": 1.0,
+      "recall@1": 0.6047,
+      "recall@10": 0.9767,
+      "mrr": 0.7444,
+      "returned_mean": 10.0,
+      "fewer_than_k": 0,
+      "latency": {
+        "samples": 162,
+        "mean_ms": 1.929,
+        "std_ms": 0.312,
+        "p50_ms": 1.813,
+        "p95_ms": 2.523,
+        "min_ms": 1.341,
+        "max_ms": 3.718
+      }
+    },
+    {
+      "method": "FAISS HNSW",
+      "ef": 10,
+      "questions": 54,
+      "index_recall@10": 0.7778,
+      "recall@1": 0.5581,
+      "recall@10": 0.9302,
+      "mrr": 0.7101,
+      "returned_mean": 10.0,
+      "fewer_than_k": 0,
+      "latency": {
+        "samples": 162,
+        "mean_ms": 0.066,
+        "std_ms": 0.02,
+        "p50_ms": 0.063,
+        "p95_ms": 0.086,
+        "min_ms": 0.045,
+        "max_ms": 0.225
+      }
+    },
+    {
+      "method": "FAISS HNSW",
+      "ef": 20,
+      "questions": 54,
+      "index_recall@10": 0.8593,
+      "recall@1": 0.6047,
+      "recall@10": 0.9535,
+      "mrr": 0.7411,
+      "returned_mean": 10.0,
+      "fewer_than_k": 0,
+      "latency": {
+        "samples": 162,
+        "mean_ms": 0.064,
+        "std_ms": 0.019,
+        "p50_ms": 0.062,
+        "p95_ms": 0.086,
+        "min_ms": 0.039,
+        "max_ms": 0.234
+      }
+    },
+    {
+      "method": "FAISS HNSW",
+      "ef": 40,
+      "questions": 54,
+      "index_recall@10": 0.8981,
+      "recall@1": 0.6047,
+      "recall@10": 0.9767,
+      "mrr": 0.7452,
+      "returned_mean": 10.0,
+      "fewer_than_k": 0,
+      "latency": {
+        "samples": 162,
+        "mean_ms": 0.091,
+        "std_ms": 0.017,
+        "p50_ms": 0.088,
+        "p95_ms": 0.125,
+        "min_ms": 0.066,
+        "max_ms": 0.179
+      }
+    },
+    {
+      "method": "FAISS HNSW",
+      "ef": 80,
+      "questions": 54,
+      "index_recall@10": 0.9537,
+      "recall@1": 0.6047,
+      "recall@10": 0.9767,
+      "mrr": 0.7452,
+      "returned_mean": 10.0,
+      "fewer_than_k": 0,
+      "latency": {
+        "samples": 162,
+        "mean_ms": 0.16,
+        "std_ms": 0.031,
+        "p50_ms": 0.158,
+        "p95_ms": 0.21,
+        "min_ms": 0.105,
+        "max_ms": 0.389
+      }
+    },
+    {
+      "method": "FAISS HNSW",
+      "ef": 160,
+      "questions": 54,
+      "index_recall@10": 0.9796,
+      "recall@1": 0.6047,
+      "recall@10": 0.9767,
+      "mrr": 0.7452,
+      "returned_mean": 10.0,
+      "fewer_than_k": 0,
+      "latency": {
+        "samples": 162,
+        "mean_ms": 0.387,
+        "std_ms": 0.672,
+        "p50_ms": 0.309,
+        "p95_ms": 0.555,
+        "min_ms": 0.215,
+        "max_ms": 8.76
+      }
+    },
+    {
+      "method": "MariaDB statement",
+      "ef": null,
+      "questions": 54,
+      "index_recall@10": 0.9519,
+      "recall@1": 0.6047,
+      "recall@10": 0.9767,
+      "mrr": 0.7444,
+      "returned_mean": 10.0,
+      "fewer_than_k": 0,
+      "latency": {
+        "samples": 162,
+        "mean_ms": 5.092,
+        "std_ms": 0.974,
+        "p50_ms": 4.724,
+        "p95_ms": 7.553,
+        "min_ms": 4.339,
+        "max_ms": 10.098
+      }
+    },
+    {
+      "method": "FAISS HNSW, then MariaDB for the text",
+      "ef": 40,
+      "questions": 54,
+      "index_recall@10": 0.8981,
+      "recall@1": 0.6047,
+      "recall@10": 0.9767,
+      "mrr": 0.7452,
+      "returned_mean": 10.0,
+      "fewer_than_k": 0,
+      "latency": {
+        "samples": 162,
+        "mean_ms": 6.257,
+        "std_ms": 2.818,
+        "p50_ms": 5.732,
+        "p95_ms": 8.397,
+        "min_ms": 3.666,
+        "max_ms": 25.378
+      }
+    }
+  ],
+  "filtered": [
+    {
+      "method": "FAISS flat over the allowed ids (exact)",
+      "ef": null,
+      "questions": 17,
+      "index_recall@10": 1.0,
+      "recall@1": 0.6471,
+      "recall@10": 0.8824,
+      "mrr": 0.7032,
+      "returned_mean": 10.0,
+      "fewer_than_k": 0,
+      "latency": {
+        "samples": 51,
+        "mean_ms": 0.214,
+        "std_ms": 0.248,
+        "p50_ms": 0.093,
+        "p95_ms": 0.71,
+        "min_ms": 0.039,
+        "max_ms": 1.126
+      }
+    },
+    {
+      "method": "FAISS HNSW with the allowed ids as selector",
+      "ef": 10,
+      "questions": 17,
+      "index_recall@10": 0.7294,
+      "recall@1": 0.5882,
+      "recall@10": 0.7647,
+      "mrr": 0.6334,
+      "returned_mean": 9.1765,
+      "fewer_than_k": 2,
+      "latency": {
+        "samples": 51,
+        "mean_ms": 0.055,
+        "std_ms": 0.011,
+        "p50_ms": 0.054,
+        "p95_ms": 0.075,
+        "min_ms": 0.038,
+        "max_ms": 0.089
+      }
+    },
+    {
+      "method": "FAISS HNSW with the allowed ids as selector",
+      "ef": 20,
+      "questions": 17,
+      "index_recall@10": 0.8353,
+      "recall@1": 0.5882,
+      "recall@10": 0.8235,
+      "mrr": 0.653,
+      "returned_mean": 9.3529,
+      "fewer_than_k": 2,
+      "latency": {
+        "samples": 51,
+        "mean_ms": 0.079,
+        "std_ms": 0.019,
+        "p50_ms": 0.075,
+        "p95_ms": 0.103,
+        "min_ms": 0.05,
+        "max_ms": 0.166
+      }
+    },
+    {
+      "method": "FAISS HNSW with the allowed ids as selector",
+      "ef": 40,
+      "questions": 17,
+      "index_recall@10": 0.8706,
+      "recall@1": 0.5882,
+      "recall@10": 0.8235,
+      "mrr": 0.6522,
+      "returned_mean": 9.7647,
+      "fewer_than_k": 1,
+      "latency": {
+        "samples": 51,
+        "mean_ms": 0.117,
+        "std_ms": 0.015,
+        "p50_ms": 0.118,
+        "p95_ms": 0.142,
+        "min_ms": 0.092,
+        "max_ms": 0.155
+      }
+    },
+    {
+      "method": "FAISS HNSW with the allowed ids as selector",
+      "ef": 80,
+      "questions": 17,
+      "index_recall@10": 0.9353,
+      "recall@1": 0.5882,
+      "recall@10": 0.8235,
+      "mrr": 0.6473,
+      "returned_mean": 10.0,
+      "fewer_than_k": 0,
+      "latency": {
+        "samples": 51,
+        "mean_ms": 0.2,
+        "std_ms": 0.032,
+        "p50_ms": 0.19,
+        "p95_ms": 0.253,
+        "min_ms": 0.142,
+        "max_ms": 0.27
+      }
+    },
+    {
+      "method": "FAISS HNSW with the allowed ids as selector",
+      "ef": 160,
+      "questions": 17,
+      "index_recall@10": 0.9824,
+      "recall@1": 0.6471,
+      "recall@10": 0.8824,
+      "mrr": 0.7032,
+      "returned_mean": 10.0,
+      "fewer_than_k": 0,
+      "latency": {
+        "samples": 51,
+        "mean_ms": 0.359,
+        "std_ms": 0.055,
+        "p50_ms": 0.365,
+        "p95_ms": 0.431,
+        "min_ms": 0.22,
+        "max_ms": 0.576
+      }
+    },
+    {
+      "method": "FAISS HNSW, 10 nearest, then filter",
+      "ef": 40,
+      "questions": 17,
+      "index_recall@10": 0.4941,
+      "recall@1": 0.4706,
+      "recall@10": 0.5882,
+      "mrr": 0.5084,
+      "returned_mean": 4.9412,
+      "fewer_than_k": 16,
+      "latency": {
+        "samples": 51,
+        "mean_ms": 0.136,
+        "std_ms": 0.065,
+        "p50_ms": 0.112,
+        "p95_ms": 0.26,
+        "min_ms": 0.077,
+        "max_ms": 0.398
+      }
+    },
+    {
+      "method": "FAISS HNSW, 100 nearest, then filter",
+      "ef": 100,
+      "questions": 17,
+      "index_recall@10": 0.8882,
+      "recall@1": 0.5294,
+      "recall@10": 0.7647,
+      "mrr": 0.5855,
+      "returned_mean": 9.1176,
+      "fewer_than_k": 2,
+      "latency": {
+        "samples": 51,
+        "mean_ms": 0.358,
+        "std_ms": 0.14,
+        "p50_ms": 0.327,
+        "p95_ms": 0.57,
+        "min_ms": 0.193,
+        "max_ms": 1.019
+      }
+    },
+    {
+      "method": "FAISS HNSW, 1000 nearest, then filter",
+      "ef": 1000,
+      "questions": 17,
+      "index_recall@10": 1.0,
+      "recall@1": 0.6471,
+      "recall@10": 0.8824,
+      "mrr": 0.7032,
+      "returned_mean": 10.0,
+      "fewer_than_k": 0,
+      "latency": {
+        "samples": 51,
+        "mean_ms": 4.367,
+        "std_ms": 0.664,
+        "p50_ms": 4.28,
+        "p95_ms": 4.975,
+        "min_ms": 3.578,
+        "max_ms": 8.438
+      }
+    },
+    {
+      "method": "MariaDB statement",
+      "ef": null,
+      "questions": 17,
+      "index_recall@10": 1.0,
+      "recall@1": 0.6471,
+      "recall@10": 0.8824,
+      "mrr": 0.7032,
+      "returned_mean": 10.0,
+      "fewer_than_k": 0,
+      "latency": {
+        "samples": 51,
+        "mean_ms": 8.384,
+        "std_ms": 4.938,
+        "p50_ms": 6.762,
+        "p95_ms": 19.017,
+        "min_ms": 4.463,
+        "max_ms": 22.931
+      }
+    },
+    {
+      "method": "MariaDB ids, FAISS HNSW with selector, MariaDB text",
+      "ef": 40,
+      "questions": 17,
+      "index_recall@10": 0.8706,
+      "recall@1": 0.5882,
+      "recall@10": 0.8235,
+      "mrr": 0.6522,
+      "returned_mean": 9.7647,
+      "fewer_than_k": 1,
+      "latency": {
+        "samples": 51,
+        "mean_ms": 17.15,
+        "std_ms": 9.298,
+        "p50_ms": 13.391,
+        "p95_ms": 40.283,
+        "min_ms": 7.795,
+        "max_ms": 42.592
+      }
+    }
+  ]
+}

@@ -42,7 +42,10 @@ url = "https://download.pytorch.org/whl/cpu"
 explicit = true
 
 [dependency-groups]
-dev = ["pytest>=9.1.1"]
+dev = [
+    "faiss-cpu>=1.15.1",
+    "pytest>=9.1.1",
+]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

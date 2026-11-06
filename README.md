@@ -10,7 +10,9 @@ UEZA answers questions about 262 English Wikipedia articles on artificial intell
 - A search takes 8 ms on average without a filter and 12 ms with one (p95 12 and 24 ms), measured from Python against MariaDB in Docker. The vector index returns 95% of the exact 10 nearest chunks.
 - Three things about MariaDB's vector search made it up to 25 times faster or more accurate on our data, each tested by changing that one thing ([What we learned](#what-we-learned-about-the-vector-index)): sending the query vector as binary instead of text, taking the nearest chunks before the join, and keeping the index's cache and statistics right.
 - `M=16` with `mhnsw_ef_search` 40: `M=32` returns 4 more of every 100 exact neighbours but takes 4.5 times as long to build, and does not find the right article more often ([M sweep](./docs/database/Vector-Search.md#choosing-m-and-ef_search)).
-- A distance threshold rejects every off-topic question before the language model is called, but not questions that are close to the topic and still not answered by the articles.
+- Next to FAISS on the same vectors, MariaDB loses on raw search speed and wins once the application needs the text and the filters: FAISS plus a query for the text took 6.3 ms per plain question against MariaDB's 5.1 ms, and a filtered question 17 ms and 87% of the exact answer against 8.4 ms and the exact answer ([FAISS Baseline](./docs/database/FAISS-Baseline.md)).
+- Not one of the 11 unanswerable questions got an answer: the distance threshold rejected 8 and the language model answered `NOT_FOUND` for the other 3. The small local model we used (`qwen2.5:3b`) also refused 18 of the 60 answerable ones ([Answers](#answers-with-the-language-model)).
+- A live sync checks all 262 articles against Wikipedia in 2.7 s and loads only the changed ones again; 184 had changed since our snapshot ([Live sync](#live-sync)).
 
 ## Quick start
 
@@ -39,6 +41,10 @@ make ingest            # all 262 articles; about an hour on our laptop CPU
 make ingest-check      # every article present, chunks complete, no orphan rows
 make eval              # Recall@K, MRR, latency, not-found analysis
 make reindex           # rebuild the vector index; make ingest does it after replacing articles
+uv run python -m src.ingestion sync --dry-run   # which articles changed on Wikipedia
+uv run python -m src.ingestion sync             # load only those again, at their latest revision
+uv run python -m src.evaluation faiss           # FAISS on the same vectors, next to MariaDB
+uv run python -m src.evaluation answers         # every question through the language model
 ```
 
 `docker-compose.yml` starts MariaDB with two vector settings, `mhnsw_ef_search=40` and a 64 MB index cache. If your database container was created before they were added, `docker compose up -d --wait db` recreates it with them; the data stays in its volume.
@@ -110,33 +116,50 @@ The same questions on 28 October, before the changes described below, took 9.2 m
 
 The distance of the closest chunk is 0.298 on average for the answerable questions (highest 0.461) and 0.438 for the unanswerable ones (lowest 0.309). With `RAG_MAX_DISTANCE=0.42`, 97% of the answerable questions keep their context and 8 of the 11 unanswerable ones are rejected before the language model is called. All seven football and tennis questions are rejected (0.437 to 0.536), and so is the AIBO question (0.439). Three questions about AI whose answer is not in the articles pass: Leela Chess Zero (0.309, closest article AlphaGo), PROSPECTOR (0.357, Expert system) and Xiaoice (0.389, History of artificial intelligence).
 
-So the threshold filters out questions that are off topic, not questions that are close to the corpus. A lower threshold does not fix that: 0.356 rejects 10 of the 11, but it also takes the context away from 12% of the answerable questions. Those questions are left to the second check, the model answering `NOT_FOUND` when the passages do not contain the answer.
+So the threshold filters out questions that are off topic, not questions that are close to the corpus. A lower threshold does not fix that: 0.356 rejects 10 of the 11, but it also takes the context away from 12% of the answerable questions. Those questions are left to the second check, the model answering `NOT_FOUND` when the passages do not contain the answer, measured below.
+
+### Answers with the language model
+
+All 71 questions through the same code as `POST /ask`, with `qwen2.5:3b` in Ollama on the laptop's CPU and the top 5 chunks, on 6 November ([report](./eval/results/20261106-183004_answers.md)):
+
+| Questions | n | answered | of those citing a correct article | `NOT_FOUND` | rejected by distance |
+| --- | --- | --- | --- | --- | --- |
+| answerable | 60 | 40 | 31 | 18 | 2 |
+| unanswerable | 11 | 0 | – | 3 | 8 |
+
+The model answered `NOT_FOUND` for the three unanswerable questions that pass the threshold, so together the two checks let no unanswerable question through. But it also refused 18 answerable questions, 14 of them with a chunk of the correct article among its 5 passages. Of its 40 answers, one was wrong ("AlphaFold" for Dendral) and two were only a citation. A 3-billion-parameter model on a CPU (33.5 s per answer at the median) is too cautious for this prompt; a larger model is the next thing to try. Details: [Evaluation](./docs/evaluation/Home.md#answers-with-the-language-model).
+
+### Live sync
+
+`sync` asks MediaWiki for the latest revision of every stored article, 50 per request and without the text, and loads only the changed articles again, each in one transaction ([Ingestion](./docs/ingestion/Home.md#live-sync)). On 6 November, 184 of the 262 articles had a newer revision than the snapshot; the check took 2.7 s. Syncing 5 of them replaced 300 chunks in 132 s, 26 s per article for fetching and embedding on the CPU. The evaluation stays on the snapshot, because the questions with an edit-date filter were written for its dates.
+
 
 ## What we learned about the vector index
 
 - **Send the query vector as binary.** MariaDB evaluates `VEC_FromText('[0.0123,...]')` again for every row it compares. Written as a hex literal of the vector's binary value, the same search returned the same chunks for all 71 questions, and the full scan went from 608 to 24 ms, filtered searches from 95 to 12.6 ms on average, and the "linked from" filter from 358 to 23 ms. That filter's plan was fine all along; it covers 3,742 chunks, and each paid for parsing the text. ([Vector Search](./docs/database/Vector-Search.md#the-query-vector-text-or-binary))
 - **Take the nearest chunks first, then join.** With `articles` joined in the same `SELECT`, the index returned the exact top 10 for every `M`, ignored `mhnsw_ef_search` and took 32 to 67 ms: it searched far more of the graph than the 10 rows needed. With the 10 nearest chunks taken from `article_chunks` alone in a derived table, recall follows `M` and `mhnsw_ef_search`, as for any HNSW index, and the search takes 0.3 ms inside MariaDB. ([Statement shape](./docs/database/Vector-Search.md#statement-shape-join-or-nearest-chunks-first))
 - **`M=16`, `mhnsw_ef_search` 40, chosen on the real embeddings.** From `M` 6 to 64, the index recall at `mhnsw_ef_search` 40 rose from 0.87 to 0.99 and the build time from 2 s to 135 s. `M=16` finds the right article as often as the exact search, with 95% of the exact top 10, and builds in 5.5 s; the ingest rebuilds the index after every re-ingest, so build time counts. ([M sweep](./docs/database/Vector-Search.md#choosing-m-and-ef_search))
-- **The index cache has to hold the deleted vectors too.** A deleted chunk stays in the HNSW graph until the index is rebuilt. After all chunks were replaced, a search took 72 ms with MariaDB's default 16 MB index cache, 20 ms with 64 MB and 72 ms again at 16 MB: the graph, deleted nodes included, no longer fit, and MariaDB drops the whole cache after a search that leaves it too large. We run MariaDB with 64 MB and rebuild the index after a re-ingest. ([Vector Index State](./docs/database/Index-State.md#cause-1-deleted-vectors-and-the-index-cache))
+- **The index cache has to hold the deleted vectors too.** A deleted chunk stays in the HNSW graph until the index is rebuilt. After all chunks were replaced, a search took 72 ms with MariaDB's default 16 MB index cache, 20 ms with 64 MB and 72 ms again at 16 MB: the graph, deleted nodes included, no longer fit, and MariaDB drops the whole cache after a search that leaves it too large. We run MariaDB with 64 MB and rebuild the index after a re-ingest. With the nearest-first statement this mostly stopped mattering: replacing up to half of the chunks changed nothing measurable, and all of them made a search 3 ms slower, even with 16 MB at most 16 ms ([partial replacement](./docs/database/Index-State.md#replacing-part-of-the-chunks)). ([Vector Index State](./docs/database/Index-State.md#cause-1-deleted-vectors-and-the-index-cache))
 - **After a rebuild, InnoDB thinks the graph is empty.** `ALTER TABLE ... ADD VECTOR INDEX` leaves the hidden graph table with the statistics of an empty table, and after a restart MariaDB sizes every search by them: index recall stayed around 0.9 for every `M` and `mhnsw_ef_search`. Setting the row count right, and nothing else, gave 0.93 to 1.00; setting it back to 0 lost it again. `make reindex` now inserts and deletes one chunk, which makes InnoDB count the table. This was the cause of the "92 to 94%" in our earlier results. ([Vector Index State](./docs/database/Index-State.md#cause-2-the-graph-tables-statistics-after-a-rebuild))
 - **With a filter, the vector index is not used.** MariaDB starts from the filter's index, reads the chunks of the matching articles and sorts them by distance, so filtered searches are exact. Right after a bulk load the statistics were stale and MariaDB scanned every chunk even without a filter; the ingest runs `ANALYZE TABLE` at the end.
 
 ## Why MariaDB and not a separate vector store
 
-- **Filters and the vector search are one statement.** With a filter, MariaDB starts from the filter's index and the answer is exact. The usual alternative, "fetch the N nearest chunks, then filter", returned only 0 to 2.8 of 10 rows in our generated-vector experiment when the filter was selective and the question was about other articles, even with N = 1000.
+- **Filters and the vector search are one statement.** With a filter, MariaDB starts from the filter's index and the answer is exact, in 8.4 ms per question. FAISS, which has no metadata, first needed the ids of the allowed chunks from MariaDB (16.6 ms on average), and its HNSW search over them returned 87% of the exact answer. The usual shortcut, "fetch the 10 nearest chunks, then filter", returned fewer than 10 chunks for 16 of the 17 filtered questions ([FAISS Baseline](./docs/database/FAISS-Baseline.md#questions-with-a-filter-17)).
 - **Joins with the rest of the data.** "Linked from article X" is a join over the links table. A separate vector store would need the links copied into its metadata and kept in sync.
-- **One transaction per article.** The ingest replaces an article's metadata, categories, links, chunks and vectors in one transaction ([src/database/repositories/articles.py](./src/database/repositories/articles.py)), so there is no second system to update and no window in which the two disagree.
+- **One transaction per article.** The ingest and the sync replace an article's metadata, categories, links, chunks and vectors in one transaction ([src/database/repositories/articles.py](./src/database/repositories/articles.py)), so there is no second system to update and no window in which the two disagree. FAISS's HNSW index cannot even delete a vector (`remove_ids` is not implemented for it).
 - **One system** to run, back up and secure.
 
 ## Where this approach loses
 
-- **The index needs looking after.** Deleted vectors stay in the graph until a rebuild, the default cache is too small for that, and a rebuild leaves the graph table's statistics wrong. We work around all three (64 MB cache, rebuild after a re-ingest, a statistics refresh after the rebuild), but each one first showed up as a puzzling measurement.
+- **A separate index searches faster.** FAISS's HNSW search took 0.09 ms in the Python process, MariaDB's 0.46 ms inside the server and 5 ms through the driver. FAISS also built the index 9 times faster (0.6 s against 5.5 s). An application that needs no text and no filters from a database would be faster with FAISS.
+- **The index needs looking after.** Deleted vectors stay in the graph until a rebuild, the default cache is small, and a rebuild leaves the graph table's statistics wrong. We work around all three (64 MB cache, rebuilds after large changes, a statistics refresh after the rebuild), but each one first showed up as a puzzling measurement.
 - **Small details decide the speed.** Writing the vector as text made searches up to 25 times slower, and the join in the same `SELECT` made the index search most of the graph. Neither is visible in `EXPLAIN`.
 - **The query vector is part of the SQL text.** aiomysql cannot send bytes as a parameter with the PyMySQL version we use, so the 3,072 bytes of the vector are written into the statement as a hex literal. It is built from validated floats only, but it is 6 KB of SQL per search.
 - **Rebuilds get slow with larger `M`:** 25 s at `M=32` and 135 s at `M=64` for 6,144 chunks.
 - **Weak filters scan.** The optimizer chooses the exact plan even when the filter keeps most of the table. At 6,144 chunks that costs at most about as much as a full scan (19 to 24 ms); it grows with the corpus.
 - **One vector index per table, tied to one dimension.** Comparing a 384-dimensional model needs a second table.
-- **Not measured yet:** the comparison with FAISS on the same vectors, concurrent searches and the memory of the index.
+- **Not measured yet:** concurrent searches, the memory of the index and a larger corpus.
 
 ## Data model
 
@@ -184,22 +207,30 @@ question ──► embedding ──► one SQL statement: vector distance + filt
 ```
 
 - [Data decisions](./docs/data_decisions.md): topic, the 262 articles, cleaning and chunking rules
-- [Ingestion](./docs/ingestion/Home.md): MediaWiki client, cache, rate limiting
+- [Ingestion](./docs/ingestion/Home.md): MediaWiki client, cache, rate limiting, live sync
 - [Vector search and index parameters](./docs/database/Vector-Search.md): the index experiments
+- [Vector index state](./docs/database/Index-State.md): the index cache, the graph statistics and replaced chunks
+- [FAISS baseline](./docs/database/FAISS-Baseline.md): the same vectors and questions in FAISS
 - [Retrieval and RAG](./docs/rag/Home.md): the search statement, the prompt and the not-found logic
-- [Evaluation](./docs/evaluation/Home.md): ground truth, metrics and method
+- [Evaluation](./docs/evaluation/Home.md): ground truth, metrics and method, the language model's answers
 - [All documentation](./docs/Home.md): architecture, Docker, CI and the Git workflow
 
 ## Status
 
-Done: schema and vector index, ingest of a fixed snapshot, hybrid search, the question-answering API and page, evaluation, and the index tuning on the real embeddings (query format, statement shape, `M` and `mhnsw_ef_search`, cache size, graph statistics).
+Done:
 
-Next:
-
-- live sync with Wikipedia, and how fast the index slows down when only some chunks are replaced
+- schema and vector index, ingest of a fixed snapshot, hybrid search, the question-answering API and page
+- evaluation: Recall@K, MRR, latency, index recall, not-found analysis on 71 questions
+- index tuning on the real embeddings: query format, statement shape, `M` and `mhnsw_ef_search`, cache size, graph statistics
 - the FAISS baseline on the same vectors
-- chunk sizes and embedding models compared on the same questions
-- measuring how often the language model answers `NOT_FOUND` for the unanswerable questions
+- live sync with Wikipedia, and the effect of partly replaced chunks on the index
+- the language model's `NOT_FOUND` answers on the same questions
+
+Not done, as future work:
+
+- chunk sizes (configs B and C) and other embedding models compared on the same questions; each needs a full re-ingest, and another dimension needs a second table
+- a larger language model, or a less strict prompt, against the refusals of the 3B model
+- concurrent searches and a larger corpus
 - reporting the two index behaviours (graph statistics after a rebuild, the whole-cache reset) to MariaDB
 
 ## Team

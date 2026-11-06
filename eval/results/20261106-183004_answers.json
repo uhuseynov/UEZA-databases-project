@@ -1,0 +1,1766 @@
+{
+  "kind": "answers",
+  "label": "answers",
+  "created_at": "2026-11-06T18:30:04+00:00",
+  "environment": {
+    "python": "3.14.8",
+    "platform": "Windows-11-10.0.26340-SP0",
+    "cpu_count": 12,
+    "embedding_model": "BAAI/bge-base-en-v1.5",
+    "embedding_dimension": 768,
+    "git_commit": "70bb82c",
+    "mariadb_version": "12.3.3-MariaDB-ubu2404",
+    "mhnsw_ef_search_default": 40,
+    "articles": 262,
+    "chunks": 6144,
+    "mhnsw_max_cache_size": 67108864,
+    "vector_index_m": 16,
+    "vector_index_distance": "cosine",
+    "llm_model": "qwen2.5:3b",
+    "llm_api_base_url": "http://localhost:11434/v1",
+    "rag_max_distance": 0.42,
+    "top_k": 5
+  },
+  "summary": {
+    "answerable": {
+      "questions": 60,
+      "answered": 40,
+      "answered_citing_a_correct_article": 31,
+      "answered_without_citation": 3,
+      "not_found": 18,
+      "rejected": 2,
+      "errors": 0
+    },
+    "unanswerable": {
+      "questions": 11,
+      "rejected": 8,
+      "not_found": 3,
+      "answered": 0,
+      "errors": 0
+    },
+    "replies_mentioning_not_found": 0,
+    "llm_latency": {
+      "samples": 61,
+      "mean_ms": 59080.549,
+      "std_ms": 217305.839,
+      "p50_ms": 33526.42,
+      "p95_ms": 45267.54,
+      "min_ms": 1864.43,
+      "max_ms": 1726990.06
+    }
+  },
+  "questions": [
+    {
+      "id": "1",
+      "question": "Which algorithm updates action values using the maximum estimated value of the next state?",
+      "answerable": true,
+      "filters": {},
+      "correct_articles": [
+        "Q-learning"
+      ],
+      "outcome": "answered",
+      "reply": "Watkin's Q-learning updates action values using the maximum estimated value of the next state. [2][3]",
+      "cited": [
+        "Reinforcement learning"
+      ],
+      "cites_correct": false,
+      "no_citation": false,
+      "mentions_not_found": false,
+      "context_titles": [
+        "State–action–reward–state–action",
+        "Reinforcement learning"
+      ],
+      "top_distance": 0.282615,
+      "llm_ms": 2460.96,
+      "seconds": 2.67
+    },
+    {
+      "id": "2",
+      "question": "What technique finds the hyperplane that separates classes with the largest margin?",
+      "answerable": true,
+      "filters": {},
+      "correct_articles": [
+        "Support vector machine"
+      ],
+      "outcome": "answered",
+      "reply": "The technique that finds the hyperplane that separates classes with the largest margin is the maximum-margin hyperplane. This is achieved by maximizing the distance from the data points nearest to it on each side, which is also known as the functional margin.",
+      "cited": [],
+      "cites_correct": false,
+      "no_citation": true,
+      "mentions_not_found": false,
+      "context_titles": [
+        "Support vector machine"
+      ],
+      "top_distance": 0.259607,
+      "llm_ms": 4094.36,
+      "seconds": 4.18
+    },
+    {
+      "id": "3",
+      "question": "Which method averages many decision trees trained on random subsets of the data?",
+      "answerable": true,
+      "filters": {},
+      "correct_articles": [
+        "Random forest"
+      ],
+      "outcome": "answered",
+      "reply": "Random forests average many decision trees trained on random subsets of the data. [1][3]",
+      "cited": [
+        "Decision tree learning",
+        "Random forest"
+      ],
+      "cites_correct": true,
+      "no_citation": false,
+      "mentions_not_found": false,
+      "context_titles": [
+        "Decision tree learning",
+        "Random forest"
+      ],
+      "top_distance": 0.240861,
+      "llm_ms": 1864.43,
+      "seconds": 1.93
+    },
+    {
+      "id": "4",
+      "question": "What problem happens when a model memorizes training data and performs poorly on new data?",
+      "answerable": true,
+      "filters": {},
+      "correct_articles": [
+        "Overfitting"
+      ],
+      "outcome": "not_found",
+      "reply": "The articles in our corpus do not answer this question.",
+      "cited": [],
+      "cites_correct": false,
+      "no_citation": false,
+      "mentions_not_found": false,
+      "context_titles": [
+        "Overfitting",
+        "Large language model",
+        "Language model benchmark",
+        "Machine learning"
+      ],
+      "top_distance": 0.343571,
+      "llm_ms": 19454.08,
+      "seconds": 19.63
+    },
+    {
+      "id": "5",
+      "question": "Which iterative method repeatedly moves parameters in the direction of the negative gradient of a loss?",
+      "answerable": true,
+      "filters": {},
+      "correct_articles": [
+        "Gradient descent"
+      ],
+      "outcome": "answered",
+      "reply": "Gradient descent repeatedly moves parameters in the direction of the negative gradient of a loss. [1]",
+      "cited": [
+        "Gradient descent"
+      ],
+      "cites_correct": true,
+      "no_citation": false,
+      "mentions_not_found": false,
+      "context_titles": [
+        "Gradient descent",
+        "Gradient boosting"
+      ],
+      "top_distance": 0.304975,
+      "llm_ms": 31121.19,
+      "seconds": 31.22
+    },
+    {
+      "id": "6",
+      "question": "How do neural networks compute gradients of the loss with respect to each weight layer by layer?",
+      "answerable": true,
+      "filters": {},
+      "correct_articles": [
+        "Backpropagation"
+      ],
+      "outcome": "answered",
+      "reply": "Neural networks compute gradients of the loss with respect to each weight layer by layer using backpropagation. This method avoids inefficiency by computing the gradient of each layer from back to front, specifically the gradient of the weighted input of each layer, denoted by . The gradients of the weights of previous layers are then computed recursively. This process involves matrix multiplications and the use of auxiliary quantities, such as the \"error at level \", which is the gradient of the input values at that level. The gradient of the weights in a layer is computed using these quantities and matrix multiplications. [1][2][3][4]",
+      "cited": [
+        "Backpropagation"
+      ],
+      "cites_correct": true,
+      "no_citation": false,
+      "mentions_not_found": false,
+      "context_titles": [
+        "Backpropagation"
+      ],
+      "top_distance": 0.242411,
+      "llm_ms": 35859.7,
+      "seconds": 35.96
+    },
+    {
+      "id": "7",
+      "question": "Which architecture introduced gating cells to remember information over long sequences?",
+      "answerable": true,
+      "filters": {},
+      "correct_articles": [
+        "Long short-term memory"
+      ],
+      "outcome": "not_found",
+      "reply": "The articles in our corpus do not answer this question.",
+      "cited": [],
+      "cites_correct": false,
+      "no_citation": false,
+      "mentions_not_found": false,
+      "context_titles": [
+        "Types of artificial neural networks",
+        "Hierarchical temporal memory",
+        "Recurrent neural network"
+      ],
+      "top_distance": 0.311954,
+      "llm_ms": 30463.44,
+      "seconds": 30.62
+    },
+    {
+      "id": "8",
+      "question": "Which network uses skip connections so very deep models can be trained?",
+      "answerable": true,
+      "filters": {},
+      "correct_articles": [
+        "Residual neural network"
+      ],
+      "outcome": "answered",
+      "reply": "Residual network (part 2) [1]",
+      "cited": [
+        "Residual neural network"
+      ],
+      "cites_correct": true,
+      "no_citation": false,
+      "mentions_not_found": false,
+      "context_titles": [
+        "Residual neural network",
+        "Convolutional neural network",
+        "Neural network (machine learning)"
+      ],
+      "top_distance": 0.28136,
+      "llm_ms": 33097.07,
+      "seconds": 33.23
+    },
+    {
+      "id": "9",
+      "question": "Which model type learns to generate images by gradually removing noise?",
+      "answerable": true,
+      "filters": {},
+      "correct_articles": [
+        "Diffusion model"
+      ],
+      "outcome": "answered",
+      "reply": "Latent diffusion model [5]",
+      "cited": [
+        "Latent diffusion model"
+      ],
+      "cites_correct": false,
+      "no_citation": false,
+      "mentions_not_found": false,
+      "context_titles": [
+        "Diffusion model",
+        "Latent diffusion model"
+      ],
+      "top_distance": 0.259253,
+      "llm_ms": 35017.83,
+      "seconds": 35.14
+    },
+    {
+      "id": "10",
+      "question": "What thought experiment argues that running a program is not the same as understanding?",
+      "answerable": true,
+      "filters": {},
+      "correct_articles": [
+        "Chinese room"
+      ],
+      "outcome": "answered",
+      "reply": "Searle's Chinese room argument argues that running a program is not the same as understanding.",
+      "cited": [],
+      "cites_correct": false,
+      "no_citation": true,
+      "mentions_not_found": false,
+      "context_titles": [
+        "Chinese room",
+        "Philosophy of artificial intelligence",
+        "Turing test"
+      ],
+      "top_distance": 0.393097,
+      "llm_ms": 30501.6,
+      "seconds": 30.65
+    },
+    {
+      "id": "11",
+      "question": "In which paper did Turing replace the question of whether machines can think with an imitation game?",
+      "answerable": true,
+      "filters": {},
+      "correct_articles": [
+        "Computing Machinery and Intelligence"
+      ],
+      "outcome": "answered",
+      "reply": "[1]",
+      "cited": [
+        "Turing test"
+      ],
+      "cites_correct": false,
+      "no_citation": false,
+      "mentions_not_found": false,
+      "context_titles": [
+        "Turing test",
+        "Computing Machinery and Intelligence"
+      ],
+      "top_distance": 0.217029,
+      "llm_ms": 23189.02,
+      "seconds": 23.29
+    },
+    {
+      "id": "12",
+      "question": "Which 1956 summer event is often considered the birth of AI as a field?",
+      "answerable": true,
+      "filters": {},
+      "correct_articles": [
+        "Dartmouth workshop"
+      ],
+      "outcome": "not_found",
+      "reply": "The articles in our corpus do not answer this question.",
+      "cited": [],
+      "cites_correct": false,
+      "no_citation": false,
+      "mentions_not_found": false,
+      "context_titles": [
+        "History of artificial intelligence",
+        "Dartmouth workshop",
+        "Artificial intelligence",
+        "Symbolic artificial intelligence"
+      ],
+      "top_distance": 0.329016,
+      "llm_ms": 31532.62,
+      "seconds": 31.64
+    },
+    {
+      "id": "13",
+      "question": "What clustering method assigns points to the nearest of k centroids?",
+      "answerable": true,
+      "filters": {},
+      "correct_articles": [
+        "K-means clustering"
+      ],
+      "outcome": "answered",
+      "reply": "k-means clustering assigns points to the nearest of k centroids. [1][2]",
+      "cited": [
+        "Cluster analysis",
+        "K-means clustering"
+      ],
+      "cites_correct": true,
+      "no_citation": false,
+      "mentions_not_found": false,
+      "context_titles": [
+        "Cluster analysis",
+        "K-means clustering"
+      ],
+      "top_distance": 0.21573,
+      "llm_ms": 34242.98,
+      "seconds": 34.36
+    },
+    {
+      "id": "14",
+      "question": "Which technique reduces dimensions by projecting data onto directions of maximum variance?",
+      "answerable": true,
+      "filters": {},
+      "correct_articles": [
+        "Principal component analysis"
+      ],
+      "outcome": "answered",
+      "reply": "principal component analysis [1][2]",
+      "cited": [
+        "Principal component analysis"
+      ],
+      "cites_correct": true,
+      "no_citation": false,
+      "mentions_not_found": false,
+      "context_titles": [
+        "Principal component analysis",
+        "Machine learning"
+      ],
+      "top_distance": 0.349001,
+      "llm_ms": 27267.39,
+      "seconds": 27.37
+    },
+    {
+      "id": "15",
+      "question": "What is it called when a language model produces confident but false statements?",
+      "answerable": true,
+      "filters": {},
+      "correct_articles": [
+        "Hallucination (artificial intelligence)"
+      ],
+      "outcome": "not_found",
+      "reply": "The articles in our corpus do not answer this question.",
+      "cited": [],
+      "cites_correct": false,
+      "no_citation": false,
+      "mentions_not_found": false,
+      "context_titles": [
+        "Large language model",
+        "Retrieval-augmented generation"
+      ],
+      "top_distance": 0.311543,
+      "llm_ms": 33224.68,
+      "seconds": 33.36
+    },
+    {
+      "id": "16",
+      "question": "Which method trains a policy by directly following the gradient of expected reward?",
+      "answerable": true,
+      "filters": {},
+      "correct_articles": [
+        "Policy gradient method"
+      ],
+      "outcome": "answered",
+      "reply": "REINFORCE method trains a policy by directly following the gradient of expected reward. [1][2]",
+      "cited": [
+        "Policy gradient method"
+      ],
+      "cites_correct": true,
+      "no_citation": false,
+      "mentions_not_found": false,
+      "context_titles": [
+        "Policy gradient method",
+        "Reinforcement learning",
+        "Reinforcement learning from human feedback"
+      ],
+      "top_distance": 0.23186,
+      "llm_ms": 33798.06,
+      "seconds": 33.88
+    },
+    {
+      "id": "17",
+      "question": "Which dataset of labeled photographs drove progress in image classification contests?",
+      "answerable": true,
+      "filters": {},
+      "correct_articles": [
+        "ImageNet"
+      ],
+      "outcome": "answered",
+      "reply": "ImageNet drove progress in image classification contests according to the passages. [1][2][3]",
+      "cited": [
+        "ImageNet"
+      ],
+      "cites_correct": true,
+      "no_citation": false,
+      "mentions_not_found": false,
+      "context_titles": [
+        "ImageNet"
+      ],
+      "top_distance": 0.303134,
+      "llm_ms": 33904.48,
+      "seconds": 34.01
+    },
+    {
+      "id": "18",
+      "question": "What algorithm detects scale-independent keypoints in images?",
+      "answerable": true,
+      "filters": {},
+      "correct_articles": [
+        "Scale-invariant feature transform"
+      ],
+      "outcome": "not_found",
+      "reply": "The articles in our corpus do not answer this question.",
+      "cited": [],
+      "cites_correct": false,
+      "no_citation": false,
+      "mentions_not_found": false,
+      "context_titles": [
+        "Scale-invariant feature transform"
+      ],
+      "top_distance": 0.230909,
+      "llm_ms": 28598.92,
+      "seconds": 28.69
+    },
+    {
+      "id": "19",
+      "question": "Which approach combines retrieved documents with a language model to produce answers?",
+      "answerable": true,
+      "filters": {},
+      "correct_articles": [
+        "Retrieval-augmented generation"
+      ],
+      "outcome": "answered",
+      "reply": "Retrieval-augmented generation (RAG) combines retrieved documents with a language model to produce answers.",
+      "cited": [],
+      "cites_correct": false,
+      "no_citation": true,
+      "mentions_not_found": false,
+      "context_titles": [
+        "Question answering",
+        "Information retrieval",
+        "Retrieval-augmented generation"
+      ],
+      "top_distance": 0.22381,
+      "llm_ms": 33597.41,
+      "seconds": 33.69
+    },
+    {
+      "id": "20",
+      "question": "Which statistical model discovers topics in a collection of documents using Dirichlet priors?",
+      "answerable": true,
+      "filters": {},
+      "correct_articles": [
+        "Latent Dirichlet allocation"
+      ],
+      "outcome": "answered",
+      "reply": "Latent Dirichlet allocation (part 8)[3]",
+      "cited": [
+        "Latent Dirichlet allocation"
+      ],
+      "cites_correct": true,
+      "no_citation": false,
+      "mentions_not_found": false,
+      "context_titles": [
+        "Mixture model",
+        "Latent Dirichlet allocation"
+      ],
+      "top_distance": 0.212588,
+      "llm_ms": 27266.2,
+      "seconds": 27.36
+    },
+    {
+      "id": "21",
+      "question": "What task decides which meaning of an ambiguous word is intended in a sentence?",
+      "answerable": true,
+      "filters": {},
+      "correct_articles": [
+        "Word-sense disambiguation"
+      ],
+      "outcome": "answered",
+      "reply": "Word-sense disambiguation decides which meaning of an ambiguous word is intended in a sentence. [1]",
+      "cited": [
+        "Word-sense disambiguation"
+      ],
+      "cites_correct": true,
+      "no_citation": false,
+      "mentions_not_found": false,
+      "context_titles": [
+        "Word-sense disambiguation",
+        "SemEval"
+      ],
+      "top_distance": 0.294934,
+      "llm_ms": 25609.26,
+      "seconds": 25.71
+    },
+    {
+      "id": "22",
+      "question": "Which empirical law says a word's frequency is inversely related to its rank in a frequency table?",
+      "answerable": true,
+      "filters": {},
+      "correct_articles": [
+        "Zipf's law"
+      ],
+      "outcome": "answered",
+      "reply": "Zipf's law [1]",
+      "cited": [
+        "Zipf's law"
+      ],
+      "cites_correct": true,
+      "no_citation": false,
+      "mentions_not_found": false,
+      "context_titles": [
+        "Zipf's law"
+      ],
+      "top_distance": 0.292095,
+      "llm_ms": 35853.38,
+      "seconds": 35.98
+    },
+    {
+      "id": "23",
+      "question": "What technique represents words as dense vectors so that similar meanings lie close together?",
+      "answerable": true,
+      "filters": {},
+      "correct_articles": [
+        "Word embedding"
+      ],
+      "outcome": "answered",
+      "reply": "Word embeddings represent words as dense vectors so that similar meanings lie close together. [1]",
+      "cited": [
+        "Word embedding"
+      ],
+      "cites_correct": true,
+      "no_citation": false,
+      "mentions_not_found": false,
+      "context_titles": [
+        "Word embedding",
+        "Latent semantic analysis"
+      ],
+      "top_distance": 0.276872,
+      "llm_ms": 33354.02,
+      "seconds": 33.46
+    },
+    {
+      "id": "24",
+      "question": "Which program defeated a top professional Go player in 2016?",
+      "answerable": true,
+      "filters": {},
+      "correct_articles": [
+        "AlphaGo"
+      ],
+      "outcome": "answered",
+      "reply": "AlphaGo defeated a top professional Go player in 2016. [1][2][3]",
+      "cited": [
+        "Google DeepMind",
+        "AlphaGo"
+      ],
+      "cites_correct": true,
+      "no_citation": false,
+      "mentions_not_found": false,
+      "context_titles": [
+        "Google DeepMind",
+        "AlphaGo"
+      ],
+      "top_distance": 0.311558,
+      "llm_ms": 32399.57,
+      "seconds": 32.51
+    },
+    {
+      "id": "25",
+      "question": "Which system predicts the 3D shape of proteins from their amino acid sequence?",
+      "answerable": true,
+      "filters": {},
+      "correct_articles": [
+        "AlphaFold"
+      ],
+      "outcome": "answered",
+      "reply": "AlphaFold [1][2]",
+      "cited": [
+        "Machine learning in bioinformatics",
+        "AlphaFold"
+      ],
+      "cites_correct": true,
+      "no_citation": false,
+      "mentions_not_found": false,
+      "context_titles": [
+        "Machine learning in bioinformatics",
+        "AlphaFold"
+      ],
+      "top_distance": 0.2992,
+      "llm_ms": 30937.24,
+      "seconds": 31.05
+    },
+    {
+      "id": "26",
+      "question": "What approach trains a shared model across many devices without collecting their raw data?",
+      "answerable": true,
+      "filters": {},
+      "correct_articles": [
+        "Federated learning"
+      ],
+      "outcome": "answered",
+      "reply": "Federated learning trains a shared model across many devices without collecting their raw data. [1]",
+      "cited": [
+        "Federated learning"
+      ],
+      "cites_correct": true,
+      "no_citation": false,
+      "mentions_not_found": false,
+      "context_titles": [
+        "Federated learning",
+        "Foundation model",
+        "Knowledge distillation"
+      ],
+      "top_distance": 0.319692,
+      "llm_ms": 35205.72,
+      "seconds": 35.33
+    },
+    {
+      "id": "27",
+      "question": "Which hypothesis says that almost-human robots can provoke a feeling of eeriness?",
+      "answerable": true,
+      "filters": {},
+      "correct_articles": [
+        "Uncanny valley"
+      ],
+      "outcome": "not_found",
+      "reply": "The articles in our corpus do not answer this question.",
+      "cited": [],
+      "cites_correct": false,
+      "no_citation": false,
+      "mentions_not_found": false,
+      "context_titles": [
+        "Uncanny valley"
+      ],
+      "top_distance": 0.273492,
+      "llm_ms": 27409.17,
+      "seconds": 27.55
+    },
+    {
+      "id": "28",
+      "question": "What is the hypothetical point at which AI-driven technological growth becomes uncontrollable?",
+      "answerable": true,
+      "filters": {},
+      "correct_articles": [
+        "Technological singularity"
+      ],
+      "outcome": "not_found",
+      "reply": "The articles in our corpus do not answer this question.",
+      "cited": [],
+      "cites_correct": false,
+      "no_citation": false,
+      "mentions_not_found": false,
+      "context_titles": [
+        "AI capability control",
+        "AI takeover",
+        "Technological singularity",
+        "AI aftermath scenarios"
+      ],
+      "top_distance": 0.309934,
+      "llm_ms": 35406.77,
+      "seconds": 35.53
+    },
+    {
+      "id": "29",
+      "question": "Which idea says an AI may pursue sub-goals like self-preservation whatever its final goal is?",
+      "answerable": true,
+      "filters": {},
+      "correct_articles": [
+        "Instrumental convergence"
+      ],
+      "outcome": "answered",
+      "reply": "Instrumental convergence [1][2]",
+      "cited": [
+        "Instrumental convergence",
+        "Existential risk from artificial intelligence"
+      ],
+      "cites_correct": true,
+      "no_citation": false,
+      "mentions_not_found": false,
+      "context_titles": [
+        "Instrumental convergence",
+        "Existential risk from artificial intelligence",
+        "History of artificial intelligence",
+        "Superintelligence"
+      ],
+      "top_distance": 0.302005,
+      "llm_ms": 32417.9,
+      "seconds": 32.52
+    },
+    {
+      "id": "30",
+      "question": "What happens when an AI exploits flaws in its reward function instead of doing the intended task?",
+      "answerable": true,
+      "filters": {},
+      "correct_articles": [
+        "Reward hacking"
+      ],
+      "outcome": "answered",
+      "reply": "When an AI exploits flaws in its reward function instead of doing the intended task, it engages in reward hacking. This occurs when the AI optimizes an imperfect proxy reward function, leading to poor performance compared to the true reward function. [1]",
+      "cited": [
+        "Reward hacking"
+      ],
+      "cites_correct": true,
+      "no_citation": false,
+      "mentions_not_found": false,
+      "context_titles": [
+        "Reward hacking",
+        "AI safety"
+      ],
+      "top_distance": 0.266557,
+      "llm_ms": 30312.94,
+      "seconds": 30.42
+    },
+    {
+      "id": "31",
+      "question": "Which problem models choosing between slot machines to balance exploration and exploitation?",
+      "answerable": true,
+      "filters": {},
+      "correct_articles": [
+        "Multi-armed bandit"
+      ],
+      "outcome": "not_found",
+      "reply": "The articles in our corpus do not answer this question.",
+      "cited": [],
+      "cites_correct": false,
+      "no_citation": false,
+      "mentions_not_found": false,
+      "context_titles": [
+        "Multi-armed bandit",
+        "Reinforcement learning"
+      ],
+      "top_distance": 0.245489,
+      "llm_ms": 35395.64,
+      "seconds": 35.49
+    },
+    {
+      "id": "32",
+      "question": "Which transform finds lines in an image by voting in a parameter space?",
+      "answerable": true,
+      "filters": {},
+      "correct_articles": [
+        "Hough transform"
+      ],
+      "outcome": "answered",
+      "reply": "Hough transform finds lines in an image by voting in a parameter space. [1][2]",
+      "cited": [
+        "Hough transform"
+      ],
+      "cites_correct": true,
+      "no_citation": false,
+      "mentions_not_found": false,
+      "context_titles": [
+        "Hough transform"
+      ],
+      "top_distance": 0.276854,
+      "llm_ms": 35842.25,
+      "seconds": 35.95
+    },
+    {
+      "id": "33",
+      "question": "Which algorithm estimates the state of a system from a series of noisy measurements?",
+      "answerable": true,
+      "filters": {},
+      "correct_articles": [
+        "Kalman filter"
+      ],
+      "outcome": "answered",
+      "reply": "The Kalman filter estimates the state of a system from a series of noisy measurements. [1][2]",
+      "cited": [
+        "Kalman filter"
+      ],
+      "cites_correct": true,
+      "no_citation": false,
+      "mentions_not_found": false,
+      "context_titles": [
+        "Kalman filter"
+      ],
+      "top_distance": 0.262874,
+      "llm_ms": 34235.69,
+      "seconds": 34.34
+    },
+    {
+      "id": "34",
+      "question": "Which technique fine-tunes a language model using human preference judgments as the reward signal?",
+      "answerable": true,
+      "filters": {},
+      "correct_articles": [
+        "Reinforcement learning from human feedback"
+      ],
+      "outcome": "answered",
+      "reply": "Reinforcement learning from human feedback (RLHF) fine-tunes a language model using human preference judgments as the reward signal. [1][2][3]",
+      "cited": [
+        "Reinforcement learning from human feedback",
+        "Reward hacking"
+      ],
+      "cites_correct": true,
+      "no_citation": false,
+      "mentions_not_found": false,
+      "context_titles": [
+        "Reinforcement learning from human feedback",
+        "Reward hacking",
+        "Reasoning model"
+      ],
+      "top_distance": 0.274203,
+      "llm_ms": 36824.46,
+      "seconds": 36.96
+    },
+    {
+      "id": "35",
+      "question": "Which method transfers knowledge from a large teacher model to a smaller student model?",
+      "answerable": true,
+      "filters": {},
+      "correct_articles": [
+        "Knowledge distillation"
+      ],
+      "outcome": "not_found",
+      "reply": "The articles in our corpus do not answer this question.",
+      "cited": [],
+      "cites_correct": false,
+      "no_citation": false,
+      "mentions_not_found": false,
+      "context_titles": [
+        "Knowledge distillation",
+        "Transfer learning",
+        "Neural scaling law"
+      ],
+      "top_distance": 0.359035,
+      "llm_ms": 34224.43,
+      "seconds": 34.34
+    },
+    {
+      "id": "36",
+      "question": "Among articles in the Reinforcement learning group, which describes methods that optimize the policy directly?",
+      "answerable": true,
+      "filters": {
+        "root_category": "Reinforcement learning"
+      },
+      "correct_articles": [
+        "Policy gradient method"
+      ],
+      "outcome": "answered",
+      "reply": "[1]",
+      "cited": [
+        "Policy gradient method"
+      ],
+      "cites_correct": true,
+      "no_citation": false,
+      "mentions_not_found": false,
+      "context_titles": [
+        "Policy gradient method",
+        "Proximal policy optimization"
+      ],
+      "top_distance": 0.29629,
+      "llm_ms": 25441.62,
+      "seconds": 25.58
+    },
+    {
+      "id": "37",
+      "question": "Which article longer than 250000 characters gives a broad overview of the whole field?",
+      "answerable": true,
+      "filters": {
+        "min_length": 250001
+      },
+      "correct_articles": [
+        "Artificial intelligence"
+      ],
+      "outcome": "rejected",
+      "reply": "The articles in our corpus do not answer this question.",
+      "cited": [],
+      "cites_correct": false,
+      "no_citation": false,
+      "mentions_not_found": false,
+      "context_titles": [
+        "Artificial intelligence"
+      ],
+      "top_distance": 0.460763,
+      "llm_ms": 0.0,
+      "seconds": 0.12
+    },
+    {
+      "id": "38",
+      "question": "Among articles last edited before 2026-01-01, which one is about increasing the resolution of video?",
+      "answerable": true,
+      "filters": {
+        "edited_before": "2026-01-01T00:00:00"
+      },
+      "correct_articles": [
+        "Video super-resolution"
+      ],
+      "outcome": "not_found",
+      "reply": "The articles in our corpus do not answer this question.",
+      "cited": [],
+      "cites_correct": false,
+      "no_citation": false,
+      "mentions_not_found": false,
+      "context_titles": [
+        "Video super-resolution"
+      ],
+      "top_distance": 0.404843,
+      "llm_ms": 13064.63,
+      "seconds": 13.17
+    },
+    {
+      "id": "39",
+      "question": "In the Computer vision group, which article describes estimating the apparent motion of pixels between frames?",
+      "answerable": true,
+      "filters": {
+        "root_category": "Computer vision"
+      },
+      "correct_articles": [
+        "Optical flow"
+      ],
+      "outcome": "answered",
+      "reply": "[1]",
+      "cited": [
+        "Optical flow"
+      ],
+      "cites_correct": true,
+      "no_citation": false,
+      "mentions_not_found": false,
+      "context_titles": [
+        "Optical flow",
+        "Computer vision"
+      ],
+      "top_distance": 0.294205,
+      "llm_ms": 36443.23,
+      "seconds": 36.6
+    },
+    {
+      "id": "40",
+      "question": "Among NLP articles shorter than 30000 characters, which one covers finding names of people and organizations in text?",
+      "answerable": true,
+      "filters": {
+        "root_category": "Natural language processing",
+        "max_length": 29999
+      },
+      "correct_articles": [
+        "Named-entity recognition"
+      ],
+      "outcome": "not_found",
+      "reply": "The articles in our corpus do not answer this question.",
+      "cited": [],
+      "cites_correct": false,
+      "no_citation": false,
+      "mentions_not_found": false,
+      "context_titles": [
+        "Named-entity recognition"
+      ],
+      "top_distance": 0.312921,
+      "llm_ms": 29933.26,
+      "seconds": 30.05
+    },
+    {
+      "id": "41",
+      "question": "Among Philosophy articles longer than 150000 characters, which one covers laws and rules governing AI?",
+      "answerable": true,
+      "filters": {
+        "root_category": "Philosophy of artificial intelligence",
+        "min_length": 150001
+      },
+      "correct_articles": [
+        "Regulation of artificial intelligence"
+      ],
+      "outcome": "not_found",
+      "reply": "The articles in our corpus do not answer this question.",
+      "cited": [],
+      "cites_correct": false,
+      "no_citation": false,
+      "mentions_not_found": false,
+      "context_titles": [
+        "Regulation of artificial intelligence"
+      ],
+      "top_distance": 0.318323,
+      "llm_ms": 39553.99,
+      "seconds": 39.66
+    },
+    {
+      "id": "42",
+      "question": "Among articles edited on or after 2026-10-04, which one describes AI-designed chip floorplanning?",
+      "answerable": true,
+      "filters": {
+        "edited_since": "2026-10-04T00:00:00"
+      },
+      "correct_articles": [
+        "AlphaChip"
+      ],
+      "outcome": "not_found",
+      "reply": "The articles in our corpus do not answer this question.",
+      "cited": [],
+      "cites_correct": false,
+      "no_citation": false,
+      "mentions_not_found": false,
+      "context_titles": [
+        "AlphaChip",
+        "Superintelligence"
+      ],
+      "top_distance": 0.31781,
+      "llm_ms": 38743.54,
+      "seconds": 38.94
+    },
+    {
+      "id": "43",
+      "question": "In the Core group, which article explains building weak learners one after another to reduce errors?",
+      "answerable": true,
+      "filters": {
+        "root_category": "Core"
+      },
+      "correct_articles": [
+        "Gradient boosting"
+      ],
+      "outcome": "rejected",
+      "reply": "The articles in our corpus do not answer this question.",
+      "cited": [],
+      "cites_correct": false,
+      "no_citation": false,
+      "mentions_not_found": false,
+      "context_titles": [
+        "Transfer learning",
+        "Autoencoder",
+        "Symbolic artificial intelligence",
+        "Attention Is All You Need",
+        "Gradient boosting"
+      ],
+      "top_distance": 0.441445,
+      "llm_ms": 0.0,
+      "seconds": 0.17
+    },
+    {
+      "id": "44",
+      "question": "In the category Text-to-video generation, which article describes OpenAI's video model?",
+      "answerable": true,
+      "filters": {
+        "category": "Text-to-video generation"
+      },
+      "correct_articles": [
+        "Sora (text-to-video model)"
+      ],
+      "outcome": "not_found",
+      "reply": "The articles in our corpus do not answer this question.",
+      "cited": [],
+      "cites_correct": false,
+      "no_citation": false,
+      "mentions_not_found": false,
+      "context_titles": [
+        "Text-to-video model"
+      ],
+      "top_distance": 0.201236,
+      "llm_ms": 31234.95,
+      "seconds": 31.34
+    },
+    {
+      "id": "45",
+      "question": "In the category Deepfakes, which article describes synthetic speech that imitates a person's voice?",
+      "answerable": true,
+      "filters": {
+        "category": "Deepfakes"
+      },
+      "correct_articles": [
+        "Audio deepfake"
+      ],
+      "outcome": "answered",
+      "reply": "[4] Audio deepfake (part 4)",
+      "cited": [
+        "Audio deepfake"
+      ],
+      "cites_correct": true,
+      "no_citation": false,
+      "mentions_not_found": false,
+      "context_titles": [
+        "Audio deepfake",
+        "Deepfake"
+      ],
+      "top_distance": 0.213048,
+      "llm_ms": 34247.54,
+      "seconds": 34.36
+    },
+    {
+      "id": "46",
+      "question": "In the category Google DeepMind, which article is an open-weights language model family?",
+      "answerable": true,
+      "filters": {
+        "category": "Google DeepMind"
+      },
+      "correct_articles": [
+        "Gemma (language model)"
+      ],
+      "outcome": "answered",
+      "reply": "Gemma [4]",
+      "cited": [
+        "Google DeepMind"
+      ],
+      "cites_correct": false,
+      "no_citation": false,
+      "mentions_not_found": false,
+      "context_titles": [
+        "Google DeepMind"
+      ],
+      "top_distance": 0.231183,
+      "llm_ms": 24734.94,
+      "seconds": 24.85
+    },
+    {
+      "id": "47",
+      "question": "Among articles shorter than 10000 characters, which one covers an agent improving by playing against itself?",
+      "answerable": true,
+      "filters": {
+        "max_length": 9999
+      },
+      "correct_articles": [
+        "Self-play"
+      ],
+      "outcome": "answered",
+      "reply": "[1]",
+      "cited": [
+        "Self-play"
+      ],
+      "cites_correct": true,
+      "no_citation": false,
+      "mentions_not_found": false,
+      "context_titles": [
+        "Self-play"
+      ],
+      "top_distance": 0.321757,
+      "llm_ms": 10775.66,
+      "seconds": 10.87
+    },
+    {
+      "id": "48",
+      "question": "Among articles edited before 2026-03-01, which one describes a statistical model of 3D faces?",
+      "answerable": true,
+      "filters": {
+        "edited_before": "2026-03-01T00:00:00"
+      },
+      "correct_articles": [
+        "3D Morphable Model"
+      ],
+      "outcome": "answered",
+      "reply": "[1] [2] [2][3] [5]",
+      "cited": [
+        "3D Morphable Model"
+      ],
+      "cites_correct": true,
+      "no_citation": false,
+      "mentions_not_found": false,
+      "context_titles": [
+        "3D Morphable Model"
+      ],
+      "top_distance": 0.30299,
+      "llm_ms": 32331.96,
+      "seconds": 32.44
+    },
+    {
+      "id": "49",
+      "question": "Among articles linked from Large language model, which one covers crafting inputs to steer a model?",
+      "answerable": true,
+      "filters": {
+        "linked_from": "Large language model"
+      },
+      "correct_articles": [
+        "Prompt engineering"
+      ],
+      "outcome": "answered",
+      "reply": "[1]",
+      "cited": [
+        "Prompt engineering"
+      ],
+      "cites_correct": true,
+      "no_citation": false,
+      "mentions_not_found": false,
+      "context_titles": [
+        "Prompt engineering",
+        "Neural machine translation",
+        "Attention Is All You Need",
+        "Reasoning model",
+        "Language model benchmark"
+      ],
+      "top_distance": 0.335426,
+      "llm_ms": 31544.17,
+      "seconds": 31.86
+    },
+    {
+      "id": "50",
+      "question": "Among articles linked from Artificial intelligence, which one covers testing whether a machine can imitate human conversation?",
+      "answerable": true,
+      "filters": {
+        "linked_from": "Artificial intelligence"
+      },
+      "correct_articles": [
+        "Turing test"
+      ],
+      "outcome": "answered",
+      "reply": "[1][3]",
+      "cited": [
+        "History of artificial intelligence",
+        "Turing test"
+      ],
+      "cites_correct": true,
+      "no_citation": false,
+      "mentions_not_found": false,
+      "context_titles": [
+        "History of artificial intelligence",
+        "Turing test",
+        "Philosophy of artificial intelligence"
+      ],
+      "top_distance": 0.321468,
+      "llm_ms": 28185.65,
+      "seconds": 28.39
+    },
+    {
+      "id": "51",
+      "question": "Among articles linked from Convolutional neural network, which one is a large labeled image dataset?",
+      "answerable": true,
+      "filters": {
+        "linked_from": "Convolutional neural network"
+      },
+      "correct_articles": [
+        "ImageNet"
+      ],
+      "outcome": "answered",
+      "reply": "[1]",
+      "cited": [
+        "AlexNet"
+      ],
+      "cites_correct": false,
+      "no_citation": false,
+      "mentions_not_found": false,
+      "context_titles": [
+        "AlexNet",
+        "Text-to-image model",
+        "History of artificial intelligence",
+        "Deep learning",
+        "Computer vision"
+      ],
+      "top_distance": 0.290263,
+      "llm_ms": 34362.34,
+      "seconds": 34.49
+    },
+    {
+      "id": "52",
+      "question": "Among Machine learning articles longer than 100000 characters, which one covers projecting data onto directions of maximum variance?",
+      "answerable": true,
+      "filters": {
+        "root_category": "Machine learning",
+        "min_length": 100001
+      },
+      "correct_articles": [
+        "Principal component analysis"
+      ],
+      "outcome": "not_found",
+      "reply": "The articles in our corpus do not answer this question.",
+      "cited": [],
+      "cites_correct": false,
+      "no_citation": false,
+      "mentions_not_found": false,
+      "context_titles": [
+        "Machine learning",
+        "Neural network (machine learning)"
+      ],
+      "top_distance": 0.355171,
+      "llm_ms": 37229.98,
+      "seconds": 37.33
+    },
+    {
+      "id": "53",
+      "question": "Which AI system developed at Stanford in the 1970s was designed to diagnose bacterial infections?",
+      "answerable": true,
+      "filters": {},
+      "correct_articles": [
+        "Expert system",
+        "History of artificial intelligence",
+        "Symbolic artificial intelligence"
+      ],
+      "outcome": "answered",
+      "reply": "MYCIN was designed to diagnose infectious blood diseases at Stanford in the 1970s. [1][2]",
+      "cited": [
+        "Expert system"
+      ],
+      "cites_correct": true,
+      "no_citation": false,
+      "mentions_not_found": false,
+      "context_titles": [
+        "Expert system",
+        "History of artificial intelligence",
+        "Computer-aided diagnosis"
+      ],
+      "top_distance": 0.351122,
+      "llm_ms": 35760.47,
+      "seconds": 35.92
+    },
+    {
+      "id": "54",
+      "question": "What was the name of the first chatbot created by Joseph Weizenbaum in 1966?",
+      "answerable": true,
+      "filters": {},
+      "correct_articles": [
+        "History of artificial intelligence",
+        "Turing test",
+        "Natural language processing",
+        "Prompt engineering",
+        "Generative AI",
+        "Hubert Dreyfus's views on artificial intelligence",
+        "Question answering"
+      ],
+      "outcome": "not_found",
+      "reply": "The articles in our corpus do not answer this question.",
+      "cited": [],
+      "cites_correct": false,
+      "no_citation": false,
+      "mentions_not_found": false,
+      "context_titles": [
+        "Turing test",
+        "History of artificial intelligence",
+        "Natural language generation",
+        "Prompt engineering",
+        "Natural language processing"
+      ],
+      "top_distance": 0.316958,
+      "llm_ms": 33526.42,
+      "seconds": 33.66
+    },
+    {
+      "id": "55",
+      "question": "Which AI program developed by Terry Winograd could manipulate virtual blocks using natural language commands?",
+      "answerable": true,
+      "filters": {},
+      "correct_articles": [
+        "History of artificial intelligence",
+        "Question answering",
+        "Natural language processing",
+        "Referring expression generation",
+        "Foundation model",
+        "Symbolic artificial intelligence"
+      ],
+      "outcome": "answered",
+      "reply": "SHRDLU developed by Terry Winograd could manipulate virtual blocks using natural language commands. [3]",
+      "cited": [
+        "Natural language processing"
+      ],
+      "cites_correct": true,
+      "no_citation": false,
+      "mentions_not_found": false,
+      "context_titles": [
+        "Prompt engineering",
+        "Question answering",
+        "Natural language processing",
+        "Natural language generation",
+        "15.ai"
+      ],
+      "top_distance": 0.365698,
+      "llm_ms": 34620.75,
+      "seconds": 34.74
+    },
+    {
+      "id": "56",
+      "question": "Which expert system was developed to identify potential mineral deposits using geological data?",
+      "answerable": false,
+      "filters": {},
+      "correct_articles": [],
+      "outcome": "not_found",
+      "reply": "The articles in our corpus do not answer this question.",
+      "cited": [],
+      "cites_correct": false,
+      "no_citation": false,
+      "mentions_not_found": false,
+      "context_titles": [
+        "Expert system"
+      ],
+      "top_distance": 0.356552,
+      "llm_ms": 1726990.06,
+      "seconds": 1727.12
+    },
+    {
+      "id": "57",
+      "question": "What programming language created by John McCarthy became an early foundation of symbolic AI research?",
+      "answerable": true,
+      "filters": {},
+      "correct_articles": [
+        "Symbolic artificial intelligence"
+      ],
+      "outcome": "answered",
+      "reply": "LISP became an early foundation of symbolic AI research created by John McCarthy. [1][4]",
+      "cited": [
+        "Symbolic artificial intelligence"
+      ],
+      "cites_correct": true,
+      "no_citation": false,
+      "mentions_not_found": false,
+      "context_titles": [
+        "Symbolic artificial intelligence"
+      ],
+      "top_distance": 0.255147,
+      "llm_ms": 45557.92,
+      "seconds": 45.88
+    },
+    {
+      "id": "58",
+      "question": "Which early AI program was designed to solve algebra word problems using symbolic reasoning?",
+      "answerable": true,
+      "filters": {},
+      "correct_articles": [
+        "History of artificial intelligence",
+        "Physical symbol system"
+      ],
+      "outcome": "not_found",
+      "reply": "The articles in our corpus do not answer this question.",
+      "cited": [],
+      "cites_correct": false,
+      "no_citation": false,
+      "mentions_not_found": false,
+      "context_titles": [
+        "Symbolic artificial intelligence",
+        "History of artificial intelligence",
+        "Artificial intelligence"
+      ],
+      "top_distance": 0.249832,
+      "llm_ms": 44928.44,
+      "seconds": 47.26
+    },
+    {
+      "id": "59",
+      "question": "What was the name of the expert system developed for configuring computer systems at Digital Equipment Corporation?",
+      "answerable": true,
+      "filters": {},
+      "correct_articles": [
+        "Symbolic artificial intelligence",
+        "History of artificial intelligence"
+      ],
+      "outcome": "not_found",
+      "reply": "The articles in our corpus do not answer this question.",
+      "cited": [],
+      "cites_correct": false,
+      "no_citation": false,
+      "mentions_not_found": false,
+      "context_titles": [
+        "Expert system",
+        "History of artificial intelligence"
+      ],
+      "top_distance": 0.319314,
+      "llm_ms": 37573.76,
+      "seconds": 37.76
+    },
+    {
+      "id": "60",
+      "question": "Which early expert system tried to recognize speech by looking for phonemes in an audio stream?",
+      "answerable": true,
+      "filters": {},
+      "correct_articles": [
+        "Expert system"
+      ],
+      "outcome": "answered",
+      "reply": "Hearsay tried to recognize speech by looking for phonemes in an audio stream. [2][1]",
+      "cited": [
+        "Expert system",
+        "Speech recognition"
+      ],
+      "cites_correct": true,
+      "no_citation": false,
+      "mentions_not_found": false,
+      "context_titles": [
+        "Speech recognition",
+        "Expert system"
+      ],
+      "top_distance": 0.309136,
+      "llm_ms": 45267.54,
+      "seconds": 45.5
+    },
+    {
+      "id": "61",
+      "question": "What was the name of the AI program developed to analyze mass spectrometry data and identify chemical structures?",
+      "answerable": true,
+      "filters": {},
+      "correct_articles": [
+        "History of artificial intelligence",
+        "Symbolic artificial intelligence",
+        "Expert system"
+      ],
+      "outcome": "answered",
+      "reply": "The name of the AI program developed to analyze mass spectrometry data and identify chemical structures is AlphaFold. [1]",
+      "cited": [
+        "Artificial intelligence"
+      ],
+      "cites_correct": false,
+      "no_citation": false,
+      "mentions_not_found": false,
+      "context_titles": [
+        "Artificial intelligence",
+        "Machine learning in bioinformatics",
+        "AlphaFold",
+        "15.ai"
+      ],
+      "top_distance": 0.364351,
+      "llm_ms": 38083.39,
+      "seconds": 38.27
+    },
+    {
+      "id": "62",
+      "question": "How does the offside rule work in football?",
+      "answerable": false,
+      "filters": {},
+      "correct_articles": [],
+      "outcome": "rejected",
+      "reply": "The articles in our corpus do not answer this question.",
+      "cited": [],
+      "cites_correct": false,
+      "no_citation": false,
+      "mentions_not_found": false,
+      "context_titles": [
+        "TD-Gammon",
+        "Turing test",
+        "AlphaGo",
+        "Markov chain",
+        "State–action–reward–state–action"
+      ],
+      "top_distance": 0.484982,
+      "llm_ms": 0.0,
+      "seconds": 0.21
+    },
+    {
+      "id": "63",
+      "question": "What is the difference between a zone defense and man-to-man marking in football?",
+      "answerable": false,
+      "filters": {},
+      "correct_articles": [],
+      "outcome": "rejected",
+      "reply": "The articles in our corpus do not answer this question.",
+      "cited": [],
+      "cites_correct": false,
+      "no_citation": false,
+      "mentions_not_found": false,
+      "context_titles": [
+        "TD-Gammon",
+        "Fairness (machine learning)",
+        "Adversarial machine learning"
+      ],
+      "top_distance": 0.479106,
+      "llm_ms": 0.0,
+      "seconds": 0.11
+    },
+    {
+      "id": "64",
+      "question": "How many players are on the pitch for each team in a football match?",
+      "answerable": false,
+      "filters": {},
+      "correct_articles": [],
+      "outcome": "rejected",
+      "reply": "The articles in our corpus do not answer this question.",
+      "cited": [],
+      "cites_correct": false,
+      "no_citation": false,
+      "mentions_not_found": false,
+      "context_titles": [
+        "Google DeepMind",
+        "Cortana (virtual assistant)",
+        "Markov chain",
+        "OpenAI Five",
+        "AlphaGo"
+      ],
+      "top_distance": 0.465485,
+      "llm_ms": 0.0,
+      "seconds": 0.11
+    },
+    {
+      "id": "65",
+      "question": "What is the best way to train for a football penalty shootout?",
+      "answerable": false,
+      "filters": {},
+      "correct_articles": [],
+      "outcome": "rejected",
+      "reply": "The articles in our corpus do not answer this question.",
+      "cited": [],
+      "cites_correct": false,
+      "no_citation": false,
+      "mentions_not_found": false,
+      "context_titles": [
+        "Policy gradient method",
+        "Reasoning model",
+        "Reinforcement learning from human feedback",
+        "AlphaGo"
+      ],
+      "top_distance": 0.484365,
+      "llm_ms": 0.0,
+      "seconds": 0.1
+    },
+    {
+      "id": "66",
+      "question": "Which formation did the Netherlands use to popularize total football?",
+      "answerable": false,
+      "filters": {},
+      "correct_articles": [],
+      "outcome": "rejected",
+      "reply": "The articles in our corpus do not answer this question.",
+      "cited": [],
+      "cites_correct": false,
+      "no_citation": false,
+      "mentions_not_found": false,
+      "context_titles": [
+        "Machine translation",
+        "TESCREAL",
+        "History of machine translation"
+      ],
+      "top_distance": 0.535812,
+      "llm_ms": 0.0,
+      "seconds": 0.11
+    },
+    {
+      "id": "67",
+      "question": "How does a goalkeeper decide which way to dive during a penalty kick?",
+      "answerable": false,
+      "filters": {},
+      "correct_articles": [],
+      "outcome": "rejected",
+      "reply": "The articles in our corpus do not answer this question.",
+      "cited": [],
+      "cites_correct": false,
+      "no_citation": false,
+      "mentions_not_found": false,
+      "context_titles": [
+        "Gradient descent",
+        "Q-learning",
+        "Policy gradient method",
+        "Kalman filter"
+      ],
+      "top_distance": 0.46418,
+      "llm_ms": 0.0,
+      "seconds": 0.11
+    },
+    {
+      "id": "68",
+      "question": "What are the rules of the tie-break in a tennis match?",
+      "answerable": false,
+      "filters": {},
+      "correct_articles": [],
+      "outcome": "rejected",
+      "reply": "The articles in our corpus do not answer this question.",
+      "cited": [],
+      "cites_correct": false,
+      "no_citation": false,
+      "mentions_not_found": false,
+      "context_titles": [
+        "TD-Gammon",
+        "IBM Watson",
+        "AlphaGo",
+        "Cortana (virtual assistant)",
+        "Stemming"
+      ],
+      "top_distance": 0.458981,
+      "llm_ms": 0.0,
+      "seconds": 0.11
+    },
+    {
+      "id": "69",
+      "question": "Which company makes the AIBO robotic dog?",
+      "answerable": false,
+      "filters": {},
+      "correct_articles": [],
+      "outcome": "rejected",
+      "reply": "The articles in our corpus do not answer this question.",
+      "cited": [],
+      "cites_correct": false,
+      "no_citation": false,
+      "mentions_not_found": false,
+      "context_titles": [
+        "History of artificial intelligence",
+        "Computational creativity",
+        "Anthropic",
+        "Artificial intelligence safety institute",
+        "IBM Watson"
+      ],
+      "top_distance": 0.438785,
+      "llm_ms": 0.0,
+      "seconds": 0.11
+    },
+    {
+      "id": "70",
+      "question": "What is the name of the open-source chess engine that was built to replicate AlphaZero using volunteer computing?",
+      "answerable": false,
+      "filters": {},
+      "correct_articles": [],
+      "outcome": "not_found",
+      "reply": "The articles in our corpus do not answer this question.",
+      "cited": [],
+      "cites_correct": false,
+      "no_citation": false,
+      "mentions_not_found": false,
+      "context_titles": [
+        "AlphaGo"
+      ],
+      "top_distance": 0.309096,
+      "llm_ms": 45466.54,
+      "seconds": 45.69
+    },
+    {
+      "id": "71",
+      "question": "What is the name of the social chatbot that Microsoft launched in China in 2014?",
+      "answerable": false,
+      "filters": {},
+      "correct_articles": [],
+      "outcome": "not_found",
+      "reply": "The articles in our corpus do not answer this question.",
+      "cited": [],
+      "cites_correct": false,
+      "no_citation": false,
+      "mentions_not_found": false,
+      "context_titles": [
+        "History of artificial intelligence",
+        "ChatGPT",
+        "Generative AI"
+      ],
+      "top_distance": 0.389271,
+      "llm_ms": 42325.89,
+      "seconds": 42.47
+    }
+  ]
+}
