@@ -9,6 +9,7 @@ from src.containers import Container
 from src.database.repositories.articles import ArticleRepository
 from src.ingestion.consistency import check_database
 from src.ingestion.pipeline import IngestionPipeline
+from src.ingestion.sync import DEFAULT_REBUILD_SHARE, sync_articles, write_sync_report
 
 logger = logging.getLogger(__name__)
 
@@ -42,6 +43,36 @@ async def run(args: argparse.Namespace) -> None:
                 raise SystemExit(1)
 
             print("\nAll consistency checks passed.")
+            return
+
+        if args.action == "sync":
+            client = container.mediawiki_client()
+            repository = ArticleRepository(database=database)
+
+            def pipeline_factory() -> IngestionPipeline:
+                return IngestionPipeline(
+                    client=client, embedder=container.embedder(), repository=repository
+                )
+
+            try:
+                result = await sync_articles(
+                    client=client,
+                    repository=repository,
+                    pipeline_factory=pipeline_factory,
+                    csv_path=args.csv,
+                    config=args.config,
+                    dry_run=args.dry_run,
+                    limit=args.limit,
+                    rebuild_share=args.rebuild_share,
+                )
+            finally:
+                client.close()
+
+            json_path, md_path = write_sync_report(result, settings.eval_results_dir)
+            print("\n" + md_path.read_text(encoding="utf-8"))
+            print(f"Saved {json_path} and {md_path}")
+            if result.failures:
+                raise SystemExit(1)
             return
 
         client = container.mediawiki_client()
@@ -86,7 +117,7 @@ def main() -> None:
 
     parser.add_argument(
         "action",
-        choices=["ingest", "check", "reindex"],
+        choices=["ingest", "check", "reindex", "sync"],
         help="Operation to perform",
     )
 
@@ -115,6 +146,20 @@ def main() -> None:
         type=int,
         default=None,
         help="Limit number of articles for testing",
+    )
+
+    parser.add_argument(
+        "--dry-run",
+        action="store_true",
+        help="sync only: report the changed articles without replacing them",
+    )
+
+    parser.add_argument(
+        "--rebuild-share",
+        type=float,
+        default=DEFAULT_REBUILD_SHARE,
+        help="sync only: rebuild the vector index when at least this share of the chunks "
+        f"was replaced (default {DEFAULT_REBUILD_SHARE})",
     )
 
     parser.add_argument(

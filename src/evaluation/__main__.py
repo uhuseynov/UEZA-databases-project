@@ -5,6 +5,8 @@
     uv run python -m src.evaluation run --shape nearest_first --vector-format binary
     uv run python -m src.evaluation ef-sweep --ef 10 20 40 80 160
     uv run python -m src.evaluation m-sweep --m 6 8 16 32 48 64 --ef 20 40 80
+    uv run python -m src.evaluation faiss --ef 10 20 40 80 160
+    uv run python -m src.evaluation answers          # needs the language model of .env
     uv run python -m src.evaluation explain
 
 
@@ -31,6 +33,8 @@ from src.config import Settings, settings
 from src.containers import Container
 from src.database import Database
 from src.database.repositories.articles import ArticleRepository, vector_index_definition
+from src.evaluation.answers import evaluate_answers
+from src.evaluation.faiss_baseline import faiss_baseline, import_faiss
 from src.evaluation.ground_truth import load_ground_truth
 from src.evaluation.report import write_report
 from src.evaluation.runner import EvalConfig, ef_search_sweep, evaluate, m_sweep
@@ -243,6 +247,25 @@ def build_parser() -> argparse.ArgumentParser:
     msweep.add_argument("--no-restart", action="store_true",
                         help="do not restart the db container (docker compose) after each build")
 
+    faiss = commands.add_parser("faiss", help="FAISS on the same vectors, next to MariaDB")
+    faiss.add_argument("--m", type=_index_m, default=16, help="M of the FAISS HNSW index")
+    faiss.add_argument("--ef-construction", type=_positive, default=40)
+    faiss.add_argument("--ef", type=_positive, nargs="+", default=[10, 20, 40, 80, 160])
+    faiss.add_argument("--fetch", type=_positive, nargs="+", default=[10, 100, 1000],
+                       help="post-filter: how many nearest chunks to fetch before filtering")
+    faiss.add_argument("--ef-two-systems", type=_positive, default=40,
+                       help="efSearch of the FAISS + MariaDB path, like MariaDB's mhnsw_ef_search")
+    faiss.add_argument("--runs", type=_positive, default=3)
+    faiss.add_argument("--warmup", type=int, default=1)
+    faiss.add_argument("--k", type=_positive, default=10)
+    faiss.add_argument("--threads", type=_positive, default=1)
+
+    answers = commands.add_parser(
+        "answers", help="answer every question with the language model: is NOT_FOUND right?"
+    )
+    answers.add_argument("--limit", type=_positive, default=None,
+                         help="only the first N questions (a quick check of the setup)")
+
     commands.add_parser("explain", help="query plans: is the vector index used?")
     return parser
 
@@ -312,6 +335,13 @@ async def run_m_sweep(args: argparse.Namespace, questions, embedder, retriever,
 async def main(argv: list[str] | None = None) -> int:
     args = build_parser().parse_args(argv)
 
+    if args.command == "faiss":
+        try:
+            import_faiss()
+        except RuntimeError as exc:
+            print(exc, file=sys.stderr)
+            return 2
+
     questions = []
     if args.command != "explain":
         try:
@@ -335,7 +365,17 @@ async def main(argv: list[str] | None = None) -> int:
             )
             return 3
         retriever = container.retriever()
-        if args.command == "explain":
+        if args.command == "answers":
+            service = await asyncio.to_thread(container.rag_service)
+            environment |= {
+                "llm_model": settings.llm_model,
+                "llm_api_base_url": settings.llm_api_base_url,
+                "rag_max_distance": settings.rag_max_distance,
+                "top_k": settings.vector_search_top_k,
+            }
+            selected = questions[: args.limit] if args.limit else questions
+            report = await evaluate_answers(selected, service, environment=environment)
+        elif args.command == "explain":
             markdown = await explain_plans(retriever, settings.embedding_dimension)
             directory = Path(args.results_dir)
             directory.mkdir(parents=True, exist_ok=True)
@@ -344,30 +384,9 @@ async def main(argv: list[str] | None = None) -> int:
             print(markdown)
             print(f"Saved {path}")
             return 0
-        embedder = await asyncio.to_thread(container.embedder)
-
-        if args.command == "run":
-            label = args.label or _run_label(args)
-            config = EvalConfig(
-                label=label,
-                runs=args.runs,
-                warmup_runs=args.warmup,
-                ef_search=args.ef_search,
-                exact=args.exact,
-                not_found_threshold=settings.rag_max_distance,
-                shape=args.shape,
-                vector_format=args.vector_format,
-            )
-            report = await evaluate(questions, embedder, retriever, config, environment)
-        elif args.command == "ef-sweep":
-            report = await ef_search_sweep(
-                questions, embedder, retriever, args.ef,
-                runs=args.runs, warmup_runs=args.warmup, k=args.k, environment=environment,
-                shape=args.shape, vector_format=args.vector_format,
-            )
-            report["label"] = args.label
         else:
-            report = await run_m_sweep(args, questions, embedder, retriever, database, environment)
+            report = await run_search_command(args, questions, container, retriever, database,
+                                              environment)
     finally:
         await database.disconnect()
 
@@ -375,6 +394,41 @@ async def main(argv: list[str] | None = None) -> int:
     print(md_path.read_text(encoding="utf-8"))
     print(f"Saved {json_path} and {md_path}")
     return 0
+
+
+async def run_search_command(args: argparse.Namespace, questions, container, retriever,
+                             database: Database, environment: dict[str, Any]) -> dict[str, Any]:
+    """run, ef-sweep, faiss and m-sweep: they embed the questions and search."""
+    embedder = await asyncio.to_thread(container.embedder)
+    if args.command == "run":
+        label = args.label or _run_label(args)
+        config = EvalConfig(
+            label=label,
+            runs=args.runs,
+            warmup_runs=args.warmup,
+            ef_search=args.ef_search,
+            exact=args.exact,
+            not_found_threshold=settings.rag_max_distance,
+            shape=args.shape,
+            vector_format=args.vector_format,
+        )
+        return await evaluate(questions, embedder, retriever, config, environment)
+    if args.command == "ef-sweep":
+        report = await ef_search_sweep(
+            questions, embedder, retriever, args.ef,
+            runs=args.runs, warmup_runs=args.warmup, k=args.k, environment=environment,
+            shape=args.shape, vector_format=args.vector_format,
+        )
+        report["label"] = args.label
+        return report
+    if args.command == "faiss":
+        return await faiss_baseline(
+            questions, embedder, retriever, database,
+            m=args.m, ef_construction=args.ef_construction, ef_values=args.ef,
+            fetch_values=args.fetch, ef_two_systems=args.ef_two_systems, runs=args.runs,
+            warmup_runs=args.warmup, k=args.k, threads=args.threads, environment=environment,
+        )
+    return await run_m_sweep(args, questions, embedder, retriever, database, environment)
 
 
 def _run_label(args: argparse.Namespace) -> str:

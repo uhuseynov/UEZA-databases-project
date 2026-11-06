@@ -7,6 +7,8 @@ from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
+from src.evaluation.answers import render_answers
+
 
 def _clean(value: Any) -> Any:
     """NaN is not valid JSON: write it as null."""
@@ -215,6 +217,91 @@ def render_m_sweep(report: dict[str, Any]) -> str:
     return "\n".join(parts) + "\n"
 
 
+def _bytes(value: int) -> str:
+    return f"{value / 1024 / 1024:.1f} MB"
+
+
+def _server_sentence(server: dict[str, Any] | None) -> str:
+    if not server or not server["plain"]["samples"]:
+        return "MariaDB's time inside the server was not measured."
+    plain, filtered = server["plain"], server["filtered"]
+    return (
+        f"Inside MariaDB (`ANALYZE`, one run per question) the statement took "
+        f"{_fmt(plain['mean_ms'])} ms on average without a filter (p95 {_fmt(plain['p95_ms'])} ms) "
+        f"and {_fmt(filtered['mean_ms'])} ms with one (p95 {_fmt(filtered['p95_ms'])} ms); the "
+        "rest of the times above is the round trip and the driver."
+    )
+
+
+def render_faiss(report: dict[str, Any]) -> str:
+    config, corpus, build = report["config"], report["corpus"], report["build"]
+    k = config["k"]
+    agreement, update, sql = report["exact_agreement"], report["update"], report["filter_ids_sql"]
+    allowed = sql["allowed_chunks"]
+
+    def rows(entries: list[dict[str, Any]], filtered: bool) -> list[list[Any]]:
+        table = []
+        for row in entries:
+            cells = [row["method"], row["ef"] if row["ef"] is not None else "–",
+                     row[f"index_recall@{k}"], row["recall@1"], row[f"recall@{k}"], row["mrr"]]
+            if filtered:
+                cells += [row["returned_mean"], row["fewer_than_k"]]
+            cells += [row["latency"]["mean_ms"], row["latency"]["p50_ms"], row["latency"]["p95_ms"]]
+            table.append(cells)
+        return table
+
+    quality = [f"index recall@{k}", "Recall@1", f"Recall@{k}", "MRR"]
+    timing = ["mean ms", "p50 ms", "p95 ms"]
+    parts = [
+        "# FAISS baseline",
+        "",
+        f"Created {report['created_at']}. FAISS {report['environment'].get('faiss_version')} on "
+        f"{config['threads']} thread(s), HNSW with M={config['m']} and "
+        f"efConstruction={config['ef_construction']}. {config['runs']} timed runs after "
+        f"{config['warmup_runs']} warm-up run(s), one question at a time, k = {k}. "
+        f"Index recall = share of the exact top-{k} chunks that a method returned.",
+        "",
+        "## Corpus and build",
+        "",
+        _table(
+            ["chunks", "dimension", "read from MariaDB", "flat build", "HNSW build",
+             "flat size", "HNSW size"],
+            [[corpus["chunks"], corpus["dimension"], f"{corpus['load_seconds']:.2f} s",
+              f"{build['flat_seconds']:.3f} s", f"{build['hnsw_seconds']:.2f} s",
+              _bytes(build["flat_bytes"]), _bytes(build["hnsw_bytes"])]],
+        ),
+        "",
+        f"MariaDB's full scan and FAISS's exact search returned the same top {k} for "
+        f"{agreement['plain']} of {agreement['plain_questions']} questions without a filter and "
+        f"{agreement['filtered']} of {agreement['filtered_questions']} with one.",
+        "",
+        "## Questions without a filter",
+        "",
+        _table(["method", "ef", *quality, *timing], rows(report["plain"], False)),
+        "",
+        "## Questions with a filter",
+        "",
+        _table(["method", "ef", *quality, "returned", f"< {k} rows", *timing],
+               rows(report["filtered"], True)),
+        "",
+        _server_sentence(report.get("mariadb_server_ms")),
+        "",
+        f"Finding the ids of the allowed chunks in MariaDB took {_fmt(sql['latency']['mean_ms'])} ms "
+        f"on average (p95 {_fmt(sql['latency']['p95_ms'])} ms). Allowed chunks per question: "
+        + (f"{allowed[0]} to {allowed[-1]}, median {allowed[len(allowed) // 2]}." if allowed else "none."),
+        "",
+        "## Updates",
+        "",
+        f"Replacing one article means deleting its {update['chunks']} vectors and adding new ones. "
+        f"HNSW `remove_ids`: {update['hnsw_remove']}. "
+        f"A flat index removed them in {_fmt(update['flat_remove_ms'])} ms and added them back in "
+        f"{_fmt(update['flat_add_ms'])} ms.",
+    ]
+    if report.get("environment"):
+        parts += ["", "## Environment", "", *_environment_lines(report["environment"])]
+    return "\n".join(parts) + "\n"
+
+
 def write_report(report: dict[str, Any], results_dir: str | Path) -> tuple[Path, Path]:
     """Write ``<timestamp>_<label>.json`` and ``.md`` and return both paths."""
     directory = Path(results_dir)
@@ -229,6 +316,8 @@ def write_report(report: dict[str, Any], results_dir: str | Path) -> tuple[Path,
     renderer = {
         "ef_search_sweep": render_sweep,
         "m_sweep": render_m_sweep,
+        "faiss_baseline": render_faiss,
+        "answers": render_answers,
     }.get(report["kind"], render_evaluation)
     md_path.write_text(renderer(report), encoding="utf-8")
     return json_path, md_path

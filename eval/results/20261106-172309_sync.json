@@ -1,0 +1,1309 @@
+{
+  "kind": "sync",
+  "created_at": "2026-11-06T17:23:09+00:00",
+  "checked": 262,
+  "changed": [
+    {
+      "title": "Neural network (machine learning)",
+      "page_id": 21523,
+      "stored_revision": 1376337947,
+      "latest_revision": 1383844653,
+      "latest_time": "2026-11-05T03:24:26+00:00"
+    },
+    {
+      "title": "Facial recognition system",
+      "page_id": 602401,
+      "stored_revision": 1378017969,
+      "latest_revision": 1383725335,
+      "latest_time": "2026-11-04T12:17:40+00:00"
+    },
+    {
+      "title": "Algorithmic bias",
+      "page_id": 55817338,
+      "stored_revision": 1375364521,
+      "latest_revision": 1383296914,
+      "latest_time": "2026-11-02T00:15:34+00:00"
+    },
+    {
+      "title": "Google DeepMind",
+      "page_id": 41755648,
+      "stored_revision": 1377305392,
+      "latest_revision": 1380412362,
+      "latest_time": "2026-10-15T15:44:34+00:00"
+    },
+    {
+      "title": "Machine learning",
+      "page_id": 233488,
+      "stored_revision": 1378284675,
+      "latest_revision": 1383342267,
+      "latest_time": "2026-11-02T05:38:25+00:00"
+    },
+    {
+      "title": "Generative AI",
+      "page_id": 73291755,
+      "stored_revision": 1377819070,
+      "latest_revision": 1383890310,
+      "latest_time": "2026-11-05T11:02:37+00:00"
+    },
+    {
+      "title": "Language model benchmark",
+      "page_id": 79100184,
+      "stored_revision": 1378473397,
+      "latest_revision": 1382260861,
+      "latest_time": "2026-10-27T16:56:45+00:00"
+    },
+    {
+      "title": "Kalman filter",
+      "page_id": 180855,
+      "stored_revision": 1376993718,
+      "latest_revision": 1383990932,
+      "latest_time": "2026-11-06T01:10:24+00:00"
+    },
+    {
+      "title": "Principal component analysis",
+      "page_id": 76340,
+      "stored_revision": 1369268948,
+      "latest_revision": 1383885717,
+      "latest_time": "2026-11-05T09:53:25+00:00"
+    },
+    {
+      "title": "Speech recognition",
+      "page_id": 29468,
+      "stored_revision": 1378339375,
+      "latest_revision": 1380060991,
+      "latest_time": "2026-10-13T15:02:26+00:00"
+    },
+    {
+      "title": "History of artificial neural networks",
+      "page_id": 61541925,
+      "stored_revision": 1371028185,
+      "latest_revision": 1383219906,
+      "latest_time": "2026-11-01T16:39:10+00:00"
+    },
+    {
+      "title": "Generative adversarial network",
+      "page_id": 50073184,
+      "stored_revision": 1378459936,
+      "latest_revision": 1380981582,
+      "latest_time": "2026-10-19T06:26:30+00:00"
+    },
+    {
+      "title": "Products and applications of OpenAI",
+      "page_id": 80209622,
+      "stored_revision": 1377742754,
+      "latest_revision": 1381902366,
+      "latest_time": "2026-10-25T14:41:03+00:00"
+    },
+    {
+      "title": "Markov chain",
+      "page_id": 60876,
+      "stored_revision": 1374578214,
+      "latest_revision": 1382192629,
+      "latest_time": "2026-10-27T05:25:27+00:00"
+    },
+    {
+      "title": "Hallucination (artificial intelligence)",
+      "page_id": 72607666,
+      "stored_revision": 1378371251,
+      "latest_revision": 1383763867,
+      "latest_time": "2026-11-04T18:41:14+00:00"
+    },
+    {
+      "title": "Types of artificial neural networks",
+      "page_id": 28016652,
+      "stored_revision": 1376909744,
+      "latest_revision": 1378634907,
+      "latest_time": "2026-10-05T10:28:02+00:00"
+    },
+    {
+      "title": "AlphaFold",
+      "page_id": 59766171,
+      "stored_revision": 1378388406,
+      "latest_revision": 1382202509,
+      "latest_time": "2026-10-27T07:16:06+00:00"
+    },
+    {
+      "title": "Diffusion model",
+      "page_id": 71912239,
+      "stored_revision": 1375484555,
+      "latest_revision": 1382561677,
+      "latest_time": "2026-10-29T07:16:12+00:00"
+    },
+    {
+      "title": "Adversarial machine learning",
+      "page_id": 45049676,
+      "stored_revision": 1377618962,
+      "latest_revision": 1383285906,
+      "latest_time": "2026-11-01T22:55:24+00:00"
+    },
+    {
+      "title": "AlphaGo",
+      "page_id": 49242352,
+      "stored_revision": 1371513984,
+      "latest_revision": 1379648512,
+      "latest_time": "2026-10-11T03:47:59+00:00"
+    },
+    {
+      "title": "Cluster analysis",
+      "page_id": 669675,
+      "stored_revision": 1360782645,
+      "latest_revision": 1379959304,
+      "latest_time": "2026-10-12T23:14:58+00:00"
+    },
+    {
+      "title": "Reinforcement learning",
+      "page_id": 66294,
+      "stored_revision": 1373420975,
+      "latest_revision": 1382044619,
+      "latest_time": "2026-10-26T06:21:43+00:00"
+    },
+    {
+      "title": "Machine learning in bioinformatics",
+      "page_id": 53970843,
+      "stored_revision": 1372855918,
+      "latest_revision": 1380829675,
+      "latest_time": "2026-10-18T05:19:30+00:00"
+    },
+    {
+      "title": "K-means clustering",
+      "page_id": 1860407,
+      "stored_revision": 1373673623,
+      "latest_revision": 1380990513,
+      "latest_time": "2026-10-19T08:20:17+00:00"
+    },
+    {
+      "title": "Geospatial foundation model",
+      "page_id": 83579514,
+      "stored_revision": 1377156348,
+      "latest_revision": 1383325346,
+      "latest_time": "2026-11-02T03:08:28+00:00"
+    },
+    {
+      "title": "PageRank",
+      "page_id": 26334893,
+      "stored_revision": 1378042705,
+      "latest_revision": 1379164769,
+      "latest_time": "2026-10-08T08:43:48+00:00"
+    },
+    {
+      "title": "Foundation model",
+      "page_id": 70984276,
+      "stored_revision": 1376650270,
+      "latest_revision": 1384064187,
+      "latest_time": "2026-11-06T10:28:10+00:00"
+    },
+    {
+      "title": "Electricity price forecasting",
+      "page_id": 48684895,
+      "stored_revision": 1376506157,
+      "latest_revision": 1379862049,
+      "latest_time": "2026-10-12T08:56:20+00:00"
+    },
+    {
+      "title": "Fairness (machine learning)",
+      "page_id": 62683332,
+      "stored_revision": 1371723335,
+      "latest_revision": 1381322112,
+      "latest_time": "2026-10-21T16:28:09+00:00"
+    },
+    {
+      "title": "Markov chain Monte Carlo",
+      "page_id": 236801,
+      "stored_revision": 1374258396,
+      "latest_revision": 1383244697,
+      "latest_time": "2026-11-01T18:49:42+00:00"
+    },
+    {
+      "title": "Mixture model",
+      "page_id": 871681,
+      "stored_revision": 1371250184,
+      "latest_revision": 1379924356,
+      "latest_time": "2026-10-12T18:28:57+00:00"
+    },
+    {
+      "title": "Feature selection",
+      "page_id": 1179950,
+      "stored_revision": 1375077689,
+      "latest_revision": 1383096480,
+      "latest_time": "2026-10-31T23:46:49+00:00"
+    },
+    {
+      "title": "Reinforcement learning from human feedback",
+      "page_id": 73200355,
+      "stored_revision": 1376235007,
+      "latest_revision": 1382030889,
+      "latest_time": "2026-10-26T03:37:43+00:00"
+    },
+    {
+      "title": "Federated learning",
+      "page_id": 60992857,
+      "stored_revision": 1373093696,
+      "latest_revision": 1378647925,
+      "latest_time": "2026-10-05T12:44:46+00:00"
+    },
+    {
+      "title": "Prompt engineering",
+      "page_id": 69071767,
+      "stored_revision": 1377526571,
+      "latest_revision": 1383996977,
+      "latest_time": "2026-11-06T01:51:18+00:00"
+    },
+    {
+      "title": "Kernel embedding of distributions",
+      "page_id": 41370976,
+      "stored_revision": 1366649339,
+      "latest_revision": 1380339908,
+      "latest_time": "2026-10-15T03:43:18+00:00"
+    },
+    {
+      "title": "Graph neural network",
+      "page_id": 68162942,
+      "stored_revision": 1370239928,
+      "latest_revision": 1380964852,
+      "latest_time": "2026-10-19T02:58:10+00:00"
+    },
+    {
+      "title": "Backpropagation",
+      "page_id": 1360091,
+      "stored_revision": 1373673106,
+      "latest_revision": 1381710221,
+      "latest_time": "2026-10-24T08:06:45+00:00"
+    },
+    {
+      "title": "DALL-E",
+      "page_id": 66303034,
+      "stored_revision": 1376634171,
+      "latest_revision": 1383344957,
+      "latest_time": "2026-11-02T06:00:33+00:00"
+    },
+    {
+      "title": "Gaussian process",
+      "page_id": 302944,
+      "stored_revision": 1375874745,
+      "latest_revision": 1383451338,
+      "latest_time": "2026-11-02T19:30:09+00:00"
+    },
+    {
+      "title": "Deepfake",
+      "page_id": 56641018,
+      "stored_revision": 1375875564,
+      "latest_revision": 1383998091,
+      "latest_time": "2026-11-06T01:59:13+00:00"
+    },
+    {
+      "title": "Deep learning",
+      "page_id": 32472154,
+      "stored_revision": 1377214125,
+      "latest_revision": 1383845117,
+      "latest_time": "2026-11-05T03:27:11+00:00"
+    },
+    {
+      "title": "Large language model",
+      "page_id": 73248112,
+      "stored_revision": 1377815095,
+      "latest_revision": 1383985501,
+      "latest_time": "2026-11-06T00:28:28+00:00"
+    },
+    {
+      "title": "15.ai",
+      "page_id": 78635504,
+      "stored_revision": 1377288200,
+      "latest_revision": 1381698187,
+      "latest_time": "2026-10-24T05:49:54+00:00"
+    },
+    {
+      "title": "Gemini (language model)",
+      "page_id": 74637995,
+      "stored_revision": 1378383351,
+      "latest_revision": 1382430075,
+      "latest_time": "2026-10-28T17:32:14+00:00"
+    },
+    {
+      "title": "AI data center",
+      "page_id": 81802552,
+      "stored_revision": 1377013450,
+      "latest_revision": 1384096055,
+      "latest_time": "2026-11-06T15:35:02+00:00"
+    },
+    {
+      "title": "Long short-term memory",
+      "page_id": 10711453,
+      "stored_revision": 1368708291,
+      "latest_revision": 1380313689,
+      "latest_time": "2026-10-15T00:50:31+00:00"
+    },
+    {
+      "title": "Audio deepfake",
+      "page_id": 65679106,
+      "stored_revision": 1377909854,
+      "latest_revision": 1384023604,
+      "latest_time": "2026-11-06T05:26:21+00:00"
+    },
+    {
+      "title": "TensorFlow",
+      "page_id": 48508507,
+      "stored_revision": 1375102350,
+      "latest_revision": 1381528602,
+      "latest_time": "2026-10-23T03:07:23+00:00"
+    },
+    {
+      "title": "Artificial intelligence and elections",
+      "page_id": 76385892,
+      "stored_revision": 1377675429,
+      "latest_revision": 1383298229,
+      "latest_time": "2026-11-02T00:22:28+00:00"
+    },
+    {
+      "title": "Midjourney",
+      "page_id": 71151961,
+      "stored_revision": 1376498512,
+      "latest_revision": 1382973449,
+      "latest_time": "2026-10-31T08:31:45+00:00"
+    },
+    {
+      "title": "Neural scaling law",
+      "page_id": 73713333,
+      "stored_revision": 1377368893,
+      "latest_revision": 1382648406,
+      "latest_time": "2026-10-29T16:52:55+00:00"
+    },
+    {
+      "title": "Text-to-video model",
+      "page_id": 71986552,
+      "stored_revision": 1378271382,
+      "latest_revision": 1383567924,
+      "latest_time": "2026-11-03T11:15:43+00:00"
+    },
+    {
+      "title": "Physics-informed neural networks",
+      "page_id": 67944516,
+      "stored_revision": 1377214069,
+      "latest_revision": 1383810802,
+      "latest_time": "2026-11-05T00:26:18+00:00"
+    },
+    {
+      "title": "Yoshua Bengio",
+      "page_id": 47749536,
+      "stored_revision": 1378036597,
+      "latest_revision": 1378627067,
+      "latest_time": "2026-10-05T08:58:17+00:00"
+    },
+    {
+      "title": "Flux (text-to-image model)",
+      "page_id": 78378498,
+      "stored_revision": 1378048752,
+      "latest_revision": 1382807192,
+      "latest_time": "2026-10-30T11:49:01+00:00"
+    },
+    {
+      "title": "AlphaChip",
+      "page_id": 80616342,
+      "stored_revision": 1378379185,
+      "latest_revision": 1383577707,
+      "latest_time": "2026-11-03T13:08:00+00:00"
+    },
+    {
+      "title": "Sora (text-to-video model)",
+      "page_id": 76106601,
+      "stored_revision": 1378070343,
+      "latest_revision": 1384015173,
+      "latest_time": "2026-11-06T04:01:52+00:00"
+    },
+    {
+      "title": "Normalization (machine learning)",
+      "page_id": 77557393,
+      "stored_revision": 1340395252,
+      "latest_revision": 1383659893,
+      "latest_time": "2026-11-04T00:42:02+00:00"
+    },
+    {
+      "title": "Hierarchical temporal memory",
+      "page_id": 11273721,
+      "stored_revision": 1375077864,
+      "latest_revision": 1383233327,
+      "latest_time": "2026-11-01T17:50:11+00:00"
+    },
+    {
+      "title": "Question answering",
+      "page_id": 360030,
+      "stored_revision": 1372314675,
+      "latest_revision": 1380981467,
+      "latest_time": "2026-10-19T06:24:56+00:00"
+    },
+    {
+      "title": "Deep reinforcement learning",
+      "page_id": 60105148,
+      "stored_revision": 1376156347,
+      "latest_revision": 1382061382,
+      "latest_time": "2026-10-26T10:00:25+00:00"
+    },
+    {
+      "title": "Residual neural network",
+      "page_id": 55867424,
+      "stored_revision": 1376425875,
+      "latest_revision": 1383259052,
+      "latest_time": "2026-11-01T20:00:15+00:00"
+    },
+    {
+      "title": "GPT-4o",
+      "page_id": 76899001,
+      "stored_revision": 1377388811,
+      "latest_revision": 1381588197,
+      "latest_time": "2026-10-23T14:40:05+00:00"
+    },
+    {
+      "title": "Vision–language–action model",
+      "page_id": 79446353,
+      "stored_revision": 1376359770,
+      "latest_revision": 1380965842,
+      "latest_time": "2026-10-19T03:08:18+00:00"
+    },
+    {
+      "title": "Optuna",
+      "page_id": 80384604,
+      "stored_revision": 1376031253,
+      "latest_revision": 1380971474,
+      "latest_time": "2026-10-19T04:12:54+00:00"
+    },
+    {
+      "title": "Stochastic parrot",
+      "page_id": 73761282,
+      "stored_revision": 1377905487,
+      "latest_revision": 1383095361,
+      "latest_time": "2026-10-31T23:39:22+00:00"
+    },
+    {
+      "title": "State space model (deep learning)",
+      "page_id": 81363082,
+      "stored_revision": 1378095071,
+      "latest_revision": 1383967471,
+      "latest_time": "2026-11-05T21:54:53+00:00"
+    },
+    {
+      "title": "Text-to-image model",
+      "page_id": 71701751,
+      "stored_revision": 1366271711,
+      "latest_revision": 1383454798,
+      "latest_time": "2026-11-02T19:50:07+00:00"
+    },
+    {
+      "title": "EleutherAI",
+      "page_id": 73176768,
+      "stored_revision": 1367134796,
+      "latest_revision": 1380302416,
+      "latest_time": "2026-10-14T23:39:54+00:00"
+    },
+    {
+      "title": "Gemma (language model)",
+      "page_id": 76155063,
+      "stored_revision": 1374938892,
+      "latest_revision": 1378908519,
+      "latest_time": "2026-10-06T21:28:54+00:00"
+    },
+    {
+      "title": "Latent diffusion model",
+      "page_id": 77815635,
+      "stored_revision": 1364590415,
+      "latest_revision": 1378986443,
+      "latest_time": "2026-10-07T06:10:24+00:00"
+    },
+    {
+      "title": "Knowledge distillation",
+      "page_id": 62295363,
+      "stored_revision": 1377190431,
+      "latest_revision": 1383319962,
+      "latest_time": "2026-11-02T02:33:13+00:00"
+    },
+    {
+      "title": "ML.NET",
+      "page_id": 57388949,
+      "stored_revision": 1349193203,
+      "latest_revision": 1381529776,
+      "latest_time": "2026-10-23T03:17:18+00:00"
+    },
+    {
+      "title": "Neural operators",
+      "page_id": 74636983,
+      "stored_revision": 1377214241,
+      "latest_revision": 1378634860,
+      "latest_time": "2026-10-05T10:27:42+00:00"
+    },
+    {
+      "title": "Google Translate",
+      "page_id": 3235536,
+      "stored_revision": 1378157698,
+      "latest_revision": 1382055090,
+      "latest_time": "2026-10-26T08:39:04+00:00"
+    },
+    {
+      "title": "Transformer (deep learning)",
+      "page_id": 61603971,
+      "stored_revision": 1378490258,
+      "latest_revision": 1384024889,
+      "latest_time": "2026-11-06T05:39:04+00:00"
+    },
+    {
+      "title": "Siri",
+      "page_id": 26086272,
+      "stored_revision": 1378492776,
+      "latest_revision": 1384056562,
+      "latest_time": "2026-11-06T09:23:31+00:00"
+    },
+    {
+      "title": "Google Assistant",
+      "page_id": 50575063,
+      "stored_revision": 1378203707,
+      "latest_revision": 1383871617,
+      "latest_time": "2026-11-05T07:28:46+00:00"
+    },
+    {
+      "title": "Automated journalism",
+      "page_id": 53070037,
+      "stored_revision": 1377178310,
+      "latest_revision": 1381992731,
+      "latest_time": "2026-10-25T23:27:15+00:00"
+    },
+    {
+      "title": "Machine translation",
+      "page_id": 19980,
+      "stored_revision": 1377702692,
+      "latest_revision": 1383244117,
+      "latest_time": "2026-11-01T18:46:48+00:00"
+    },
+    {
+      "title": "Sentiment analysis",
+      "page_id": 6435232,
+      "stored_revision": 1377546849,
+      "latest_revision": 1383135688,
+      "latest_time": "2026-11-01T04:25:30+00:00"
+    },
+    {
+      "title": "Stylometry",
+      "page_id": 2097760,
+      "stored_revision": 1378146999,
+      "latest_revision": 1382735672,
+      "latest_time": "2026-10-30T00:50:44+00:00"
+    },
+    {
+      "title": "Automatic summarization",
+      "page_id": 637199,
+      "stored_revision": 1378461767,
+      "latest_revision": 1383229898,
+      "latest_time": "2026-11-01T17:32:04+00:00"
+    },
+    {
+      "title": "Word-sense disambiguation",
+      "page_id": 67065,
+      "stored_revision": 1367045748,
+      "latest_revision": 1383256466,
+      "latest_time": "2026-11-01T19:45:31+00:00"
+    },
+    {
+      "title": "Cortana (virtual assistant)",
+      "page_id": 42119832,
+      "stored_revision": 1378442900,
+      "latest_revision": 1382687867,
+      "latest_time": "2026-10-29T20:19:42+00:00"
+    },
+    {
+      "title": "Latent semantic analysis",
+      "page_id": 689427,
+      "stored_revision": 1378438883,
+      "latest_revision": 1383242302,
+      "latest_time": "2026-11-01T18:37:50+00:00"
+    },
+    {
+      "title": "Natural language processing",
+      "page_id": 21652,
+      "stored_revision": 1374356070,
+      "latest_revision": 1383133655,
+      "latest_time": "2026-11-01T04:08:05+00:00"
+    },
+    {
+      "title": "Zipf's law",
+      "page_id": 43218,
+      "stored_revision": 1374901395,
+      "latest_revision": 1383404184,
+      "latest_time": "2026-11-02T14:35:43+00:00"
+    },
+    {
+      "title": "Comparison of machine translation applications",
+      "page_id": 13829382,
+      "stored_revision": 1377914904,
+      "latest_revision": 1381580442,
+      "latest_time": "2026-10-23T13:28:49+00:00"
+    },
+    {
+      "title": "Treebank",
+      "page_id": 3732417,
+      "stored_revision": 1361768498,
+      "latest_revision": 1383137121,
+      "latest_time": "2026-11-01T04:37:15+00:00"
+    },
+    {
+      "title": "Latent Dirichlet allocation",
+      "page_id": 4605351,
+      "stored_revision": 1369017315,
+      "latest_revision": 1380964178,
+      "latest_time": "2026-10-19T02:50:24+00:00"
+    },
+    {
+      "title": "Pronunciation assessment",
+      "page_id": 4941061,
+      "stored_revision": 1376655576,
+      "latest_revision": 1380002696,
+      "latest_time": "2026-10-13T05:14:26+00:00"
+    },
+    {
+      "title": "Cohere",
+      "page_id": 69643817,
+      "stored_revision": 1375422810,
+      "latest_revision": 1382923648,
+      "latest_time": "2026-10-31T00:52:37+00:00"
+    },
+    {
+      "title": "WordNet",
+      "page_id": 33955,
+      "stored_revision": 1378116856,
+      "latest_revision": 1383727168,
+      "latest_time": "2026-11-04T12:44:00+00:00"
+    },
+    {
+      "title": "Optical character recognition",
+      "page_id": 49091,
+      "stored_revision": 1376596805,
+      "latest_revision": 1383325575,
+      "latest_time": "2026-11-02T03:10:02+00:00"
+    },
+    {
+      "title": "Probabilistic context-free grammar",
+      "page_id": 299329,
+      "stored_revision": 1374572893,
+      "latest_revision": 1383116914,
+      "latest_time": "2026-11-01T01:59:52+00:00"
+    },
+    {
+      "title": "Text mining",
+      "page_id": 318439,
+      "stored_revision": 1375531260,
+      "latest_revision": 1383253930,
+      "latest_time": "2026-11-01T19:32:14+00:00"
+    },
+    {
+      "title": "DeepL Translator",
+      "page_id": 61658617,
+      "stored_revision": 1376125547,
+      "latest_revision": 1380550320,
+      "latest_time": "2026-10-16T12:16:38+00:00"
+    },
+    {
+      "title": "Neural machine translation",
+      "page_id": 47961606,
+      "stored_revision": 1368847364,
+      "latest_revision": 1381663222,
+      "latest_time": "2026-10-24T00:10:29+00:00"
+    },
+    {
+      "title": "SemEval",
+      "page_id": 29081358,
+      "stored_revision": 1372636702,
+      "latest_revision": 1382623797,
+      "latest_time": "2026-10-29T14:38:25+00:00"
+    },
+    {
+      "title": "Reasoning model",
+      "page_id": 79013463,
+      "stored_revision": 1377742798,
+      "latest_revision": 1381338556,
+      "latest_time": "2026-10-21T18:58:29+00:00"
+    },
+    {
+      "title": "Frederick Jelinek",
+      "page_id": 4561188,
+      "stored_revision": 1377296380,
+      "latest_revision": 1379612267,
+      "latest_time": "2026-10-11T00:01:48+00:00"
+    },
+    {
+      "title": "Semantic parsing",
+      "page_id": 55831248,
+      "stored_revision": 1374749882,
+      "latest_revision": 1382885605,
+      "latest_time": "2026-10-30T20:49:36+00:00"
+    },
+    {
+      "title": "Tsetlin machine",
+      "page_id": 57316019,
+      "stored_revision": 1350144411,
+      "latest_revision": 1383331821,
+      "latest_time": "2026-11-02T04:00:53+00:00"
+    },
+    {
+      "title": "Vision-language model",
+      "page_id": 81348246,
+      "stored_revision": 1375874758,
+      "latest_revision": 1382505402,
+      "latest_time": "2026-10-29T01:00:35+00:00"
+    },
+    {
+      "title": "Contrastive Language–Image Pre-training",
+      "page_id": 67219182,
+      "stored_revision": 1359776164,
+      "latest_revision": 1383086915,
+      "latest_time": "2026-10-31T22:46:42+00:00"
+    },
+    {
+      "title": "Bixby (software)",
+      "page_id": 53639024,
+      "stored_revision": 1370566696,
+      "latest_revision": 1382576688,
+      "latest_time": "2026-10-29T09:22:00+00:00"
+    },
+    {
+      "title": "Stance detection",
+      "page_id": 83580654,
+      "stored_revision": 1374938293,
+      "latest_revision": 1383358446,
+      "latest_time": "2026-11-02T07:55:33+00:00"
+    },
+    {
+      "title": "Motor theory of speech perception",
+      "page_id": 23060403,
+      "stored_revision": 1363263735,
+      "latest_revision": 1380965609,
+      "latest_time": "2026-10-19T03:06:06+00:00"
+    },
+    {
+      "title": "Convolutional neural network",
+      "page_id": 40409788,
+      "stored_revision": 1372994421,
+      "latest_revision": 1383802675,
+      "latest_time": "2026-11-04T23:32:50+00:00"
+    },
+    {
+      "title": "Image segmentation",
+      "page_id": 505717,
+      "stored_revision": 1375991769,
+      "latest_revision": 1383966883,
+      "latest_time": "2026-11-05T21:51:09+00:00"
+    },
+    {
+      "title": "Computer vision",
+      "page_id": 6596,
+      "stored_revision": 1372994537,
+      "latest_revision": 1383999365,
+      "latest_time": "2026-11-06T02:07:01+00:00"
+    },
+    {
+      "title": "Scale-invariant feature transform",
+      "page_id": 1208345,
+      "stored_revision": 1373672434,
+      "latest_revision": 1378946240,
+      "latest_time": "2026-10-07T01:40:03+00:00"
+    },
+    {
+      "title": "Iris recognition",
+      "page_id": 366418,
+      "stored_revision": 1376502682,
+      "latest_revision": 1383607513,
+      "latest_time": "2026-11-03T17:30:49+00:00"
+    },
+    {
+      "title": "Digital image processing",
+      "page_id": 97922,
+      "stored_revision": 1373913396,
+      "latest_revision": 1383258464,
+      "latest_time": "2026-11-01T19:56:51+00:00"
+    },
+    {
+      "title": "Vision transformer",
+      "page_id": 68212199,
+      "stored_revision": 1374802351,
+      "latest_revision": 1383349687,
+      "latest_time": "2026-11-02T06:42:16+00:00"
+    },
+    {
+      "title": "Activity recognition",
+      "page_id": 15795950,
+      "stored_revision": 1376832836,
+      "latest_revision": 1383275680,
+      "latest_time": "2026-11-01T21:49:49+00:00"
+    },
+    {
+      "title": "ImageNet",
+      "page_id": 50896194,
+      "stored_revision": 1377738480,
+      "latest_revision": 1381846999,
+      "latest_time": "2026-10-25T04:26:41+00:00"
+    },
+    {
+      "title": "Structure tensor",
+      "page_id": 7096466,
+      "stored_revision": 1374385094,
+      "latest_revision": 1378807200,
+      "latest_time": "2026-10-06T06:01:49+00:00"
+    },
+    {
+      "title": "Gesture recognition",
+      "page_id": 1400452,
+      "stored_revision": 1365974128,
+      "latest_revision": 1382477185,
+      "latest_time": "2026-10-28T22:19:33+00:00"
+    },
+    {
+      "title": "Optical flow",
+      "page_id": 869825,
+      "stored_revision": 1372994811,
+      "latest_revision": 1383970928,
+      "latest_time": "2026-11-05T22:22:12+00:00"
+    },
+    {
+      "title": "Edge detection",
+      "page_id": 331680,
+      "stored_revision": 1373059615,
+      "latest_revision": 1382050267,
+      "latest_time": "2026-10-26T07:32:27+00:00"
+    },
+    {
+      "title": "Photogrammetry",
+      "page_id": 552840,
+      "stored_revision": 1374345741,
+      "latest_revision": 1379999494,
+      "latest_time": "2026-10-13T04:33:23+00:00"
+    },
+    {
+      "title": "Human image synthesis",
+      "page_id": 4287389,
+      "stored_revision": 1375836153,
+      "latest_revision": 1384066196,
+      "latest_time": "2026-11-06T10:50:10+00:00"
+    },
+    {
+      "title": "3D reconstruction",
+      "page_id": 16234982,
+      "stored_revision": 1375132582,
+      "latest_revision": 1380029534,
+      "latest_time": "2026-10-13T10:34:57+00:00"
+    },
+    {
+      "title": "Hough transform",
+      "page_id": 434897,
+      "stored_revision": 1367924421,
+      "latest_revision": 1381870769,
+      "latest_time": "2026-10-25T08:57:30+00:00"
+    },
+    {
+      "title": "Proximal policy optimization",
+      "page_id": 70774614,
+      "stored_revision": 1355448120,
+      "latest_revision": 1383689426,
+      "latest_time": "2026-11-04T04:57:31+00:00"
+    },
+    {
+      "title": "Model-free (reinforcement learning)",
+      "page_id": 60008386,
+      "stored_revision": 1378214240,
+      "latest_revision": 1378653993,
+      "latest_time": "2026-10-05T13:41:59+00:00"
+    },
+    {
+      "title": "Embodied cognition",
+      "page_id": 33034640,
+      "stored_revision": 1377452945,
+      "latest_revision": 1382047408,
+      "latest_time": "2026-10-26T07:05:07+00:00"
+    },
+    {
+      "title": "Regulation of artificial intelligence",
+      "page_id": 63451675,
+      "stored_revision": 1378162446,
+      "latest_revision": 1384001557,
+      "latest_time": "2026-11-06T02:19:20+00:00"
+    },
+    {
+      "title": "Ethics of artificial intelligence",
+      "page_id": 13659583,
+      "stored_revision": 1376885476,
+      "latest_revision": 1383446002,
+      "latest_time": "2026-11-02T18:56:38+00:00"
+    },
+    {
+      "title": "Existential risk from artificial intelligence",
+      "page_id": 46583121,
+      "stored_revision": 1378450122,
+      "latest_revision": 1383524595,
+      "latest_time": "2026-11-03T04:01:52+00:00"
+    },
+    {
+      "title": "AI alignment",
+      "page_id": 50785023,
+      "stored_revision": 1375975271,
+      "latest_revision": 1383765867,
+      "latest_time": "2026-11-04T18:59:11+00:00"
+    },
+    {
+      "title": "Transhumanism",
+      "page_id": 30299,
+      "stored_revision": 1371123990,
+      "latest_revision": 1383251160,
+      "latest_time": "2026-11-01T19:19:34+00:00"
+    },
+    {
+      "title": "AI safety",
+      "page_id": 72360809,
+      "stored_revision": 1377820772,
+      "latest_revision": 1383835210,
+      "latest_time": "2026-11-05T02:30:08+00:00"
+    },
+    {
+      "title": "Technological singularity",
+      "page_id": 54245,
+      "stored_revision": 1378478147,
+      "latest_revision": 1383615092,
+      "latest_time": "2026-11-03T18:26:16+00:00"
+    },
+    {
+      "title": "Turing test",
+      "page_id": 21391751,
+      "stored_revision": 1374125371,
+      "latest_revision": 1383681635,
+      "latest_time": "2026-11-04T03:46:42+00:00"
+    },
+    {
+      "title": "Chinese room",
+      "page_id": 6216,
+      "stored_revision": 1377403907,
+      "latest_revision": 1383832156,
+      "latest_time": "2026-11-05T02:14:35+00:00"
+    },
+    {
+      "title": "Accelerationism",
+      "page_id": 41330767,
+      "stored_revision": 1376352858,
+      "latest_revision": 1383762131,
+      "latest_time": "2026-11-04T18:24:34+00:00"
+    },
+    {
+      "title": "Anthropic",
+      "page_id": 6206236,
+      "stored_revision": 1378449841,
+      "latest_revision": 1383922802,
+      "latest_time": "2026-11-05T16:40:00+00:00"
+    },
+    {
+      "title": "Uncanny valley",
+      "page_id": 430976,
+      "stored_revision": 1376320396,
+      "latest_revision": 1383151248,
+      "latest_time": "2026-11-01T06:35:00+00:00"
+    },
+    {
+      "title": "Computational creativity",
+      "page_id": 16300571,
+      "stored_revision": 1376338142,
+      "latest_revision": 1379070073,
+      "latest_time": "2026-10-07T19:28:13+00:00"
+    },
+    {
+      "title": "Magnifica humanitas",
+      "page_id": 83211385,
+      "stored_revision": 1378081932,
+      "latest_revision": 1381822289,
+      "latest_time": "2026-10-25T00:46:36+00:00"
+    },
+    {
+      "title": "Philosophy of artificial intelligence",
+      "page_id": 2958015,
+      "stored_revision": 1378025335,
+      "latest_revision": 1379195331,
+      "latest_time": "2026-10-08T13:50:43+00:00"
+    },
+    {
+      "title": "Machine ethics",
+      "page_id": 32237314,
+      "stored_revision": 1369908522,
+      "latest_revision": 1379182557,
+      "latest_time": "2026-10-08T11:35:06+00:00"
+    },
+    {
+      "title": "AI takeover",
+      "page_id": 813176,
+      "stored_revision": 1377781226,
+      "latest_revision": 1383194700,
+      "latest_time": "2026-11-01T13:20:45+00:00"
+    },
+    {
+      "title": "LaMDA",
+      "page_id": 70993391,
+      "stored_revision": 1354945164,
+      "latest_revision": 1382178874,
+      "latest_time": "2026-10-27T02:51:00+00:00"
+    },
+    {
+      "title": "Hubert Dreyfus's views on artificial intelligence",
+      "page_id": 8919856,
+      "stored_revision": 1373750276,
+      "latest_revision": 1380378847,
+      "latest_time": "2026-10-15T11:33:40+00:00"
+    },
+    {
+      "title": "Future of Life Institute",
+      "page_id": 42912557,
+      "stored_revision": 1375715998,
+      "latest_revision": 1383321373,
+      "latest_time": "2026-11-02T02:42:17+00:00"
+    },
+    {
+      "title": "Regulation of algorithms",
+      "page_id": 63442371,
+      "stored_revision": 1372722429,
+      "latest_revision": 1380481128,
+      "latest_time": "2026-10-16T00:03:11+00:00"
+    },
+    {
+      "title": "Anthropic–United States Department of Defense dispute",
+      "page_id": 82623892,
+      "stored_revision": 1375722324,
+      "latest_revision": 1383839218,
+      "latest_time": "2026-11-05T02:50:32+00:00"
+    },
+    {
+      "title": "Rationalist community",
+      "page_id": 74469524,
+      "stored_revision": 1377840354,
+      "latest_revision": 1384102519,
+      "latest_time": "2026-11-06T16:19:51+00:00"
+    },
+    {
+      "title": "Hubert Dreyfus",
+      "page_id": 952926,
+      "stored_revision": 1366153003,
+      "latest_revision": 1380585989,
+      "latest_time": "2026-10-16T17:26:50+00:00"
+    },
+    {
+      "title": "TESCREAL",
+      "page_id": 77241904,
+      "stored_revision": 1377446190,
+      "latest_revision": 1381066601,
+      "latest_time": "2026-10-19T20:05:25+00:00"
+    },
+    {
+      "title": "Instrumental convergence",
+      "page_id": 43591208,
+      "stored_revision": 1373266943,
+      "latest_revision": 1383279229,
+      "latest_time": "2026-11-01T22:11:28+00:00"
+    },
+    {
+      "title": "Reward hacking",
+      "page_id": 73429796,
+      "stored_revision": 1377451572,
+      "latest_revision": 1381164044,
+      "latest_time": "2026-10-20T11:25:33+00:00"
+    },
+    {
+      "title": "Roko's basilisk",
+      "page_id": 70371803,
+      "stored_revision": 1376577108,
+      "latest_revision": 1382826559,
+      "latest_time": "2026-10-30T14:26:23+00:00"
+    },
+    {
+      "title": "AI aftermath scenarios",
+      "page_id": 55962927,
+      "stored_revision": 1353633525,
+      "latest_revision": 1381714952,
+      "latest_time": "2026-10-24T08:56:44+00:00"
+    },
+    {
+      "title": "Artificial intelligence safety institute",
+      "page_id": 77301785,
+      "stored_revision": 1375741604,
+      "latest_revision": 1383835456,
+      "latest_time": "2026-11-05T02:31:14+00:00"
+    },
+    {
+      "title": "Computational theory of mind",
+      "page_id": 3951220,
+      "stored_revision": 1373749508,
+      "latest_revision": 1380659888,
+      "latest_time": "2026-10-17T03:10:12+00:00"
+    },
+    {
+      "title": "Superintelligence",
+      "page_id": 726659,
+      "stored_revision": 1378477027,
+      "latest_revision": 1383967319,
+      "latest_time": "2026-11-05T21:53:49+00:00"
+    },
+    {
+      "title": "Dartmouth workshop",
+      "page_id": 1124646,
+      "stored_revision": 1360638286,
+      "latest_revision": 1382271170,
+      "latest_time": "2026-10-27T18:18:10+00:00"
+    },
+    {
+      "title": "Effective accelerationism",
+      "page_id": 75085196,
+      "stored_revision": 1375901066,
+      "latest_revision": 1382945350,
+      "latest_time": "2026-10-31T03:30:56+00:00"
+    },
+    {
+      "title": "Digital necromancy",
+      "page_id": 84077539,
+      "stored_revision": 1372231012,
+      "latest_revision": 1380128984,
+      "latest_time": "2026-10-13T23:41:23+00:00"
+    },
+    {
+      "title": "ControlAI",
+      "page_id": 81798293,
+      "stored_revision": 1365603042,
+      "latest_revision": 1382412942,
+      "latest_time": "2026-10-28T15:52:42+00:00"
+    },
+    {
+      "title": "P(doom)",
+      "page_id": 77187024,
+      "stored_revision": 1378304185,
+      "latest_revision": 1383522454,
+      "latest_time": "2026-11-03T03:42:58+00:00"
+    },
+    {
+      "title": "METR",
+      "page_id": 80216309,
+      "stored_revision": 1378404582,
+      "latest_revision": 1379840390,
+      "latest_time": "2026-10-12T05:40:03+00:00"
+    },
+    {
+      "title": "AI capability control",
+      "page_id": 31641770,
+      "stored_revision": 1376525618,
+      "latest_revision": 1381231725,
+      "latest_time": "2026-10-20T21:22:45+00:00"
+    },
+    {
+      "title": "4E cognition",
+      "page_id": 79595959,
+      "stored_revision": 1359991832,
+      "latest_revision": 1379826458,
+      "latest_time": "2026-10-12T03:43:00+00:00"
+    },
+    {
+      "title": "Artificial intelligence",
+      "page_id": 1164,
+      "stored_revision": 1377950039,
+      "latest_revision": 1384005518,
+      "latest_time": "2026-11-06T02:45:08+00:00"
+    },
+    {
+      "title": "Supervised learning",
+      "page_id": 20926,
+      "stored_revision": 1378413836,
+      "latest_revision": 1379881854,
+      "latest_time": "2026-10-12T12:26:18+00:00"
+    },
+    {
+      "title": "Symbolic artificial intelligence",
+      "page_id": 339417,
+      "stored_revision": 1374344413,
+      "latest_revision": 1381896785,
+      "latest_time": "2026-10-25T13:57:23+00:00"
+    },
+    {
+      "title": "Recurrent neural network",
+      "page_id": 1706303,
+      "stored_revision": 1378363404,
+      "latest_revision": 1383645247,
+      "latest_time": "2026-11-03T22:34:57+00:00"
+    },
+    {
+      "title": "History of artificial intelligence",
+      "page_id": 2894560,
+      "stored_revision": 1378118509,
+      "latest_revision": 1384110209,
+      "latest_time": "2026-11-06T17:14:57+00:00"
+    },
+    {
+      "title": "Transfer learning",
+      "page_id": 3920550,
+      "stored_revision": 1360633829,
+      "latest_revision": 1383898221,
+      "latest_time": "2026-11-05T12:46:07+00:00"
+    },
+    {
+      "title": "Semantic search",
+      "page_id": 11246715,
+      "stored_revision": 1376135669,
+      "latest_revision": 1382599403,
+      "latest_time": "2026-10-29T12:09:28+00:00"
+    },
+    {
+      "title": "BERT (language model)",
+      "page_id": 62026514,
+      "stored_revision": 1377756068,
+      "latest_revision": 1382680910,
+      "latest_time": "2026-10-29T19:39:50+00:00"
+    },
+    {
+      "title": "Knowledge graph",
+      "page_id": 64418530,
+      "stored_revision": 1378450681,
+      "latest_revision": 1382603053,
+      "latest_time": "2026-10-29T12:32:42+00:00"
+    },
+    {
+      "title": "GPT-3",
+      "page_id": 64695824,
+      "stored_revision": 1377283503,
+      "latest_revision": 1382821298,
+      "latest_time": "2026-10-30T13:47:43+00:00"
+    },
+    {
+      "title": "Self-supervised learning",
+      "page_id": 67902375,
+      "stored_revision": 1375949950,
+      "latest_revision": 1380353226,
+      "latest_time": "2026-10-15T05:44:13+00:00"
+    },
+    {
+      "title": "ChatGPT",
+      "page_id": 72417803,
+      "stored_revision": 1377796884,
+      "latest_revision": 1383877983,
+      "latest_time": "2026-11-05T08:27:12+00:00"
+    },
+    {
+      "title": "Retrieval-augmented generation",
+      "page_id": 75229858,
+      "stored_revision": 1377227095,
+      "latest_revision": 1382674307,
+      "latest_time": "2026-10-29T19:06:20+00:00"
+    },
+    {
+      "title": "Attention Is All You Need",
+      "page_id": 75477752,
+      "stored_revision": 1378295457,
+      "latest_revision": 1384047364,
+      "latest_time": "2026-11-06T08:10:35+00:00"
+    }
+  ],
+  "missing": [],
+  "not_stored": [],
+  "dry_run": false,
+  "replaced_articles": 5,
+  "chunks_before": 6144,
+  "deleted_chunks": 300,
+  "inserted_chunks": 302,
+  "failures": [],
+  "rebuild_share": 0.25,
+  "rebuilt": false,
+  "rebuild_seconds": null,
+  "check_seconds": 2.677478199999314,
+  "seconds": 131.88518740001018,
+  "replaced_share": 0.0488
+}

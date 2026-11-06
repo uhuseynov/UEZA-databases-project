@@ -9,6 +9,7 @@ from src.rag.models import SearchFilters
 from src.rag.retriever import (
     MAX_K,
     VectorRetriever,
+    build_chunk_ids_query,
     build_search_query,
     vector_to_bytes,
     vector_to_hex_literal,
@@ -244,3 +245,21 @@ async def test_analyze_runs_the_statement_under_analyze_format_json():
     assert database.session.statements[0][0].startswith("ANALYZE FORMAT=JSON SELECT")
     assert result == plan
 
+
+
+def test_chunk_ids_query_uses_the_same_filter_predicates_as_the_search():
+    filters = SearchFilters(root_category="Core", linked_from="Artificial intelligence")
+
+    ids = build_chunk_ids_query(filters)
+    search = build_search_query(VECTOR, k=5, filters=filters)
+
+    assert ids.sql.startswith("SELECT c.id FROM article_chunks c\nJOIN articles a ON a.id = c.article_id\nWHERE ")
+    where = ids.sql.split("WHERE ", 1)[1]
+    assert where in search.sql
+    assert ids.params == {"root_category": "Core", "linked_from": "Artificial intelligence"}
+
+
+def test_chunk_ids_query_without_filters_selects_every_chunk():
+    assert build_chunk_ids_query(SearchFilters()).sql == (
+        "SELECT c.id FROM article_chunks c\nJOIN articles a ON a.id = c.article_id"
+    )

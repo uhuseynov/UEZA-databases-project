@@ -9,6 +9,7 @@ The same `VECTOR INDEX`, with the same `M` and `mhnsw_ef_search`, searched at th
 - **Deleted vectors stay in the graph, and the graph then no longer fits into the index cache.** After every chunk was deleted and inserted again, a plain search took 72 ms. Raising `mhnsw_max_cache_size` from 16 MB to 64 MB, with nothing else changed, brought it to 20 ms, and setting it back to 72 ms again. `docker-compose.yml` now starts MariaDB with a 64 MB cache, and the ingest rebuilds the index after replacing articles.
 - **After a rebuild, InnoDB believes the graph table is empty.** `ALTER TABLE ... ADD VECTOR INDEX` fills the hidden table that holds the HNSW graph without InnoDB counting the rows, so its statistics say 0 rows. After a restart MariaDB reads the size of the graph from these statistics, and searches then skip part of the graph: index recall@10 0.88 to 0.92 instead of 0.93 to 1.00. Setting the statistic to the real count, with nothing else changed, restored the full recall; setting it back to 0 lost it again. `make reindex` now inserts and deletes one chunk after the rebuild, which makes InnoDB count the table.
 - **Both explain the states of 28 October**, see [the table below](#the-states-of-28-october).
+- **With the nearest-first statement, replaced chunks hardly matter any more.** Replacing up to half of the chunks changed nothing measurable, and replacing all of them made a search 3 ms slower, with the recall unchanged ([below](#replacing-part-of-the-chunks)). The 72 ms came with the old join statement, which searched most of the graph.
 
 ## Setup
 
@@ -76,6 +77,24 @@ The first load of the articles inserts row by row, which InnoDB counts, so an in
 
 We think both behaviours are worth reporting to MariaDB: the statistics of a graph table built by `ALTER TABLE`, and a whole-cache reset as the only way of staying under `mhnsw_max_cache_size`.
 
+## Replacing part of the chunks
+
+A live sync replaces only the changed articles, so the graph collects deleted nodes a little at a time. [experiments/index_cache/partial_replace.py](../../experiments/index_cache/partial_replace.py) rebuilt the index and then replaced whole articles until 10%, 25%, 50% and 100% of the chunks had been deleted and inserted again. After each step it restarted MariaDB and measured the 54 questions without a filter at `mhnsw_ef_search` 40, with the shipped statement (nearest chunks first, binary query vector), once with the 64 MB cache of `docker-compose.yml` and once with MariaDB's default 16 MB. Measured on 6 November 2026:
+
+| Chunks replaced since the rebuild | 64 MB: index recall@10 | 64 MB: mean | 16 MB: index recall@10 | 16 MB: mean |
+| --- | --- | --- | --- | --- |
+| 0 | 0.959 | 9.0 ms | 0.956 | 10.8 ms |
+| 10% | 0.965 | 9.1 ms | 0.956 | 14.1 ms |
+| 25% | 0.959 | 8.5 ms | 0.944 | 12.1 ms |
+| 50% | 0.965 | 9.7 ms | 0.954 | 12.9 ms |
+| 100% | 0.963 | 12.2 ms | 0.952 | 16.0 ms |
+
+- With 64 MB, up to half of the chunks replaced made no measurable difference, and all of them 3 ms more per search. The index recall did not drop: deleted nodes are skipped in the results, and here every deleted node had a live copy at the same position (see [Limits](#limits)).
+- With 16 MB every state was 2 to 5 ms slower than with 64 MB, but nothing like the 72 ms of the first experiment. That one used the join statement, which searched most of the graph and so had to read most of it back after every dropped cache. The nearest-first search touches only a small part.
+- So the 64 MB cache is now a margin rather than a necessity, and a rebuild is needed far less often than we thought. `sync` rebuilds when a run replaced 25% of the chunks ([Ingestion](../ingestion/Home.md#live-sync)).
+
+The raw output is in [eval/results](../../eval/results/), labelled `partial-<share>-64mb` and `partial-<share>-16mb`.
+
 ## The states of 28 October
 
 These were measured with the statement and query format of that time (the join, query vector as text, `mhnsw_ef_search` 20, 16 MB cache), before we knew the causes:
@@ -101,7 +120,7 @@ The raw output is in [eval/results](../../eval/results/) (files of 28 October: `
 - One machine, one data set (6,144 vectors), one version of MariaDB (12.3.3).
 - The mechanisms are read from the source, not observed inside the server. We did not measure the cache's memory use, and we did not try sizes between 16 and 64 MB.
 - The refresh relies on InnoDB's automatic recalculation (`innodb_stats_auto_recalc`, on by default) and gives an estimate (5,376 for 6,144 nodes), not an exact count.
-- We have not measured how fast the index slows down when only part of the chunks is replaced, as a live sync does.
+- The partial replacements were measured with whole articles rewritten as they were. A real sync changes the text, so the new chunks are new points, not copies of the deleted ones.
 
 ## Reproducing it
 
@@ -111,6 +130,7 @@ Each script runs from the repository root with the compose database up and loade
 uv run python experiments/index_cache/run.py            # cause 1: replaced chunks, 16 MB and 64 MB cache
 uv run python experiments/index_cache/graph_stats.py    # cause 2: n_rows of the graph table 0, correct, 0
 uv run python experiments/index_cache/refresh_check.py  # make reindex refreshes the statistics; final measurement
+uv run python experiments/index_cache/partial_replace.py # 10% to 100% of the chunks replaced, 64 MB and 16 MB
 ```
 
 They run SQL as root inside the db container, change only what is described above and put it back at the end (`run.py` leaves the index rebuilt).

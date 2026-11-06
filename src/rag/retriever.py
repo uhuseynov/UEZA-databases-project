@@ -126,12 +126,7 @@ def build_search_query(
         query_sql = "VEC_FromText(:query_vector)"
     else:
         query_sql = vector_to_hex_literal(query_vector)
-    conditions: list[str] = []
-    for name, fragment in _FILTER_SQL.items():
-        value = getattr(filters, name)
-        if value is not None:
-            conditions.append(fragment)
-            params[name] = value
+    conditions = _filter_conditions(filters, params)
 
     if shape == "nearest_first" and not conditions:
         distance = _distance("embedding", query_sql)
@@ -161,6 +156,30 @@ def build_search_query(
         f"ORDER BY {order_by}\n"
         "LIMIT :k"
     )
+    return SearchQuery(sql=sql, params=params)
+
+
+def _filter_conditions(filters: SearchFilters, params: dict[str, Any]) -> list[str]:
+    """The WHERE fragments for the set filters; their values are added to ``params``."""
+    conditions: list[str] = []
+    for name, fragment in _FILTER_SQL.items():
+        value = getattr(filters, name)
+        if value is not None:
+            conditions.append(fragment)
+            params[name] = value
+    return conditions
+
+
+def build_chunk_ids_query(filters: SearchFilters) -> SearchQuery:
+    """The ids of the chunks that pass ``filters``, with the same predicates as the search.
+
+    An external vector index (the FAISS baseline) needs them to filter, since it does not
+    have the articles' metadata.
+    """
+    params: dict[str, Any] = {}
+    conditions = _filter_conditions(filters, params)
+    where = f"\nWHERE {' AND '.join(conditions)}" if conditions else ""
+    sql = "SELECT c.id FROM article_chunks c\nJOIN articles a ON a.id = c.article_id" + where
     return SearchQuery(sql=sql, params=params)
 
 
