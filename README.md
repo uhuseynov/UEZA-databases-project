@@ -239,3 +239,9 @@ Not done, as future work:
 - **Zeynalabidin**: data decisions (topic, article list, metadata, cleaning and chunking rules) and the ground-truth question set
 - **Egehan**: ingestion and live sync (MediaWiki client, chunking, embeddings, loading into MariaDB), the FAISS comparison baseline, the Docker Compose stack and CI
 - **Umid** (team lead): repo structure, RAG pipeline and backend, evaluation, final integration
+
+## License
+
+The code is released under the [MIT License](./LICENSE).
+
+The article text comes from English Wikipedia, under [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/). The repository does not contain it: it stores only the article titles, page ids and metadata (`data/articles.csv`) and our own questions, and the ingest fetches the text from the MediaWiki API. The embedding model `BAAI/bge-base-en-v1.5` is under the MIT License.
