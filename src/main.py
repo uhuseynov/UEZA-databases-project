@@ -1,3 +1,4 @@
+import asyncio
 from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
 
@@ -37,6 +38,7 @@ def create_app() -> FastAPI:
         lifespan=lifespan,
     )
     app.state.container = container
+    app.state.article_fetch_slots = asyncio.Semaphore(settings.mediawiki_api_concurrency)
     app.include_router(rag_router)
 
     @app.get("/health")

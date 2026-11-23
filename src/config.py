@@ -53,6 +53,9 @@ class Settings(BaseSettings):
     )
 
     mediawiki_requests_per_second: float = Field(default=2.0, gt=0)
+    # At most this many GET /articles/{title} requests fetch at the same time (per process);
+    # the others wait without using a thread.
+    mediawiki_api_concurrency: int = Field(default=4, ge=1)
 
     mediawiki_max_retries: int = Field(default=3, ge=0)
     mediawiki_batch_size: int = Field(default=20, ge=1)

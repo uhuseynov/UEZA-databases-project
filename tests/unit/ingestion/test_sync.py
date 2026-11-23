@@ -51,9 +51,11 @@ class FakeRepository:
 class FakePipeline:
     def __init__(self) -> None:
         self.ingested: list[tuple[str, bool]] = []
+        self.min_revisions: dict[str, int | None] = {}
 
-    async def ingest_one(self, row, config="A", snapshot=True):
+    async def ingest_one(self, row, config="A", snapshot=True, min_revision=None):
         self.ingested.append((row["title"], snapshot))
+        self.min_revisions[row["title"]] = min_revision
         if row["title"] == "Broken":
             raise ValueError("Unclosed MediaWiki table")
         return 8
@@ -156,3 +158,13 @@ async def test_report_is_written_as_json_and_markdown(csv_path, tmp_path):
     assert "| Edited | 200 | 201 |" in markdown
     assert "- Broken: Unclosed MediaWiki table" in markdown
     assert "Deleted" in render_sync(result)
+
+
+async def test_sync_tells_the_pipeline_which_revision_it_found(csv_path):
+    """So that a cached copy of an older revision cannot be stored again."""
+    pipeline = FakePipeline()
+
+    await sync_articles(client=FakeClient(), repository=FakeRepository(),
+                        pipeline_factory=lambda: pipeline, csv_path=csv_path)
+
+    assert pipeline.min_revisions == {"Edited": 201, "Broken": 401}

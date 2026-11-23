@@ -35,13 +35,17 @@ async def get_mediawiki_client(request: Request) -> AsyncGenerator[MediaWikiClie
     """One MediaWiki client per request, closed when the request ends (also on errors).
 
     The container's provider is a Factory: every client has its own HTTP connection pool,
-    while the article cache is a shared singleton.
+    while the article cache and the rate limiter are shared singletons, so the request limit
+    holds across concurrent requests (in this process). At most ``MEDIAWIKI_API_CONCURRENCY``
+    requests fetch at once; the rest wait here, in the event loop, not in a worker thread, so
+    a burst of article requests cannot use up the threads the embedding model needs.
     """
-    client = request.app.state.container.mediawiki_client()
-    try:
-        yield client
-    finally:
-        client.close()
+    async with request.app.state.article_fetch_slots:
+        client = request.app.state.container.mediawiki_client()
+        try:
+            yield client
+        finally:
+            client.close()
 
 
 @router.get("/", include_in_schema=False)

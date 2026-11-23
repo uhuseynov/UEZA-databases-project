@@ -15,7 +15,8 @@ The project uses `dependency-injector` to build and share the application's obje
 | `database` | Singleton | `Database(settings, logger)` | repository, retriever, app lifespan, CLIs |
 | `article_repository` | Factory | `ArticleRepository(database, dimension=EMBEDDING_DIMENSION)` | ingestion CLI (`ingest`, `check` preflight, `reindex`, `sync`) |
 | `article_cache` | Singleton | `ArticleCache(CACHE_DIR, CACHE_TTL_SECONDS)` | `mediawiki_client` |
-| `mediawiki_client` | Factory | MediaWiki settings, logger, cache | `GET /articles/{title}`, ingestion CLI |
+| `mediawiki_rate_limiter` | Singleton | `RateLimiter(MEDIAWIKI_REQUESTS_PER_SECOND)` | every `mediawiki_client`: one limit per process |
+| `mediawiki_client` | Factory | MediaWiki settings, logger, cache, the shared rate limiter | `GET /articles/{title}`, ingestion CLI |
 | `embedder` | ThreadSafeSingleton | `Embedder(model name, dimension, prefixes)` | RAG service, ingestion CLI |
 | `ingestion_pipeline` | Factory | client, embedder, repository | not used: the CLI builds `IngestionPipeline` itself |
 | `retriever` | Singleton | `VectorRetriever(database)` | `rag_service` |
@@ -25,7 +26,7 @@ The project uses `dependency-injector` to build and share the application's obje
 ## Lifetimes
 
 - **Singletons** are shared for the lifetime of the container: the logger, the database pool, the article cache, the retriever, the LLM client and the RAG service. `embedder` is thread-safe because the first request loads the model in a worker thread.
-- **Factories** build a new object per call. `mediawiki_client` is a factory because each client owns an HTTP connection pool that has to be closed: the `/articles/{title}` route creates one per request and closes it afterwards, and the CLI closes its own. The shared `article_cache` is what is reused between them.
+- **Factories** build a new object per call. `mediawiki_client` is a factory because each client owns an HTTP connection pool that has to be closed: the `/articles/{title}` route creates one per request and closes it afterwards, and the CLI closes its own. The shared `article_cache` and `mediawiki_rate_limiter` are what is reused between them: the limit holds across concurrent requests of one process ([Rate Limiting](../ingestion/mediawiki/Rate-Limiting.md#scope-of-the-limit)).
 
 ## How code gets its dependencies
 

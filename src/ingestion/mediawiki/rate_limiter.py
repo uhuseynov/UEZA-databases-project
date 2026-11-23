@@ -3,6 +3,17 @@ from threading import Lock
 
 
 class RateLimiter:
+    """Keeps at least ``1 / requests_per_second`` seconds between the requests that call
+    ``wait()``.
+
+    Thread-safe, and the limit belongs to the instance: clients that share one instance share
+    the limit (the container does this for the API), clients with their own do not. It is a
+    limit per process; separate processes (several uvicorn workers, or the API next to an
+    ingest CLI) each have their own. ``wait()`` only sleeps for the time left until the
+    caller's turn, so it blocks the calling thread, never the event loop (the API calls it
+    from worker threads).
+    """
+
     def __init__(self, requests_per_second: float) -> None:
         if requests_per_second <= 0:
             raise ValueError("requests_per_second must be greater than 0")

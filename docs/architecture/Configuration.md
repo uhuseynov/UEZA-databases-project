@@ -22,7 +22,8 @@ Precedence, highest first: real environment variables, then `.env`, then the def
 | `MARIADB_POOL_RECYCLE`, `MARIADB_POOL_PRE_PING` | `3600`, `true` | connection pool |
 | `CACHE_DIR`, `CACHE_TTL_SECONDS` | `.cache/articles`, `86400` | the [article cache](../ingestion/Cache.md) |
 | `MEDIAWIKI_USER_AGENT` | project name, repository URL, contact address | identifies the project to Wikimedia; override it when you run under another identity |
-| `MEDIAWIKI_REQUESTS_PER_SECOND`, `MEDIAWIKI_MAX_RETRIES`, `MEDIAWIKI_BATCH_SIZE`, `MEDIAWIKI_TIMEOUT`, `MEDIAWIKI_MAXLAG` | `2.0`, `3`, `20`, `10.0`, `5` | [MediaWiki client](../ingestion/mediawiki/Home.md) |
+| `MEDIAWIKI_REQUESTS_PER_SECOND`, `MEDIAWIKI_MAX_RETRIES`, `MEDIAWIKI_BATCH_SIZE`, `MEDIAWIKI_TIMEOUT`, `MEDIAWIKI_MAXLAG` | `2.0`, `3`, `20`, `10.0`, `5` | [MediaWiki client](../ingestion/mediawiki/Home.md); the rate is one limit for the whole process ([Rate Limiting](../ingestion/mediawiki/Rate-Limiting.md#scope-of-the-limit)) |
+| `MEDIAWIKI_API_CONCURRENCY` | `4` | how many `GET /articles/{title}` requests fetch at once in one process; the rest wait ([Rate Limiting](../ingestion/mediawiki/Rate-Limiting.md#concurrent-api-requests)) |
 | `ARTICLES_CSV_PATH` | `data/articles.csv` | the article list (the default of `--csv`) |
 | `CHUNK_CONFIG` | `A` | chunking: A (256 tokens, 32 overlap), B (512, 64) or C (one paragraph, at most 512) |
 | `INGESTION_SNAPSHOT` | `true` | `true`: each article at its revision on the CSV's `last_edit` date; `false`: the latest revisions (`make ingest-latest`) |

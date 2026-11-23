@@ -45,7 +45,11 @@ class MediaWikiClient:
         client: httpx.Client | None = None,
         logger: AppLogger | None = None,
         cache: ArticleCache | None = None,
+        rate_limiter: RateLimiter | None = None,
     ) -> None:
+        """``rate_limiter`` is shared by every client that is given the same instance; without
+        one, the client limits itself to ``requests_per_second``."""
+
         if not user_agent.strip():
             raise ValueError("user_agent cannot be empty")
         if max_retries < 0:
@@ -59,7 +63,7 @@ class MediaWikiClient:
         self._maxlag = maxlag
         self._batch_size = batch_size
 
-        self._rate_limiter = RateLimiter(requests_per_second)
+        self._rate_limiter = rate_limiter or RateLimiter(requests_per_second)
         self._owns_client = client is None
         self._logger = logger.get_logger(__name__) if logger else logging.getLogger(__name__)
         self._cache = cache
@@ -87,8 +91,14 @@ class MediaWikiClient:
         title: str,
         *,
         as_of: datetime | None = None,
+        min_revision: int | None = None,
     ) -> WikiArticle:
-        """Fetch a latest or historical Wikipedia article."""
+        """Fetch a latest or historical Wikipedia article.
+
+        ``min_revision`` is for callers that know a revision the article must have reached
+        (the live sync): a cached copy with an older revision is not used, and the fresh copy
+        replaces it. Historical requests (``as_of``) never read or write the cache.
+        """
 
         title = title.strip()
 
@@ -103,7 +113,7 @@ class MediaWikiClient:
         # Only latest requests use the TTL cache.
         if as_of is None and self._cache:
             cached = self._cache.get(title)
-            if cached is not None:
+            if cached is not None and (min_revision is None or cached.revision_id >= min_revision):
                 self._logger.info("Cache hit: %s", title)
                 return cached
 
@@ -113,7 +123,7 @@ class MediaWikiClient:
         )
 
         if as_of is None and self._cache:
-            self._cache.set(article)
+            self._cache.set(article, requested_title=title)
 
         return article
 

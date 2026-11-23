@@ -44,7 +44,7 @@ Before it loads anything, `ingest` and `sync` check that the table's `VECTOR(n)`
 
 1. It asks MediaWiki for the latest revision of every stored page, 50 pages per request and without the text (`prop=revisions`, `rvprop=ids|timestamp`, `pageids=...`). All 262 articles take 6 requests.
 2. It compares each with `articles.revision_id` and lists the changed articles, and the ones that no longer exist.
-3. It re-ingests only the changed articles, at their latest revision, through the same pipeline as the ingest: each article's metadata, categories, links, chunks and vectors are replaced in one transaction.
+3. It re-ingests only the changed articles, at their latest revision (a cached copy of an older revision is never reused, see [Article Cache](./Cache.md#scope)), through the same pipeline as the ingest: each article's metadata, categories, links, chunks and vectors are replaced in one transaction.
 4. It runs `ANALYZE TABLE`, and rebuilds the vector index when the replaced chunks reach 25% of all chunks (`--rebuild-share`).
 
 `--dry-run` stops after step 2 and does not load the embedding model. `--limit N` replaces at most N of the changed articles. Each run writes `eval/results/<timestamp>_sync.json` and `.md` with the changed articles and what was replaced.

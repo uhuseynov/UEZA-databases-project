@@ -137,8 +137,14 @@ async def sync_articles(
 
     for index, change in enumerate(to_replace, start=1):
         try:
+            # The latest revision was just read from MediaWiki: a cached copy of an older one
+            # (the article cache keeps latest-mode fetches for CACHE_TTL_SECONDS) must not
+            # be stored again.
             chunks = await pipeline.ingest_one(
-                row=by_page[change.page_id], config=config, snapshot=False
+                row=by_page[change.page_id],
+                config=config,
+                snapshot=False,
+                min_revision=change.latest_revision,
             )
         except Exception as exc:  # noqa: BLE001 - recorded, the others continue
             logger.exception("[%d/%d] Failed: %s", index, len(to_replace), change.title)

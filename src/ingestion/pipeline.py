@@ -102,8 +102,13 @@ class IngestionPipeline:
         row: dict[str, str],
         config: str = "A",
         snapshot: bool = True,
+        min_revision: int | None = None,
     ) -> int:
-        """Ingest one article and return its chunk count."""
+        """Ingest one article and return its chunk count.
+
+        ``min_revision`` (the live sync passes the revision it found on Wikipedia) keeps a
+        cached copy of an older revision from being stored again.
+        """
 
         title = row["title"]
 
@@ -118,10 +123,14 @@ class IngestionPipeline:
         )
 
         # MediaWiki client is synchronous.
+        fetch_options = {"as_of": as_of}
+        if min_revision is not None:
+            fetch_options["min_revision"] = min_revision
+
         wiki = await asyncio.to_thread(
             self.client.get_article,
             title,
-            as_of=as_of,
+            **fetch_options,
         )
 
         if wiki.page_id != int(row["pageid"]):
