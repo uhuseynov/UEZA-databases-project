@@ -6,12 +6,12 @@ from datetime import UTC
 
 from sqlalchemy import text
 
-from src.rag.retriever import vector_to_text
-
+from src.database.vectors import vector_to_text
 
 _VECTOR_KEY = re.compile(r"VECTOR KEY `(?P<name>\w+)` \(`embedding`\)(?P<options>[^\n]*)")
 _INDEX_M = re.compile(r"`?M`?\s*=\s*'?(?P<m>\d+)'?")
 _INDEX_DISTANCE = re.compile(r"`?DISTANCE`?\s*=\s*'?(?P<distance>[a-z]+)'?")
+_EMBEDDING_COLUMN = re.compile(r"`embedding` vector\((?P<dimension>\d+)\)", re.IGNORECASE)
 
 
 def vector_index_definition(create_table: str) -> tuple[str, int | None, str | None]:
@@ -36,9 +36,23 @@ def vector_index_definition(create_table: str) -> tuple[str, int | None, str | N
     return match["name"], m_value, distance_value
 
 
+def vector_column_dimension(create_table: str) -> int:
+    """Dimension of the ``embedding`` column in a SHOW CREATE TABLE statement."""
+
+    match = _EMBEDDING_COLUMN.search(create_table)
+    if match is None:
+        raise ValueError("article_chunks has no VECTOR(n) column named embedding")
+
+    return int(match["dimension"])
+
+
 class ArticleRepository:
-    def __init__(self, database):
+    def __init__(self, database, dimension: int):
+        """``dimension`` is the configured EMBEDDING_DIMENSION. The column is declared in
+        schema.sql (``VECTOR(768)``) and is never changed by the application."""
+
         self.database = database
+        self.dimension = dimension
 
     async def replace_article(
         self,
@@ -63,8 +77,12 @@ class ArticleRepository:
         if int(csv_row["pageid"]) != wiki.page_id:
             raise ValueError(f"Page ID mismatch for {csv_row['title']}")
 
-        if any(len(vector) != 768 for vector in vectors):
-            raise ValueError("Every embedding must contain 768 dimensions")
+        for vector in vectors:
+            if len(vector) != self.dimension:
+                raise ValueError(
+                    f"Embedding has {len(vector)} dimensions, but EMBEDDING_DIMENSION is "
+                    f"{self.dimension}"
+                )
 
         # Prepare vector serialization before opening transaction.
         serialized_vectors = [vector_to_text(vector) for vector in vectors]
@@ -251,6 +269,25 @@ class ArticleRepository:
         async with self.database.get_session() as session:
             row = (await session.execute(text("SHOW CREATE TABLE article_chunks"))).one()
             return vector_index_definition(row[1])
+
+    async def check_dimension(self) -> None:
+        """Raise when the ``embedding`` column of the database is not EMBEDDING_DIMENSION wide.
+
+        The column is declared in schema.sql and nothing here alters it: a mismatch means
+        another embedding model or dimension was configured than the table was created
+        for (see docs/database/Schema.md).
+        """
+
+        async with self.database.get_session() as session:
+            row = (await session.execute(text("SHOW CREATE TABLE article_chunks"))).one()
+
+        column = vector_column_dimension(row[1])
+        if column != self.dimension:
+            raise ValueError(
+                f"EMBEDDING_DIMENSION is {self.dimension}, but article_chunks.embedding is "
+                f"VECTOR({column}). The table is not changed automatically; use a database "
+                "created for this dimension (docs/database/Schema.md)."
+            )
 
     async def rebuild_vector_index(self, m: int | None = None) -> float:
         """Drop and re-create the vector index, with its current M and distance.

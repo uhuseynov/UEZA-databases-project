@@ -45,7 +45,6 @@ COPY --from=builder /app/.venv /app/.venv
 
 COPY src ./src
 COPY data ./data
-COPY alembic.ini ./
 COPY scripts/entrypoint.sh ./scripts/entrypoint.sh
 
 RUN chmod +x ./scripts/entrypoint.sh

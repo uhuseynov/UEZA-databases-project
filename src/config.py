@@ -119,7 +119,7 @@ class Settings(BaseSettings):
         return self
 
     # ---------------------------------------------------------
-    # Database URLs
+    # Database URL
     # ---------------------------------------------------------
 
     @property
@@ -130,22 +130,6 @@ class Settings(BaseSettings):
 
         return URL.create(
             drivername="mysql+aiomysql",
-            username=self.mariadb_user,
-            password=self.mariadb_password,
-            host=self.mariadb_host,
-            port=self.mariadb_port,
-            database=self.mariadb_database,
-            query={"charset": "utf8mb4"},
-        ).render_as_string(hide_password=False)
-
-    @property
-    def sync_database_url(self) -> str:
-        """Synchronous SQLAlchemy connection URL."""
-
-        from sqlalchemy.engine import URL
-
-        return URL.create(
-            drivername="mysql+pymysql",
             username=self.mariadb_user,
             password=self.mariadb_password,
             host=self.mariadb_host,

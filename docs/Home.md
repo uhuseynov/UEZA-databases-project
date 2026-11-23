@@ -17,7 +17,7 @@ The project explores native vector search and retrieval-augmented generation usi
 
 - [Database Overview](./database/Home.md)
 - [Connection and Sessions](./database/Connection.md)
-- [Migrations](./database/Migrations.md)
+- [Schema Management](./database/Schema.md)
 - [Vector Search and Index Parameters](./database/Vector-Search.md)
 - [Vector Index State](./database/Index-State.md)
 - [FAISS Baseline](./database/FAISS-Baseline.md)
@@ -51,7 +51,7 @@ src/
 ├── database/
 │   ├── base.py
 │   ├── connection.py
-│   ├── migrations/
+│   ├── vectors.py
 │   ├── models/
 │   ├── repositories/
 │   └── service/
@@ -83,8 +83,7 @@ The repository currently contains:
 - Dependency injection using `dependency-injector`
 - FastAPI application bootstrap and lifecycle management
 - Async SQLAlchemy database connection management for MariaDB
-- A synchronous MariaDB URL intended for Alembic
-- Alembic migration environment wired to the synchronous MariaDB URL and SQLAlchemy metadata
+- The schema in `schema.sql`, loaded by MariaDB on the first start of an empty volume
 - Application logging
 - Disk-backed MediaWiki article caching
 - MediaWiki retrieval, pagination, rate limiting, retry handling, and tests

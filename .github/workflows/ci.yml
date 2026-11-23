@@ -101,9 +101,6 @@ jobs:
       - name: Show MariaDB status
         run: docker compose ps db
 
-      - name: Run database migrations
-        run: uv run alembic upgrade head
-
       - name: Run integration tests
         run: uv run pytest tests/integration -ra
 

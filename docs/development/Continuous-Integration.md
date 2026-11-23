@@ -30,7 +30,7 @@ uv run pytest tests/unit -ra
 
 ## Integration Tests
 
-Integration tests depend on the unit-test job. CI starts the pinned MariaDB service from `docker-compose.yml`, waits for it to become healthy, applies all Alembic migrations, and then runs:
+Integration tests depend on the unit-test job. CI starts the pinned MariaDB service from `docker-compose.yml`, waits for it to become healthy (the image loads `schema.sql` into the empty database), and then runs:
 
 ```bash
 uv run pytest tests/integration -ra
@@ -46,7 +46,7 @@ This stage runs only after integration tests pass. It builds the application ima
 GET /health → HTTP success
 ```
 
-This exercises the real container startup path, including the application entrypoint, Alembic migration execution, FastAPI startup, MariaDB connectivity, and the application health check.
+This exercises the real container startup path, including the application entrypoint, FastAPI startup, MariaDB connectivity, and the application health check.
 
 ## Final Gate
 

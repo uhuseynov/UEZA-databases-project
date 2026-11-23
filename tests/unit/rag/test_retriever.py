@@ -11,9 +11,6 @@ from src.rag.retriever import (
     VectorRetriever,
     build_chunk_ids_query,
     build_search_query,
-    vector_to_bytes,
-    vector_to_hex_literal,
-    vector_to_text,
 )
 from tests.unit.rag.fakes import FakeDatabase, chunk_row
 
@@ -152,15 +149,6 @@ def test_filters_as_dict_skips_unset_values_and_formats_dates():
     assert SearchFilters().is_empty()
 
 
-def test_vector_text_never_uses_exponents():
-    assert vector_to_text([1e-05, -0.5, 1]) == "[0.00001000,-0.50000000,1.00000000]"
-
-
-def test_vector_text_rejects_nan():
-    with pytest.raises(ValueError):
-        vector_to_text([0.1, float("nan")])
-
-
 def test_nearest_first_takes_the_k_nearest_chunks_before_the_join():
     query = build_search_query(VECTOR, k=5, shape="nearest_first", vector_format="text")
 
@@ -196,24 +184,6 @@ def test_binary_vector_is_written_as_a_hex_literal_of_float32_values():
     assert "VEC_FromText" not in query.sql
     assert f"VEC_DISTANCE_COSINE(c.embedding, {literal}) AS distance" in query.sql
     assert query.params == {"k": 5}
-
-
-def test_hex_literal_contains_only_hex_digits():
-    literal = vector_to_hex_literal([1.0, -0.5])
-
-    assert literal == "X'0000803f000000bf'"
-
-
-def test_binary_vector_round_trips():
-    data = vector_to_bytes([1.0, -0.5, 1e-05])
-
-    assert len(data) == 12
-    assert struct.unpack("<3f", data) == pytest.approx((1.0, -0.5, 1e-05))
-
-
-def test_binary_vector_rejects_infinity():
-    with pytest.raises(ValueError):
-        vector_to_bytes([0.1, math.inf])
 
 
 @pytest.mark.parametrize("option", [{"shape": "chunks"}, {"vector_format": "hex"}])

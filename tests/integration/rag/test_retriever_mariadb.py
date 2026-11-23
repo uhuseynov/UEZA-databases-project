@@ -18,9 +18,10 @@ from sqlalchemy import text
 
 from src.config import settings
 from src.database import Database
+from src.database.vectors import vector_to_text
 from src.logger import AppLogger
 from src.rag.models import SearchFilters
-from src.rag.retriever import VectorRetriever, vector_to_text
+from src.rag.retriever import VectorRetriever
 
 pytestmark = [pytest.mark.integration, pytest.mark.anyio]
 

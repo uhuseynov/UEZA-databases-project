@@ -43,7 +43,6 @@ make ingest-sync     # re-ingest the articles that changed on Wikipedia (ARGS="-
 make ingest-sync-dry-run
 make up              # complete Docker Compose stack
 make down
-make migrate
 make help
 ```
 

@@ -27,7 +27,6 @@ APP_NAME := ueza-databases-project
 UV      := uv
 DC      := docker compose
 PYTEST  := $(UV) run pytest
-ALEMBIC := $(UV) run alembic
 
 VERSION := $(shell git describe --tags --always --dirty 2>/dev/null || echo "dev")
 COMMIT  := $(shell git rev-parse --short HEAD 2>/dev/null || echo "unknown")
@@ -329,55 +328,6 @@ db-reset: ## Recreates the MariaDB volume
 	@$(DC) up -d db
 	@$(MAKE) wait-db
 	@printf "$(GREEN)✅ MariaDB reset complete.$(RESET)\n"
-
-
-# =============================================================================
-##@ Migrations
-# =============================================================================
-
-.PHONY: migrate
-migrate: ## Applies all pending migrations locally
-	@printf "$(BLUE)🗃️  Applying migrations...$(RESET)\n"
-	@$(ALEMBIC) upgrade head
-	@printf "$(GREEN)✅ Migrations applied.$(RESET)\n"
-
-
-.PHONY: migration
-migration: ## Creates migration: make migration m="message"
-	@if [ -z "$(m)" ]; then \
-		printf "$(RED)Usage: make migration m=\"migration message\"$(RESET)\n"; \
-		exit 1; \
-	fi
-	@printf "$(BLUE)📝 Creating migration: $(m)$(RESET)\n"
-	@$(ALEMBIC) revision --autogenerate -m "$(m)"
-	@printf "$(GREEN)✅ Migration created.$(RESET)\n"
-
-
-.PHONY: migration-empty
-migration-empty: ## Creates empty migration: make migration-empty m="message"
-	@if [ -z "$(m)" ]; then \
-		printf "$(RED)Usage: make migration-empty m=\"migration message\"$(RESET)\n"; \
-		exit 1; \
-	fi
-	@printf "$(BLUE)📝 Creating empty migration: $(m)$(RESET)\n"
-	@$(ALEMBIC) revision -m "$(m)"
-	@printf "$(GREEN)✅ Migration created.$(RESET)\n"
-
-
-.PHONY: migration-down
-migration-down: ## Reverts the latest migration
-	@printf "$(YELLOW)↩️  Reverting latest migration...$(RESET)\n"
-	@$(ALEMBIC) downgrade -1
-
-
-.PHONY: migration-current
-migration-current: ## Shows current database revision
-	@$(ALEMBIC) current
-
-
-.PHONY: migration-history
-migration-history: ## Shows migration history
-	@$(ALEMBIC) history
 
 
 # =============================================================================

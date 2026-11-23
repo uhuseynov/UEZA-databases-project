@@ -48,7 +48,7 @@ FastAPI
 
 ### Database
 
-`src/database/` contains the SQLAlchemy base, asynchronous connection/session management, configured Alembic migration environment, and placeholders for models and repositories.
+`src/database/` contains the SQLAlchemy base, asynchronous connection/session management, the article repository, the vector serialization helpers, and placeholders for models and services. The schema is `schema.sql`.
 
 [Database Documentation →](../database/Home.md)
 

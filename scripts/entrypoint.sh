@@ -23,11 +23,8 @@ else:
     raise SystemExit("MariaDB did not become reachable in time.")
 PY
 
-echo "Running database migrations..."
-
-alembic upgrade head
-
-echo "Database migrations complete."
+# The schema is not managed here: schema.sql creates it when the database volume is first
+# created (docs/database/Schema.md).
 
 echo "Starting application..."
 

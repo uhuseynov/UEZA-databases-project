@@ -2,7 +2,7 @@
 
 [← Documentation Home](../Home.md)
 
-The database layer provides infrastructure for connecting the application to MariaDB and managing schema migrations.
+The database layer provides infrastructure for connecting the application to MariaDB and and the helpers that write vectors for MariaDB. The schema itself is [`schema.sql`](../../schema.sql).
 
 ## Current Structure
 
@@ -10,9 +10,7 @@ The database layer provides infrastructure for connecting the application to Mar
 src/database/
 ├── base.py
 ├── connection.py
-├── migrations/
-│   ├── env.py
-│   └── script.py.mako
+├── vectors.py
 ├── models/
 ├── repositories/
 └── service/
@@ -32,19 +30,9 @@ SQLAlchemy AsyncEngine
 
 [Connection and Sessions →](./Connection.md)
 
-## Migration Model
+## Schema Management
 
-```text
-Alembic
-   ↓
-SQLAlchemy synchronous connection
-   ↓
-PyMySQL
-   ↓
-MariaDB
-```
-
-[Migrations →](./Migrations.md)
+`schema.sql` is the only schema definition; there is no migration tool. [Schema Management →](./Schema.md)
 
 ## Schema and Vector Search
 

@@ -42,6 +42,7 @@ class Container(containers.DeclarativeContainer):
     article_repository = providers.Factory(
         ArticleRepository,
         database=database,
+        dimension=config.provided.embedding_dimension,
     )
 
     # ---------------------------------------------------------

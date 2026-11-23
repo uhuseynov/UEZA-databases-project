@@ -295,7 +295,7 @@ async def restart_database(database: Database, timeout: float = 120) -> None:
 
 async def run_m_sweep(args: argparse.Namespace, questions, embedder, retriever,
                       database: Database, environment: dict[str, Any]) -> dict[str, Any]:
-    repository = ArticleRepository(database)
+    repository = ArticleRepository(database, settings.embedding_dimension)
     _, original_m, _ = await repository.vector_index()
     if original_m is None:  # no M in the definition: the server default was used
         async with database.get_session() as session:

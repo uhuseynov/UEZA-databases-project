@@ -28,7 +28,7 @@ Current application-level settings include `APP_ENV`, `LOG_LEVEL`, `APP_HOST`, a
 
 Database configuration includes the host, port, user, password, database name, pool recycle interval, and pool pre-ping behavior.
 
-### Asynchronous URL
+### Database URL
 
 `database_url` uses:
 
@@ -36,17 +36,11 @@ Database configuration includes the host, port, user, password, database name, p
 mysql+aiomysql://
 ```
 
-This URL is used by the running application through SQLAlchemy's async engine.
+This URL is used by the running application, the ingest and the evaluation through SQLAlchemy's async engine.
 
-### Synchronous URL
+### Embedding dimension
 
-`sync_database_url` uses:
-
-```text
-mysql+pymysql://
-```
-
-This URL is intended for synchronous tooling such as Alembic migrations.
+`EMBEDDING_DIMENSION` (default 768) must match the model and the `VECTOR(768)` column in `schema.sql`. The `Embedder` checks it against the model, the `ArticleRepository` checks every vector it stores against it, and `ingest` and `sync` check the table's column against it before they start. Nothing changes the column automatically ([Schema Management](../database/Schema.md)).
 
 ## Ingestion Settings
 

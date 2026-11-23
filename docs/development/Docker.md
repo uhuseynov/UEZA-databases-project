@@ -8,7 +8,7 @@ The project uses a multi-stage `Dockerfile` and Docker Compose for the reproduci
 
 The builder stage uses Python 3.14 and `uv` to create `/app/.venv` from `pyproject.toml` and `uv.lock`. Development dependencies are excluded from the runtime environment.
 
-The runtime stage copies the prepared virtual environment, application source, Alembic configuration, and `scripts/entrypoint.sh` into a smaller Python runtime image.
+The runtime stage copies the prepared virtual environment, application source, the article list in `data/`, and `scripts/entrypoint.sh` into a smaller Python runtime image.
 
 ## Startup
 
@@ -17,12 +17,12 @@ The application container starts through `scripts/entrypoint.sh`:
 ```text
 container start
      ↓
-alembic upgrade head
+wait until MariaDB accepts connections
      ↓
 exec uvicorn ...
 ```
 
-Database schema migration is therefore part of application startup. Compose additionally waits for the MariaDB health check before starting the application service.
+The entrypoint only waits for the database; it does not touch the schema. `schema.sql` is loaded by the MariaDB image on the first start of an empty volume ([Schema Management](../database/Schema.md)). Compose additionally waits for the MariaDB health check before starting the application service.
 
 ## Compose Services
 
