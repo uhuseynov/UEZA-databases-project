@@ -18,9 +18,10 @@ from sqlalchemy import text
 
 from src.config import settings
 from src.database import Database
+from src.database.vectors import vector_to_text
 from src.logger import AppLogger
 from src.rag.models import SearchFilters
-from src.rag.retriever import VectorRetriever, vector_to_text
+from src.rag.retriever import VectorRetriever
 
 pytestmark = [pytest.mark.integration, pytest.mark.anyio]
 
@@ -113,7 +114,11 @@ async def database():
                     "INSERT INTO article_chunks (article_id, chunk_index, chunk_text, embedding) "
                     "VALUES (:a, 0, :t, VEC_FromText(:v))"
                 ),
-                {"a": article_id, "t": f"chunk of {title}", "v": vector_to_text(basis_vector(basis))},
+                {
+                    "a": article_id,
+                    "t": f"chunk of {title}",
+                    "v": vector_to_text(basis_vector(basis)),
+                },
             )
 
     yield db
@@ -195,16 +200,16 @@ async def test_binary_query_vector_gives_the_same_results_as_text(database):
             )
 
             assert [c.chunk_id for c in as_binary] == [c.chunk_id for c in as_text]
-            assert [c.distance for c in as_binary] == pytest.approx(
-                [c.distance for c in as_text]
-            )
+            assert [c.distance for c in as_binary] == pytest.approx([c.distance for c in as_text])
 
 
 async def test_binary_query_vector_works_with_a_filter(database):
     retriever = VectorRetriever(database)
 
     chunks = await retriever.retrieve(
-        basis_vector(0), k=5, filters=SearchFilters(linked_from=f"{PREFIX}Alpha"),
+        basis_vector(0),
+        k=5,
+        filters=SearchFilters(linked_from=f"{PREFIX}Alpha"),
         vector_format="binary",
     )
 
@@ -219,10 +224,13 @@ async def test_nearest_first_finds_the_same_nearest_chunk(database):
     for vector_format in ("text", "binary"):
         for exact in (False, True):
             nearest = await retriever.retrieve(
-                query, k=1, exact=exact, shape="nearest_first", vector_format=vector_format,
+                query,
+                k=1,
+                exact=exact,
+                shape="nearest_first",
+                vector_format=vector_format,
                 ef_search=200,
             )
             assert nearest[0].chunk_id == joined[0].chunk_id
             assert nearest[0].title == f"{PREFIX}Gamma"
             assert nearest[0].text == f"chunk of {PREFIX}Gamma"
-

@@ -23,8 +23,9 @@ from run import log, restart, root_sql, run
 
 def evaluate(arguments: list[str]) -> None:
     log("Measuring: " + " ".join(arguments))
-    completed = subprocess.run([sys.executable, "-m", "src.evaluation", *arguments],
-                               capture_output=True, text=True)
+    completed = subprocess.run(
+        [sys.executable, "-m", "src.evaluation", *arguments], capture_output=True, text=True
+    )
     if completed.returncode != 0:
         sys.exit(f"evaluation failed:\n{completed.stderr[-3000:]}")
     print(completed.stdout)

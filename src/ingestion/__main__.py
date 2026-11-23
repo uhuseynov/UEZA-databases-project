@@ -6,7 +6,6 @@ import logging
 
 from src.config import settings
 from src.containers import Container
-from src.database.repositories.articles import ArticleRepository
 from src.ingestion.consistency import check_database
 from src.ingestion.pipeline import IngestionPipeline
 from src.ingestion.sync import DEFAULT_REBUILD_SHARE, sync_articles, write_sync_report
@@ -22,7 +21,7 @@ async def run(args: argparse.Namespace) -> None:
 
     try:
         if args.action == "reindex":
-            repository = ArticleRepository(database=database)
+            repository = container.article_repository()
             seconds = await repository.rebuild_vector_index(args.m)
             _, m, distance = await repository.vector_index()
             print(f"\nVector index rebuilt in {seconds:.1f} s (M={m}, DISTANCE={distance}).")
@@ -46,8 +45,9 @@ async def run(args: argparse.Namespace) -> None:
             return
 
         if args.action == "sync":
+            repository = container.article_repository()
+            await repository.check_dimension()
             client = container.mediawiki_client()
-            repository = ArticleRepository(database=database)
 
             def pipeline_factory() -> IngestionPipeline:
                 return IngestionPipeline(
@@ -75,12 +75,10 @@ async def run(args: argparse.Namespace) -> None:
                 raise SystemExit(1)
             return
 
+        repository = container.article_repository()
+        await repository.check_dimension()
         client = container.mediawiki_client()
         embedder = container.embedder()
-
-        repository = ArticleRepository(
-            database=database,
-        )
 
         pipeline = IngestionPipeline(
             client=client,

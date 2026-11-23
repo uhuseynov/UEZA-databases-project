@@ -51,9 +51,11 @@ class FakeRepository:
 class FakePipeline:
     def __init__(self) -> None:
         self.ingested: list[tuple[str, bool]] = []
+        self.min_revisions: dict[str, int | None] = {}
 
-    async def ingest_one(self, row, config="A", snapshot=True):
+    async def ingest_one(self, row, config="A", snapshot=True, min_revision=None):
         self.ingested.append((row["title"], snapshot))
+        self.min_revisions[row["title"]] = min_revision
         if row["title"] == "Broken":
             raise ValueError("Unclosed MediaWiki table")
         return 8
@@ -88,8 +90,13 @@ async def test_dry_run_replaces_nothing_and_loads_no_model(csv_path):
     def no_pipeline():
         raise AssertionError("a dry run must not load the embedding model")
 
-    result = await sync_articles(client=FakeClient(), repository=repository,
-                                 pipeline_factory=no_pipeline, csv_path=csv_path, dry_run=True)
+    result = await sync_articles(
+        client=FakeClient(),
+        repository=repository,
+        pipeline_factory=no_pipeline,
+        csv_path=csv_path,
+        dry_run=True,
+    )
 
     assert result.dry_run
     assert len(result.changed) == 2
@@ -100,9 +107,13 @@ async def test_dry_run_replaces_nothing_and_loads_no_model(csv_path):
 async def test_sync_replaces_changed_articles_at_their_latest_revision(csv_path):
     repository, pipeline = FakeRepository(), FakePipeline()
 
-    result = await sync_articles(client=FakeClient(), repository=repository,
-                                 pipeline_factory=lambda: pipeline, csv_path=csv_path,
-                                 rebuild_share=0.5)
+    result = await sync_articles(
+        client=FakeClient(),
+        repository=repository,
+        pipeline_factory=lambda: pipeline,
+        csv_path=csv_path,
+        rebuild_share=0.5,
+    )
 
     assert pipeline.ingested == [("Edited", False), ("Broken", False)]
     assert result.replaced_articles == 1
@@ -119,9 +130,13 @@ async def test_sync_replaces_changed_articles_at_their_latest_revision(csv_path)
 async def test_sync_rebuilds_the_index_above_the_threshold(csv_path):
     repository = FakeRepository()
 
-    result = await sync_articles(client=FakeClient(), repository=repository,
-                                 pipeline_factory=FakePipeline, csv_path=csv_path,
-                                 rebuild_share=0.2)
+    result = await sync_articles(
+        client=FakeClient(),
+        repository=repository,
+        pipeline_factory=FakePipeline,
+        csv_path=csv_path,
+        rebuild_share=0.2,
+    )
 
     assert result.replaced_share == pytest.approx(6 / 25)
     assert result.rebuilt
@@ -132,8 +147,13 @@ async def test_sync_rebuilds_the_index_above_the_threshold(csv_path):
 async def test_limit_caps_the_replaced_articles(csv_path):
     pipeline = FakePipeline()
 
-    await sync_articles(client=FakeClient(), repository=FakeRepository(),
-                        pipeline_factory=lambda: pipeline, csv_path=csv_path, limit=1)
+    await sync_articles(
+        client=FakeClient(),
+        repository=FakeRepository(),
+        pipeline_factory=lambda: pipeline,
+        csv_path=csv_path,
+        limit=1,
+    )
 
     assert pipeline.ingested == [("Edited", False)]
 
@@ -141,13 +161,22 @@ async def test_limit_caps_the_replaced_articles(csv_path):
 @pytest.mark.parametrize("options", [{"limit": 0}, {"rebuild_share": 1.5}])
 async def test_rejects_invalid_options(csv_path, options):
     with pytest.raises(ValueError):
-        await sync_articles(client=FakeClient(), repository=FakeRepository(),
-                            pipeline_factory=FakePipeline, csv_path=csv_path, **options)
+        await sync_articles(
+            client=FakeClient(),
+            repository=FakeRepository(),
+            pipeline_factory=FakePipeline,
+            csv_path=csv_path,
+            **options,
+        )
 
 
 async def test_report_is_written_as_json_and_markdown(csv_path, tmp_path):
-    result = await sync_articles(client=FakeClient(), repository=FakeRepository(),
-                                 pipeline_factory=FakePipeline, csv_path=csv_path)
+    result = await sync_articles(
+        client=FakeClient(),
+        repository=FakeRepository(),
+        pipeline_factory=FakePipeline,
+        csv_path=csv_path,
+    )
 
     json_path, md_path = write_sync_report(result, tmp_path / "results")
 
@@ -156,3 +185,17 @@ async def test_report_is_written_as_json_and_markdown(csv_path, tmp_path):
     assert "| Edited | 200 | 201 |" in markdown
     assert "- Broken: Unclosed MediaWiki table" in markdown
     assert "Deleted" in render_sync(result)
+
+
+async def test_sync_tells_the_pipeline_which_revision_it_found(csv_path):
+    """So that a cached copy of an older revision cannot be stored again."""
+    pipeline = FakePipeline()
+
+    await sync_articles(
+        client=FakeClient(),
+        repository=FakeRepository(),
+        pipeline_factory=lambda: pipeline,
+        csv_path=csv_path,
+    )
+
+    assert pipeline.min_revisions == {"Edited": 201, "Broken": 401}

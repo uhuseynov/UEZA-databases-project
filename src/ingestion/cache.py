@@ -3,12 +3,43 @@
 import hashlib
 import json
 import os
+import re
 import tempfile
+import unicodedata
 from dataclasses import asdict
 from datetime import UTC, datetime
 from pathlib import Path
 
 from .mediawiki.models import WikiArticle
+
+
+def normalize_title(title: str) -> str:
+    """The form of a title under which the cache stores and finds it.
+
+    Merges only spellings that MediaWiki itself treats as the same page title on English
+    Wikipedia, and nothing else:
+
+    - Unicode is normalized to NFC (MediaWiki does the same);
+    - underscores are spaces, and runs of spaces and underscores are one space;
+    - leading and trailing spaces are dropped;
+    - the first letter is capitalized (``$wgCapitalLinks`` is on there), unless capitalizing
+      it would change its length.
+
+    The rest of the title keeps its case: ``IPhone`` and ``Iphone`` are different pages.
+    Percent-encoding is a matter of the URL and is already decoded when a title arrives here;
+    a literal ``%20`` in a title stays literal. Redirects cannot be resolved by spelling: see
+    ``ArticleCache.set``.
+    """
+
+    title = unicodedata.normalize("NFC", title)
+    title = re.sub(r"[ _]+", " ", title).strip(" ")
+
+    if title:
+        first = title[0].upper()
+        if len(first) == 1:
+            title = first + title[1:]
+
+    return title
 
 
 class ArticleCache:
@@ -33,29 +64,52 @@ class ArticleCache:
         self,
         title: str,
     ) -> Path:
-        """Generate a collision-resistant cache filename."""
+        """Generate a collision-resistant cache filename for the normalized title."""
 
-        digest = hashlib.sha256(title.encode("utf-8")).hexdigest()
+        return self._path_for(normalize_title(title))
+
+    def _path_for(self, exact_title: str) -> Path:
+        digest = hashlib.sha256(exact_title.encode("utf-8")).hexdigest()
 
         return self.cache_path / f"{digest}.json"
+
+    def _is_fresh(self, path: Path) -> bool:
+        try:
+            age = datetime.now(UTC).timestamp() - path.stat().st_mtime
+        except OSError:
+            return False
+
+        return age < self.ttl_seconds
 
     def get(
         self,
         title: str,
     ) -> WikiArticle | None:
-        """Return cached article if still valid."""
+        """Return cached article if still valid.
 
-        if not title.strip():
+        The title is looked up in its normalized form. Entries written before the
+        normalization existed were stored under the title MediaWiki returned, which is
+        normalized already, so they are found as before; the title exactly as given is tried
+        last, for entries under any other spelling. A redirect alias that was fetched before
+        points at its target (see ``set``); an alias nobody has fetched is a miss.
+        """
+
+        stripped = title.strip()
+
+        if not stripped:
             raise ValueError("Article title cannot be empty")
 
-        path = self._get_file_path(title)
+        article = self._load(self._get_file_path(stripped), follow_alias=True)
 
-        if not path.is_file():
-            return None
+        if article is None:
+            legacy_path = self._path_for(stripped)
+            if legacy_path != self._get_file_path(stripped):
+                article = self._load(legacy_path, follow_alias=False)
 
-        age = datetime.now(UTC).timestamp() - path.stat().st_mtime
+        return article
 
-        if age >= self.ttl_seconds:
+    def _load(self, path: Path, *, follow_alias: bool) -> WikiArticle | None:
+        if not path.is_file() or not self._is_fresh(path):
             return None
 
         try:
@@ -64,6 +118,12 @@ class ArticleCache:
                 encoding="utf-8",
             ) as handle:
                 data = json.load(handle)
+
+            if "alias_of" in data:
+                if not follow_alias:
+                    return None
+
+                return self._load(self._get_file_path(str(data["alias_of"])), follow_alias=False)
 
             article = WikiArticle(
                 page_id=int(data["page_id"]),
@@ -92,14 +152,33 @@ class ArticleCache:
     def set(
         self,
         article: WikiArticle,
+        requested_title: str | None = None,
     ) -> None:
-        """Atomically write an article to disk."""
+        """Atomically write an article to disk, under its normalized canonical title.
 
-        path = self._get_file_path(article.title)
+        ``requested_title`` is the title the caller asked for. When MediaWiki answered with
+        another page (a redirect: "ML" for "Machine learning"), a small alias entry
+        remembers that, so the next request for the alias is served from the cache. That is
+        all that can be known locally: an alias that was never fetched has to be resolved by
+        MediaWiki. The alias entry expires like any other, so a changed redirect is noticed.
+        """
 
+        self._write(self._get_file_path(article.title), self._serialize(article))
+
+        if requested_title is not None:
+            alias_path = self._get_file_path(requested_title)
+
+            if requested_title.strip() and alias_path != self._get_file_path(article.title):
+                self._write(alias_path, {"alias_of": article.title})
+
+    @staticmethod
+    def _serialize(article: WikiArticle) -> dict:
         data = asdict(article)
         data["last_modified"] = article.last_modified.isoformat()
 
+        return data
+
+    def _write(self, path: Path, data: dict) -> None:
         temporary_path = None
 
         try:

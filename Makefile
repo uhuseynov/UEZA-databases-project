@@ -27,11 +27,12 @@ APP_NAME := ueza-databases-project
 UV      := uv
 DC      := docker compose
 PYTEST  := $(UV) run pytest
-ALEMBIC := $(UV) run alembic
+RUFF    := $(UV) run ruff
 
 VERSION := $(shell git describe --tags --always --dirty 2>/dev/null || echo "dev")
 COMMIT  := $(shell git rev-parse --short HEAD 2>/dev/null || echo "unknown")
 
+APP_HOST         ?= 127.0.0.1
 APP_PORT         ?= 8000
 MARIADB_USER     ?= ueza
 MARIADB_PASSWORD ?= ueza_password
@@ -161,7 +162,7 @@ lock: ## Updates uv.lock
 run: ## Runs FastAPI locally with hot reload
 	@printf "$(BLUE)🚀 Starting FastAPI...$(RESET)\n"
 	@$(UV) run uvicorn src.main:app \
-		--host 0.0.0.0 \
+		--host $(APP_HOST) \
 		--port $(APP_PORT) \
 		--reload
 
@@ -233,6 +234,8 @@ eval-explain: ## Prints the query plans: is the vector index used, with and with
 INGEST_CONFIG ?= $(or $(CHUNK_CONFIG),A)
 INGEST_CSV ?= $(or $(ARTICLES_CSV_PATH),data/articles.csv)
 INGEST_LIMIT ?=
+# Extra flags for `make ingest-sync` and `make reindex`, e.g. make ingest-sync ARGS="--limit 5"
+ARGS ?=
 
 .PHONY: ingest
 ingest: db-up ## Load Wikipedia articles into MariaDB
@@ -260,6 +263,27 @@ ingest-test: db-up ## Ingest only three articles
 		--csv $(INGEST_CSV) \
 		--config $(INGEST_CONFIG) \
 		--limit 3
+
+.PHONY: reindex
+reindex: db-up ## Rebuilds the vector index (same M; M=32 sets another; ARGS="..." forwards flags)
+	@$(UV) run python -m src.ingestion reindex \
+		$(if $(M),--m $(M),) \
+		$(ARGS)
+
+.PHONY: ingest-sync
+ingest-sync: db-up ## Re-ingests the articles that changed on Wikipedia (ARGS="--limit 5 --rebuild-share 0.5")
+	@$(UV) run python -m src.ingestion sync \
+		--csv $(INGEST_CSV) \
+		--config $(INGEST_CONFIG) \
+		$(ARGS)
+
+.PHONY: ingest-sync-dry-run
+ingest-sync-dry-run: db-up ## Lists the articles that changed on Wikipedia without loading them
+	@$(UV) run python -m src.ingestion sync \
+		--csv $(INGEST_CSV) \
+		--config $(INGEST_CONFIG) \
+		--dry-run \
+		$(ARGS)
 
 
 # =============================================================================
@@ -306,55 +330,6 @@ db-reset: ## Recreates the MariaDB volume
 	@$(DC) up -d db
 	@$(MAKE) wait-db
 	@printf "$(GREEN)✅ MariaDB reset complete.$(RESET)\n"
-
-
-# =============================================================================
-##@ Migrations
-# =============================================================================
-
-.PHONY: migrate
-migrate: ## Applies all pending migrations locally
-	@printf "$(BLUE)🗃️  Applying migrations...$(RESET)\n"
-	@$(ALEMBIC) upgrade head
-	@printf "$(GREEN)✅ Migrations applied.$(RESET)\n"
-
-
-.PHONY: migration
-migration: ## Creates migration: make migration m="message"
-	@if [ -z "$(m)" ]; then \
-		printf "$(RED)Usage: make migration m=\"migration message\"$(RESET)\n"; \
-		exit 1; \
-	fi
-	@printf "$(BLUE)📝 Creating migration: $(m)$(RESET)\n"
-	@$(ALEMBIC) revision --autogenerate -m "$(m)"
-	@printf "$(GREEN)✅ Migration created.$(RESET)\n"
-
-
-.PHONY: migration-empty
-migration-empty: ## Creates empty migration: make migration-empty m="message"
-	@if [ -z "$(m)" ]; then \
-		printf "$(RED)Usage: make migration-empty m=\"migration message\"$(RESET)\n"; \
-		exit 1; \
-	fi
-	@printf "$(BLUE)📝 Creating empty migration: $(m)$(RESET)\n"
-	@$(ALEMBIC) revision -m "$(m)"
-	@printf "$(GREEN)✅ Migration created.$(RESET)\n"
-
-
-.PHONY: migration-down
-migration-down: ## Reverts the latest migration
-	@printf "$(YELLOW)↩️  Reverting latest migration...$(RESET)\n"
-	@$(ALEMBIC) downgrade -1
-
-
-.PHONY: migration-current
-migration-current: ## Shows current database revision
-	@$(ALEMBIC) current
-
-
-.PHONY: migration-history
-migration-history: ## Shows migration history
-	@$(ALEMBIC) history
 
 
 # =============================================================================
@@ -434,11 +409,45 @@ shell: ## Opens a shell inside the application container
 
 
 # =============================================================================
+##@ Code quality
+# =============================================================================
+
+.PHONY: lint
+lint: ## Ruff lint and format check (what the CI Lint job runs, without the docs check)
+	@printf "$(BLUE)🔍 Running Ruff lint and format check...$(RESET)\n"
+	@$(RUFF) check .
+	@$(RUFF) format --check .
+	@printf "$(GREEN)✅ Lint and formatting passed.$(RESET)\n"
+
+
+.PHONY: lint-fix
+lint-fix: ## Ruff lint, applying the safe automatic fixes
+	@$(RUFF) check --fix .
+
+
+.PHONY: format-check
+format-check: ## Reports files that `ruff format` would change (does not modify anything)
+	@$(RUFF) format --check .
+
+
+.PHONY: format
+format: ## Formats all Python files with Ruff (rewrites files)
+	@$(RUFF) format .
+
+
+.PHONY: docs-check
+docs-check: ## Checks documentation links, anchors, paths, make targets and setting names
+	@python3 scripts/check_docs.py
+
+
+# =============================================================================
 ##@ CI
 # =============================================================================
 
 .PHONY: check
-check: ## Runs local checks before committing
+check: ## Runs local checks before committing: lint, formatting, docs, unit tests
+	@$(MAKE) lint
+	@$(MAKE) docs-check
 	@$(MAKE) test-unit
 
 
@@ -446,6 +455,9 @@ check: ## Runs local checks before committing
 ci: ## Runs CI checks using locked dependencies
 	@printf "$(BLUE)🔍 Running CI checks...$(RESET)\n"
 	@$(UV) sync --locked
+	@$(RUFF) check .
+	@$(RUFF) format --check .
+	@python3 scripts/check_docs.py
 	@$(PYTEST) tests/unit
 	@printf "$(GREEN)✅ CI checks passed.$(RESET)\n"
 

@@ -18,12 +18,15 @@ import asyncio
 import json
 import logging
 import time
+from collections.abc import Callable
 from dataclasses import asdict, dataclass, field
 from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
-from src.ingestion.pipeline import read_articles
+from src.database.repositories.articles import ArticleRepository
+from src.ingestion.mediawiki import MediaWikiClient
+from src.ingestion.pipeline import IngestionPipeline, read_articles
 
 logger = logging.getLogger(__name__)
 
@@ -62,7 +65,9 @@ class SyncResult:
         return self.deleted_chunks / self.chunks_before if self.chunks_before else 0.0
 
 
-async def find_changes(client, repository, rows: list[dict[str, str]]) -> SyncResult:
+async def find_changes(
+    client: MediaWikiClient, repository: ArticleRepository, rows: list[dict[str, str]]
+) -> SyncResult:
     """Which stored articles have a newer revision on Wikipedia, and which are gone."""
 
     stored = await repository.revision_ids()
@@ -91,9 +96,9 @@ async def find_changes(client, repository, rows: list[dict[str, str]]) -> SyncRe
 
 async def sync_articles(
     *,
-    client,
-    repository,
-    pipeline_factory,
+    client: MediaWikiClient,
+    repository: ArticleRepository,
+    pipeline_factory: Callable[[], IngestionPipeline],
     csv_path: str,
     config: str = "A",
     dry_run: bool = False,
@@ -117,7 +122,10 @@ async def sync_articles(
 
     logger.info(
         "Checked %d articles in %.1f s: %d changed, %d no longer on Wikipedia",
-        result.checked, result.check_seconds, len(result.changed), len(result.missing),
+        result.checked,
+        result.check_seconds,
+        len(result.changed),
+        len(result.missing),
     )
 
     to_replace = result.changed[:limit] if limit is not None else result.changed
@@ -132,8 +140,14 @@ async def sync_articles(
 
     for index, change in enumerate(to_replace, start=1):
         try:
+            # The latest revision was just read from MediaWiki: a cached copy of an older one
+            # (the article cache keeps latest-mode fetches for CACHE_TTL_SECONDS) must not
+            # be stored again.
             chunks = await pipeline.ingest_one(
-                row=by_page[change.page_id], config=config, snapshot=False
+                row=by_page[change.page_id],
+                config=config,
+                snapshot=False,
+                min_revision=change.latest_revision,
             )
         except Exception as exc:  # noqa: BLE001 - recorded, the others continue
             logger.exception("[%d/%d] Failed: %s", index, len(to_replace), change.title)
@@ -152,7 +166,8 @@ async def sync_articles(
             result.rebuilt = True
             logger.info(
                 "Replaced %.0f%% of the chunks: rebuilt the vector index (%.1f s)",
-                100 * result.replaced_share, result.rebuild_seconds,
+                100 * result.replaced_share,
+                result.rebuild_seconds,
             )
 
     result.seconds = time.perf_counter() - start
@@ -203,10 +218,17 @@ def render_sync(result: SyncResult) -> str:
             ),
         ]
     if result.failures:
-        lines += ["", "## Failures", ""] + [f"- {title}: {error}" for title, error in result.failures]
+        lines += ["", "## Failures", ""] + [
+            f"- {title}: {error}" for title, error in result.failures
+        ]
     if result.changed:
-        lines += ["", "## Changed articles", "", "| title | stored revision | latest revision | latest edit |",
-                  "|---|---|---|---|"]
+        lines += [
+            "",
+            "## Changed articles",
+            "",
+            "| title | stored revision | latest revision | latest edit |",
+            "|---|---|---|---|",
+        ]
         lines += [
             f"| {c.title} | {c.stored_revision} | {c.latest_revision} | {c.latest_time} |"
             for c in result.changed

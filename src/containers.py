@@ -7,6 +7,7 @@ from src.database import Database
 from src.database.repositories.articles import ArticleRepository
 from src.ingestion.cache import ArticleCache
 from src.ingestion.mediawiki import MediaWikiClient
+from src.ingestion.mediawiki.rate_limiter import RateLimiter
 from src.ingestion.pipeline import IngestionPipeline
 from src.logger import AppLogger
 from src.rag.embedder import Embedder
@@ -42,6 +43,7 @@ class Container(containers.DeclarativeContainer):
     article_repository = providers.Factory(
         ArticleRepository,
         database=database,
+        dimension=config.provided.embedding_dimension,
     )
 
     # ---------------------------------------------------------
@@ -54,10 +56,17 @@ class Container(containers.DeclarativeContainer):
         ttl_seconds=config.provided.cache_ttl_seconds,
     )
 
+    # One limiter for every client of this process, so concurrent API requests share the
+    # limit instead of each client having its own. Not shared with other processes.
+    mediawiki_rate_limiter = providers.Singleton(
+        RateLimiter,
+        requests_per_second=config.provided.mediawiki_requests_per_second,
+    )
+
     mediawiki_client = providers.Factory(
         MediaWikiClient,
         user_agent=config.provided.mediawiki_user_agent,
-        requests_per_second=(config.provided.mediawiki_requests_per_second),
+        rate_limiter=mediawiki_rate_limiter,
         timeout=config.provided.mediawiki_timeout,
         max_retries=config.provided.mediawiki_max_retries,
         maxlag=config.provided.mediawiki_maxlag,

@@ -14,10 +14,26 @@ PLAN = {
             "r_used_priority_queue": True,
             "temporary_table": {
                 "nested_loop": [
-                    {"table": {"table_name": "a", "access_type": "ref", "key": "idx",
-                               "rows": 5, "r_loops": 1, "r_rows": 4}},
-                    {"table": {"table_name": "c", "access_type": "ref", "key": "uq_chunks_position",
-                               "rows": 15, "r_loops": 4, "r_rows": 20.5}},
+                    {
+                        "table": {
+                            "table_name": "a",
+                            "access_type": "ref",
+                            "key": "idx",
+                            "rows": 5,
+                            "r_loops": 1,
+                            "r_rows": 4,
+                        }
+                    },
+                    {
+                        "table": {
+                            "table_name": "c",
+                            "access_type": "ref",
+                            "key": "uq_chunks_position",
+                            "rows": 15,
+                            "r_loops": 4,
+                            "r_rows": 20.5,
+                        }
+                    },
                 ]
             },
         },
@@ -30,14 +46,25 @@ class FakeRetriever:
         self.calls: list[tuple[int, bool, str]] = []
         self.analyzed: list[tuple[bool, str, str]] = []
 
-    async def explain(self, query_vector, k=5, filters=None, *, exact=False, shape="join",
-                      vector_format="text"):
+    async def explain(
+        self, query_vector, k=5, filters=None, *, exact=False, shape="join", vector_format="text"
+    ):
         self.calls.append((len(query_vector), exact, shape))
-        return [{"id": 1, "select_type": "SIMPLE", "table": "c", "type": "index",
-                 "key": None if exact else "embedding", "rows": 10, "Extra": ""}]
+        return [
+            {
+                "id": 1,
+                "select_type": "SIMPLE",
+                "table": "c",
+                "type": "index",
+                "key": None if exact else "embedding",
+                "rows": 10,
+                "Extra": "",
+            }
+        ]
 
-    async def analyze(self, query_vector, k=5, filters=None, *, exact=False, shape="join",
-                      vector_format="text"):
+    async def analyze(
+        self, query_vector, k=5, filters=None, *, exact=False, shape="join", vector_format="text"
+    ):
         self.analyzed.append((exact, shape, vector_format))
         return PLAN
 
@@ -69,8 +96,15 @@ def test_summarize_analyze_lists_tables_and_sorts():
     assert "filesort: 3.25 ms, 10 rows out, priority queue True" in text
 
 
-@pytest.mark.parametrize("argv", [["m-sweep", "--m", "2"], ["m-sweep", "--m", "201"],
-                                  ["run", "--runs", "0"], ["run", "--shape", "chunks"]])
+@pytest.mark.parametrize(
+    "argv",
+    [
+        ["m-sweep", "--m", "2"],
+        ["m-sweep", "--m", "201"],
+        ["run", "--runs", "0"],
+        ["run", "--shape", "chunks"],
+    ],
+)
 def test_parser_rejects_invalid_values(argv):
     with pytest.raises(SystemExit):
         build_parser().parse_args(argv)

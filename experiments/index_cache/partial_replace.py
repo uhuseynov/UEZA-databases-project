@@ -52,9 +52,20 @@ def chunk_counts() -> list[tuple[int, int]]:
 def measure(label: str, runs: int) -> None:
     log(f"Measuring: {label}")
     completed = subprocess.run(
-        [sys.executable, "-m", "src.evaluation", "ef-sweep", "--ef", "40", "--runs", str(runs),
-         "--label", label],
-        capture_output=True, text=True,
+        [
+            sys.executable,
+            "-m",
+            "src.evaluation",
+            "ef-sweep",
+            "--ef",
+            "40",
+            "--runs",
+            str(runs),
+            "--label",
+            label,
+        ],
+        capture_output=True,
+        text=True,
     )
     if completed.returncode != 0:
         sys.exit(f"evaluation failed:\n{completed.stderr[-3000:]}")
@@ -73,8 +84,13 @@ def measure_both(label: str, runs: int, large: int, small: int) -> None:
 
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__.split("\n\n")[0])
-    parser.add_argument("--steps", type=int, nargs="+", default=[10, 25, 50, 100],
-                        help="cumulative shares of the chunks to replace, in percent")
+    parser.add_argument(
+        "--steps",
+        type=int,
+        nargs="+",
+        default=[10, 25, 50, 100],
+        help="cumulative shares of the chunks to replace, in percent",
+    )
     parser.add_argument("--runs", type=int, default=3)
     parser.add_argument("--large", type=int, default=64, help="large cache size in MB")
     parser.add_argument("--small", type=int, default=16, help="small cache size in MB")
@@ -98,8 +114,10 @@ def main() -> None:
             replaced += count
             position += 1
         if batch:
-            log(f"Replacing {len(batch)} more articles: {replaced} of {total} chunks "
-                f"({100 * replaced / total:.1f}%) replaced since the rebuild")
+            log(
+                f"Replacing {len(batch)} more articles: {replaced} of {total} chunks "
+                f"({100 * replaced / total:.1f}%) replaced since the rebuild"
+            )
             start = time.perf_counter()
             root_sql(REPLACE_ARTICLES.format(ids=",".join(str(a) for a in batch)))
             print(f"done in {time.perf_counter() - start:.1f} s")

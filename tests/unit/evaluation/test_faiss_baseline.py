@@ -42,13 +42,32 @@ def axis(index: int, noise: float = 0.01) -> list[float]:
 QUESTIONS = [
     Question("1", "about alpha", ("Alpha",), True),
     Question("2", "about gamma", ("Gamma",), True),
-    Question("3", "beta among core", ("Beta",), True, SearchFilters(root_category="Core"), "root_category = Core"),
+    Question(
+        "3",
+        "beta among core",
+        ("Beta",),
+        True,
+        SearchFilters(root_category="Core"),
+        "root_category = Core",
+    ),
     # asks for Alpha's direction, but only Vision articles are allowed
-    Question("4", "alpha among vision", ("Gamma",), True, SearchFilters(root_category="Vision"), "root_category = Vision"),
+    Question(
+        "4",
+        "alpha among vision",
+        ("Gamma",),
+        True,
+        SearchFilters(root_category="Vision"),
+        "root_category = Vision",
+    ),
     Question("5", "football?", (), False),
 ]
-QUERY = {"about alpha": axis(0), "about gamma": axis(2), "beta among core": axis(1),
-         "alpha among vision": axis(0), "football?": axis(DIMENSION - 1)}
+QUERY = {
+    "about alpha": axis(0),
+    "about gamma": axis(2),
+    "beta among core": axis(1),
+    "alpha among vision": axis(0),
+    "football?": axis(DIMENSION - 1),
+}
 
 
 class FakeEmbedder:
@@ -59,8 +78,11 @@ class FakeEmbedder:
 def exact_ids(vector, filters: SearchFilters | None, k: int) -> list[int]:
     query = normalize(np.asarray([vector]))[0]
     vectors = normalize(VECTORS)
-    allowed = [i for i, t in enumerate(CHUNK_TITLES)
-               if not filters or not filters.root_category or GROUP[t] == filters.root_category]
+    allowed = [
+        i
+        for i, t in enumerate(CHUNK_TITLES)
+        if not filters or not filters.root_category or GROUP[t] == filters.root_category
+    ]
     order = sorted(allowed, key=lambda i: -float(vectors[i] @ query))
     return [int(IDS[i]) for i in order[:k]]
 
@@ -72,7 +94,10 @@ class FakeRetriever:
     async def retrieve(self, query_vector, k=5, filters=None, *, exact=False, **kwargs):
         self.calls.append(exact)
         title = dict(zip(IDS.tolist(), CHUNK_TITLES, strict=True))
-        return [RetrievedChunk(i, 0, title[i], None, 0, "text", 0.0) for i in exact_ids(query_vector, filters, k)]
+        return [
+            RetrievedChunk(i, 0, title[i], None, 0, "text", 0.0)
+            for i in exact_ids(query_vector, filters, k)
+        ]
 
 
 class FakeResult:
@@ -90,11 +115,17 @@ class FakeSession:
     async def execute(self, statement, params=None):
         sql = str(statement)
         if "HEX(c.embedding)" in sql:
-            return FakeResult([(int(i), t, VECTORS[n].astype("<f4").tobytes().hex().upper())
-                               for n, (i, t) in enumerate(zip(IDS, CHUNK_TITLES, strict=True))])
+            return FakeResult(
+                [
+                    (int(i), t, VECTORS[n].astype("<f4").tobytes().hex().upper())
+                    for n, (i, t) in enumerate(zip(IDS, CHUNK_TITLES, strict=True))
+                ]
+            )
         if sql.startswith("SELECT c.id FROM article_chunks"):
             group = params["root_category"]
-            return FakeResult([(int(i),) for i, t in zip(IDS, CHUNK_TITLES, strict=True) if GROUP[t] == group])
+            return FakeResult(
+                [(int(i),) for i, t in zip(IDS, CHUNK_TITLES, strict=True) if GROUP[t] == group]
+            )
         if "WHERE c.id IN" in sql:
             title = dict(zip(IDS.tolist(), CHUNK_TITLES, strict=True))
             return FakeResult([(i, title[i], "text") for i in params["ids"]])
@@ -130,7 +161,9 @@ def test_indexes_search_filter_and_report_update_costs():
     corpus = Corpus(IDS, CHUNK_TITLES, normalize(VECTORS))
     indexes = FaissIndexes(faiss, corpus, m=8, ef_construction=40)
     query = normalize(np.asarray([axis(0)]))
-    vision = corpus.positions([i for i, t in zip(IDS, CHUNK_TITLES, strict=True) if GROUP[t] == "Vision"])
+    vision = corpus.positions(
+        [i for i, t in zip(IDS, CHUNK_TITLES, strict=True) if GROUP[t] == "Vision"]
+    )
 
     assert indexes.search_flat(query, 5) == exact_ids(axis(0), None, 5)
     assert set(indexes.search_hnsw(query, 5, ef=40)) == set(exact_ids(axis(0), None, 5))
@@ -152,12 +185,30 @@ async def test_baseline_compares_faiss_with_mariadb_on_every_question():
     retriever = FakeRetriever()
 
     report = await faiss_baseline(
-        QUESTIONS, FakeEmbedder(), retriever, FakeDatabase(),
-        m=8, ef_values=[10, 40], fetch_values=[5, 20], runs=1, warmup_runs=0, k=3, faiss=faiss,
+        QUESTIONS,
+        FakeEmbedder(),
+        retriever,
+        FakeDatabase(),
+        m=8,
+        ef_values=[10, 40],
+        fetch_values=[5, 20],
+        runs=1,
+        warmup_runs=0,
+        k=3,
+        faiss=faiss,
     )
 
-    assert report["corpus"] == {"chunks": 20, "dimension": DIMENSION, "load_seconds": report["corpus"]["load_seconds"]}
-    assert report["exact_agreement"] == {"plain": 3, "plain_questions": 3, "filtered": 2, "filtered_questions": 2}
+    assert report["corpus"] == {
+        "chunks": 20,
+        "dimension": DIMENSION,
+        "load_seconds": report["corpus"]["load_seconds"],
+    }
+    assert report["exact_agreement"] == {
+        "plain": 3,
+        "plain_questions": 3,
+        "filtered": 2,
+        "filtered_questions": 2,
+    }
     plain = {(row["method"], row["ef"]): row for row in report["plain"]}
     assert plain[("FAISS flat (exact)", None)]["index_recall@3"] == 1.0
     assert plain[("FAISS flat (exact)", None)]["recall@1"] == 1.0
@@ -179,14 +230,27 @@ async def test_baseline_compares_faiss_with_mariadb_on_every_question():
 
 class AnalyzingRetriever(FakeRetriever):
     async def analyze(self, query_vector, k=5, filters=None, **kwargs):
-        return {"query_block": {"r_total_time_ms": 0.5 if filters is None or filters.is_empty() else 2.0}}
+        return {
+            "query_block": {
+                "r_total_time_ms": 0.5 if filters is None or filters.is_empty() else 2.0
+            }
+        }
 
 
 @pytest.mark.anyio
 async def test_baseline_reports_mariadb_time_inside_the_server():
     report = await faiss_baseline(
-        QUESTIONS, FakeEmbedder(), AnalyzingRetriever(), FakeDatabase(),
-        m=8, ef_values=[40], fetch_values=[20], runs=1, warmup_runs=0, k=3, faiss=faiss,
+        QUESTIONS,
+        FakeEmbedder(),
+        AnalyzingRetriever(),
+        FakeDatabase(),
+        m=8,
+        ef_values=[40],
+        fetch_values=[20],
+        runs=1,
+        warmup_runs=0,
+        k=3,
+        faiss=faiss,
     )
 
     assert report["mariadb_server_ms"]["plain"]["mean_ms"] == 0.5

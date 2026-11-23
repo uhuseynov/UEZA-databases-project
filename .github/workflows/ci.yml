@@ -23,6 +23,45 @@ env:
 
 jobs:
   # ===========================================================================
+  # Lint (Ruff)
+  # ===========================================================================
+
+  lint:
+    name: Lint
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v7.0.1
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v10.2.0
+        with:
+          version: "0.12.23"
+          enable-cache: true
+          cache-dependency-glob: uv.lock
+
+      - name: Set up Python
+        uses: actions/setup-python@v7.0.0
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      # Only the dev group: Ruff does not need torch or the other runtime dependencies.
+      - name: Install Ruff
+        run: uv sync --locked --only-group dev
+
+      - name: Ruff lint
+        run: uv run --no-sync ruff check --output-format=github .
+
+      - name: Ruff format check
+        run: uv run --no-sync ruff format --check --diff .
+
+      # Standard library only: links, anchors, paths, make targets and setting names.
+      - name: Documentation check
+        run: python3 scripts/check_docs.py
+
+  # ===========================================================================
   # Unit Tests
   # ===========================================================================
 
@@ -101,11 +140,15 @@ jobs:
       - name: Show MariaDB status
         run: docker compose ps db
 
-      - name: Run database migrations
-        run: uv run alembic upgrade head
-
+      # Some database tests skip themselves when MariaDB or the schema is missing. In CI that
+      # would turn a broken database into a green run, so a skip fails this step.
       - name: Run integration tests
-        run: uv run pytest tests/integration -ra
+        run: |
+          uv run pytest tests/integration -ra | tee integration.log
+          if grep -q "^SKIPPED" integration.log; then
+            echo "::error::Integration tests were skipped; the database or schema is not available."
+            exit 1
+          fi
 
       - name: Show MariaDB logs on failure
         if: failure()
@@ -180,11 +223,13 @@ jobs:
     timeout-minutes: 5
 
     needs:
+      - lint
       - docker
 
     steps:
       - name: Verify pipeline
         run: |
+          echo "Lint passed."
           echo "Unit tests passed."
           echo "Integration tests passed."
           echo "Docker build passed."

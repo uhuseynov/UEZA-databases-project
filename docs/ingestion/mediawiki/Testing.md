@@ -2,7 +2,7 @@
 
 [← MediaWiki](./Home.md) | [Documentation Home](../../Home.md)
 
-The MediaWiki integration uses both unit and integration tests.
+The MediaWiki integration is tested with mocked HTTP only; no test contacts the real Wikipedia.
 
 ## Test Structure
 
@@ -23,23 +23,19 @@ tests/
             └── test_mediawiki_api.py
 ```
 
+`test_client_cache.py` (cache hit and miss through the client) sits next to them in `tests/unit/ingestion/mediawiki/`.
+
 ## Unit Tests
 
 Unit tests do not access the real MediaWiki API. HTTP behavior is simulated with `httpx.MockTransport`.
 
-They cover article retrieval, batch retrieval, parsing, redirects, missing pages, pagination, rate limiting, retries, API errors, and invalid responses.
+They cover article retrieval, batch retrieval, parsing, redirects, missing pages, pagination, rate limiting, retries, API errors, invalid responses and the cache.
 
 ## Integration Tests
 
-Integration tests communicate with the real MediaWiki API. Their purpose is to verify that assumptions tested with mocks still hold against the external service.
+`tests/integration/ingestion/mediawiki/test_mediawiki_api.py` is marked `integration`, but it also runs against `httpx.MockTransport`. It checks the request the client sends (host, path, user agent and every query parameter) and the full article conversion, a redirect and a missing page (`MediaWikiPageNotFoundError`) against realistic response shapes. It needs neither a network nor a database, so it is deterministic in CI.
 
-### Stable Assertions
-
-Wikipedia changes continuously, so integration tests avoid exact revision IDs, article lengths, category counts, and link counts. They instead assert stable invariants such as positive IDs, non-empty content, and available metadata.
-
-### Redirect and Missing Page Tests
-
-A real redirect verifies canonical article handling. A deliberately nonexistent page verifies `MediaWikiPageNotFoundError`.
+Nothing in the test suite contacts Wikipedia. A check against the real service is a manual one, for example `make ingest-test` (three articles) or `make ingest-sync-dry-run`.
 
 ## Running Tests
 
@@ -69,7 +65,7 @@ make test-all
 
 ## Testing Philosophy
 
-Most detailed behavior belongs in deterministic unit tests. A small integration suite verifies the boundary with the real MediaWiki service.
+All behaviour is tested deterministically against recorded response shapes, so CI never depends on Wikipedia being reachable or unchanged. The price is that a change in the real API is only noticed by running the ingest.
 
 ## Cache Testing
 

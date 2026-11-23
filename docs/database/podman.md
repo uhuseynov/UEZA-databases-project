@@ -1,5 +1,7 @@
 # Installing Podman on Windows
 
+[← Database](./Home.md) | [Documentation Home](../Home.md)
+
 The project database runs in a container. On Linux and Mac you can install Podman directly. On Windows, Podman runs a small Linux system in the background using WSL2, so it needs a few extra steps.
 
 Requires Windows 10 (build 19043 or newer) or Windows 11.
@@ -28,7 +30,7 @@ After this, `podman` commands work the same on Windows as on Linux or Mac. Run t
 
 ## Starting the database
 
-Follow the setup section in the main [README](../../README.md). It uses the project's docker compose setup, which Podman can usually run through `podman compose`. Use the exact command from the README.
+Follow the [quick start in the README](../../README.md#quick-start). It uses the project's docker compose setup, which Podman can usually run through `podman compose`. Use the exact command from the README.
 
 ## If something fails
 

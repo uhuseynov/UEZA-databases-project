@@ -1,8 +1,26 @@
+from urllib.parse import urlsplit
+
 import httpx
 
 
 class LLMError(RuntimeError):
-    """The language model could not be reached or returned something unusable."""
+    """The language model could not be reached or returned something unusable.
+
+    The message is for server-side logs: it names the endpoint (without credentials or query
+    string) and may quote the start of the upstream reply. It must never be sent to API
+    clients; the API answers with a fixed message instead.
+    """
+
+
+def _without_credentials(url: str) -> str:
+    """``scheme://host:port/path``: no user name, password or query string."""
+    try:
+        parts = urlsplit(url)
+        host = parts.hostname or ""
+        port = f":{parts.port}" if parts.port else ""
+    except ValueError:
+        return "<invalid LLM URL>"
+    return f"{parts.scheme}://{host}{port}{parts.path}"
 
 
 class ChatLLM:
@@ -28,9 +46,18 @@ class ChatLLM:
         self.timeout = timeout
         self._client = client
 
+    def _clean(self, text: str) -> str:
+        """Remove the API key and the raw (possibly credentialed) URLs from text for logs."""
+        for raw in (f"{self.base_url}/chat/completions", self.base_url):
+            text = text.replace(raw, _without_credentials(raw))
+        if self.api_key:
+            text = text.replace(self.api_key, "***")
+        return text
+
     async def complete(self, messages: list[dict[str, str]]) -> str:
         """Send the chat messages and return the model's reply text."""
         url = f"{self.base_url}/chat/completions"
+        endpoint = _without_credentials(url)  # for error messages and logs only
         payload = {
             "model": self.model,
             "messages": messages,
@@ -49,18 +76,22 @@ class ChatLLM:
                 async with httpx.AsyncClient(timeout=self.timeout) as client:
                     response = await client.post(url, json=payload, headers=headers)
         except httpx.HTTPError as exc:
-            raise LLMError(f"LLM request to {url} failed: {exc}") from exc
+            detail = self._clean(f"{type(exc).__name__}: {exc}")
+            raise LLMError(f"LLM request to {endpoint} failed: {detail}") from exc
 
         if response.status_code != 200:
             raise LLMError(
-                f"LLM returned HTTP {response.status_code}: {response.text[:200]}"
+                f"LLM at {endpoint} returned HTTP {response.status_code}: "
+                f"{self._clean(response.text[:200])}"
             )
 
         try:
             content = response.json()["choices"][0]["message"]["content"]
         except (KeyError, IndexError, TypeError, ValueError) as exc:
-            raise LLMError("LLM response did not have the expected format") from exc
+            raise LLMError(
+                f"LLM response from {endpoint} did not have the expected format"
+            ) from exc
 
         if not isinstance(content, str):
-            raise LLMError("LLM response content is not text")
+            raise LLMError(f"LLM response from {endpoint} is not text")
         return content.strip()

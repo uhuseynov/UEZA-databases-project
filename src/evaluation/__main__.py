@@ -61,10 +61,13 @@ async def collect_environment(database: Database, config: Settings) -> dict[str,
     try:
         commit = subprocess.run(
             ["git", "rev-parse", "--short", "HEAD"],
-            capture_output=True, text=True, check=True, timeout=5,
+            capture_output=True,
+            text=True,
+            check=True,
+            timeout=5,
         ).stdout.strip()
         environment["git_commit"] = commit
-    except (OSError, subprocess.SubprocessError):
+    except OSError, subprocess.SubprocessError:
         pass
 
     async with database.get_session() as session:
@@ -125,10 +128,23 @@ def _plan_nodes(plan: Any, key: str) -> list[dict[str, Any]]:
 def summarize_analyze(plan: dict[str, Any]) -> list[str]:
     """Markdown lines: total time, then rows and time per table, then the sorts."""
     total = plan.get("query_block", {}).get("r_total_time_ms")
-    lines = [f"Total {total:.2f} ms in the server." if isinstance(total, int | float)
-             else "Total time not reported.", ""]
-    columns = ("table_name", "access_type", "key", "rows", "r_loops", "r_rows",
-               "r_table_time_ms", "r_other_time_ms", "r_filtered")
+    lines = [
+        f"Total {total:.2f} ms in the server."
+        if isinstance(total, int | float)
+        else "Total time not reported.",
+        "",
+    ]
+    columns = (
+        "table_name",
+        "access_type",
+        "key",
+        "rows",
+        "r_loops",
+        "r_rows",
+        "r_table_time_ms",
+        "r_other_time_ms",
+        "r_filtered",
+    )
     lines += ["| " + " | ".join(columns) + " |", "|" + "---|" * len(columns)]
     for table in _plan_nodes(plan, "table"):
         if "table_name" in table:
@@ -164,10 +180,16 @@ async def explain_plans(retriever: VectorRetriever, dimension: int) -> str:
         for exact in (False, True):
             rows = await retriever.explain(vector, k=10, filters=filters, exact=exact, shape=shape)
             mode = "exact (ORDER BY distance + 0)" if exact else "index (ORDER BY distance)"
-            parts += [f"## {name}, {mode}", "", "| " + " | ".join(EXPLAIN_COLUMNS) + " |",
-                      "|" + "---|" * len(EXPLAIN_COLUMNS)]
-            parts += ["| " + " | ".join(str(row.get(col, "")) for col in EXPLAIN_COLUMNS) + " |"
-                      for row in rows]
+            parts += [
+                f"## {name}, {mode}",
+                "",
+                "| " + " | ".join(EXPLAIN_COLUMNS) + " |",
+                "|" + "---|" * len(EXPLAIN_COLUMNS),
+            ]
+            parts += [
+                "| " + " | ".join(str(row.get(col, "")) for col in EXPLAIN_COLUMNS) + " |"
+                for row in rows
+            ]
             parts.append("")
 
     analyzed = [
@@ -177,13 +199,18 @@ async def explain_plans(retriever: VectorRetriever, dimension: int) -> str:
         (f"linked from {LINKED_FROM_EXAMPLE}", linked, False, "join"),
         ("category filter", SearchFilters(category="Machine learning"), False, "join"),
     ]
-    parts += ["# ANALYZE: the statements run, with measured rows and times", "",
-              "The same random vector; each statement once with the query vector as text "
-              "(`VEC_FromText`) and once as its binary value.", ""]
+    parts += [
+        "# ANALYZE: the statements run, with measured rows and times",
+        "",
+        "The same random vector; each statement once with the query vector as text "
+        "(`VEC_FromText`) and once as its binary value.",
+        "",
+    ]
     for name, filters, exact, shape in analyzed:
         for vector_format in VECTOR_FORMATS:
-            plan = await retriever.analyze(vector, k=10, filters=filters, exact=exact,
-                                           shape=shape, vector_format=vector_format)
+            plan = await retriever.analyze(
+                vector, k=10, filters=filters, exact=exact, shape=shape, vector_format=vector_format
+            )
             parts += [f"## {name}, vector as {vector_format}", "", *summarize_analyze(plan), ""]
     return "\n".join(parts)
 
@@ -203,18 +230,28 @@ def _index_m(value: str) -> int:
 
 
 def build_parser() -> argparse.ArgumentParser:
-    parser = argparse.ArgumentParser(prog="python -m src.evaluation", description=__doc__,
-                                     formatter_class=argparse.RawDescriptionHelpFormatter)
+    parser = argparse.ArgumentParser(
+        prog="python -m src.evaluation",
+        description=__doc__,
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+    )
     parser.add_argument("--ground-truth", default=settings.ground_truth_path)
     parser.add_argument("--results-dir", default=settings.eval_results_dir)
     commands = parser.add_subparsers(dest="command", required=True)
 
     def statement_options(command: argparse.ArgumentParser) -> None:
-        command.add_argument("--shape", choices=SHAPES, default=DEFAULT_SHAPE,
-                             help="statement for searches without a filter")
-        command.add_argument("--vector-format", choices=VECTOR_FORMATS,
-                             default=DEFAULT_VECTOR_FORMAT,
-                             help="send the query vector as text or as its binary value")
+        command.add_argument(
+            "--shape",
+            choices=SHAPES,
+            default=DEFAULT_SHAPE,
+            help="statement for searches without a filter",
+        )
+        command.add_argument(
+            "--vector-format",
+            choices=VECTOR_FORMATS,
+            default=DEFAULT_VECTOR_FORMAT,
+            help="send the query vector as text or as its binary value",
+        )
 
     run = commands.add_parser("run", help="Recall@K, MRR, latency and not-found analysis")
     run.add_argument("--label", default=None)
@@ -235,7 +272,7 @@ def build_parser() -> argparse.ArgumentParser:
     msweep = commands.add_parser(
         "m-sweep",
         help="rebuild the vector index for several M values and measure each, "
-             "right after the build and after a restart of the db container",
+        "right after the build and after a restart of the db container",
     )
     msweep.add_argument("--m", type=_index_m, nargs="+", default=[6, 8, 16, 32, 48, 64])
     msweep.add_argument("--ef", type=_positive, nargs="+", default=[20, 40, 80])
@@ -244,17 +281,29 @@ def build_parser() -> argparse.ArgumentParser:
     msweep.add_argument("--warmup", type=int, default=1)
     msweep.add_argument("--k", type=_positive, default=10)
     msweep.add_argument("--vector-format", choices=VECTOR_FORMATS, default=DEFAULT_VECTOR_FORMAT)
-    msweep.add_argument("--no-restart", action="store_true",
-                        help="do not restart the db container (docker compose) after each build")
+    msweep.add_argument(
+        "--no-restart",
+        action="store_true",
+        help="do not restart the db container (docker compose) after each build",
+    )
 
     faiss = commands.add_parser("faiss", help="FAISS on the same vectors, next to MariaDB")
     faiss.add_argument("--m", type=_index_m, default=16, help="M of the FAISS HNSW index")
     faiss.add_argument("--ef-construction", type=_positive, default=40)
     faiss.add_argument("--ef", type=_positive, nargs="+", default=[10, 20, 40, 80, 160])
-    faiss.add_argument("--fetch", type=_positive, nargs="+", default=[10, 100, 1000],
-                       help="post-filter: how many nearest chunks to fetch before filtering")
-    faiss.add_argument("--ef-two-systems", type=_positive, default=40,
-                       help="efSearch of the FAISS + MariaDB path, like MariaDB's mhnsw_ef_search")
+    faiss.add_argument(
+        "--fetch",
+        type=_positive,
+        nargs="+",
+        default=[10, 100, 1000],
+        help="post-filter: how many nearest chunks to fetch before filtering",
+    )
+    faiss.add_argument(
+        "--ef-two-systems",
+        type=_positive,
+        default=40,
+        help="efSearch of the FAISS + MariaDB path, like MariaDB's mhnsw_ef_search",
+    )
     faiss.add_argument("--runs", type=_positive, default=3)
     faiss.add_argument("--warmup", type=int, default=1)
     faiss.add_argument("--k", type=_positive, default=10)
@@ -263,8 +312,12 @@ def build_parser() -> argparse.ArgumentParser:
     answers = commands.add_parser(
         "answers", help="answer every question with the language model: is NOT_FOUND right?"
     )
-    answers.add_argument("--limit", type=_positive, default=None,
-                         help="only the first N questions (a quick check of the setup)")
+    answers.add_argument(
+        "--limit",
+        type=_positive,
+        default=None,
+        help="only the first N questions (a quick check of the setup)",
+    )
 
     commands.add_parser("explain", help="query plans: is the vector index used?")
     return parser
@@ -273,8 +326,10 @@ def build_parser() -> argparse.ArgumentParser:
 async def restart_database(database: Database, timeout: float = 120) -> None:
     """Restart the db service of docker-compose.yml and wait until MariaDB answers again."""
     await database.disconnect()
-    for command in (["docker", "compose", "restart", "db"],
-                    ["docker", "compose", "up", "-d", "--wait", "db"]):
+    for command in (
+        ["docker", "compose", "restart", "db"],
+        ["docker", "compose", "up", "-d", "--wait", "db"],
+    ):
         completed = await asyncio.to_thread(
             subprocess.run, command, capture_output=True, text=True, timeout=timeout, check=False
         )
@@ -293,9 +348,15 @@ async def restart_database(database: Database, timeout: float = 120) -> None:
             await asyncio.sleep(1)
 
 
-async def run_m_sweep(args: argparse.Namespace, questions, embedder, retriever,
-                      database: Database, environment: dict[str, Any]) -> dict[str, Any]:
-    repository = ArticleRepository(database)
+async def run_m_sweep(
+    args: argparse.Namespace,
+    questions,
+    embedder,
+    retriever,
+    database: Database,
+    environment: dict[str, Any],
+) -> dict[str, Any]:
+    repository = ArticleRepository(database, settings.embedding_dimension)
     _, original_m, _ = await repository.vector_index()
     if original_m is None:  # no M in the definition: the server default was used
         async with database.get_session() as session:
@@ -313,10 +374,19 @@ async def run_m_sweep(args: argparse.Namespace, questions, embedder, retriever,
 
     try:
         return await m_sweep(
-            questions, embedder, retriever, args.m, args.ef,
-            rebuild=rebuild, restart=None if args.no_restart else restart,
-            shapes=args.shapes, runs=args.runs, warmup_runs=args.warmup, k=args.k,
-            vector_format=args.vector_format, environment=environment,
+            questions,
+            embedder,
+            retriever,
+            args.m,
+            args.ef,
+            rebuild=rebuild,
+            restart=None if args.no_restart else restart,
+            shapes=args.shapes,
+            runs=args.runs,
+            warmup_runs=args.warmup,
+            k=args.k,
+            vector_format=args.vector_format,
+            environment=environment,
         )
     finally:
         print(f"Putting the vector index back to M={original_m}...", file=sys.stderr, flush=True)
@@ -327,9 +397,11 @@ async def run_m_sweep(args: argparse.Namespace, questions, embedder, retriever,
             if not args.no_restart:
                 await restart()
         except Exception as exc:  # noqa: BLE001 - tell the user how to finish by hand
-            print(f"Could not put the index back ({type(exc).__name__}: {exc}). Run: "
-                  f"uv run python -m src.ingestion reindex --m {original_m}",
-                  file=sys.stderr)
+            print(
+                f"Could not put the index back ({type(exc).__name__}: {exc}). Run: "
+                f"uv run python -m src.ingestion reindex --m {original_m}",
+                file=sys.stderr,
+            )
 
 
 async def main(argv: list[str] | None = None) -> int:
@@ -385,8 +457,9 @@ async def main(argv: list[str] | None = None) -> int:
             print(f"Saved {path}")
             return 0
         else:
-            report = await run_search_command(args, questions, container, retriever, database,
-                                              environment)
+            report = await run_search_command(
+                args, questions, container, retriever, database, environment
+            )
     finally:
         await database.disconnect()
 
@@ -396,8 +469,14 @@ async def main(argv: list[str] | None = None) -> int:
     return 0
 
 
-async def run_search_command(args: argparse.Namespace, questions, container, retriever,
-                             database: Database, environment: dict[str, Any]) -> dict[str, Any]:
+async def run_search_command(
+    args: argparse.Namespace,
+    questions,
+    container,
+    retriever,
+    database: Database,
+    environment: dict[str, Any],
+) -> dict[str, Any]:
     """run, ef-sweep, faiss and m-sweep: they embed the questions and search."""
     embedder = await asyncio.to_thread(container.embedder)
     if args.command == "run":
@@ -415,18 +494,35 @@ async def run_search_command(args: argparse.Namespace, questions, container, ret
         return await evaluate(questions, embedder, retriever, config, environment)
     if args.command == "ef-sweep":
         report = await ef_search_sweep(
-            questions, embedder, retriever, args.ef,
-            runs=args.runs, warmup_runs=args.warmup, k=args.k, environment=environment,
-            shape=args.shape, vector_format=args.vector_format,
+            questions,
+            embedder,
+            retriever,
+            args.ef,
+            runs=args.runs,
+            warmup_runs=args.warmup,
+            k=args.k,
+            environment=environment,
+            shape=args.shape,
+            vector_format=args.vector_format,
         )
         report["label"] = args.label
         return report
     if args.command == "faiss":
         return await faiss_baseline(
-            questions, embedder, retriever, database,
-            m=args.m, ef_construction=args.ef_construction, ef_values=args.ef,
-            fetch_values=args.fetch, ef_two_systems=args.ef_two_systems, runs=args.runs,
-            warmup_runs=args.warmup, k=args.k, threads=args.threads, environment=environment,
+            questions,
+            embedder,
+            retriever,
+            database,
+            m=args.m,
+            ef_construction=args.ef_construction,
+            ef_values=args.ef,
+            fetch_values=args.fetch,
+            ef_two_systems=args.ef_two_systems,
+            runs=args.runs,
+            warmup_runs=args.warmup,
+            k=args.k,
+            threads=args.threads,
+            environment=environment,
         )
     return await run_m_sweep(args, questions, embedder, retriever, database, environment)
 

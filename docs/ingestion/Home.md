@@ -29,14 +29,14 @@ make ingest-test     # the first 3 articles of the CSV
 make ingest          # all articles
 make ingest-latest   # the latest revisions instead of the snapshot
 make ingest-check    # every article present, chunks complete, no orphan rows
-make reindex         # rebuild the vector index with the same M and distance
-uv run python -m src.ingestion sync --dry-run   # which stored articles changed on Wikipedia
-uv run python -m src.ingestion sync             # replace only those, at their latest revision
+make reindex         # rebuild the vector index with the same M and distance (make reindex M=32 for another M)
+make ingest-sync-dry-run   # which stored articles changed on Wikipedia
+make ingest-sync           # replace only those, at their latest revision (ARGS="--limit 5" forwards flags)
 ```
 
 The settings come from `.env`: `ARTICLES_CSV_PATH`, `CHUNK_CONFIG` (A, B or C) and `INGESTION_SNAPSHOT`. The command is `uv run python -m src.ingestion ingest` (or `check`) with `--csv`, `--config`, `--latest` and `--limit`, for machines without `make`.
 
-Each article is processed on its own, and a failure is logged and reported at the end without stopping the others. The command then exits with an error that lists the failed articles. `ANALYZE TABLE` runs at the end in either case, because MariaDB can ignore the vector index with stale statistics (see [Vector Search](../database/Vector-Search.md)). If the run replaced articles that were already stored, the vector index is also dropped and added again, so the graph does not keep the deleted chunks (see [Vector Index State](../database/Index-State.md)).
+Before it loads anything, `ingest` and `sync` check that the table's `VECTOR(n)` column matches `EMBEDDING_DIMENSION` and stop with a clear message otherwise ([Schema Management](../database/Schema.md)). Each article is processed on its own, and a failure is logged and reported at the end without stopping the others. The command then exits with an error that lists the failed articles. `ANALYZE TABLE` runs at the end in either case, because MariaDB can ignore the vector index with stale statistics (see [Vector Search](../database/Vector-Search.md)). If the run replaced articles that were already stored, the vector index is also dropped and added again, so the graph does not keep the deleted chunks (see [Vector Index State](../database/Index-State.md)).
 
 ## Live sync
 
@@ -44,7 +44,7 @@ Each article is processed on its own, and a failure is logged and reported at th
 
 1. It asks MediaWiki for the latest revision of every stored page, 50 pages per request and without the text (`prop=revisions`, `rvprop=ids|timestamp`, `pageids=...`). All 262 articles take 6 requests.
 2. It compares each with `articles.revision_id` and lists the changed articles, and the ones that no longer exist.
-3. It re-ingests only the changed articles, at their latest revision, through the same pipeline as the ingest: each article's metadata, categories, links, chunks and vectors are replaced in one transaction.
+3. It re-ingests only the changed articles, at their latest revision (a cached copy of an older revision is never reused, see [Article Cache](./Cache.md#scope)), through the same pipeline as the ingest: each article's metadata, categories, links, chunks and vectors are replaced in one transaction.
 4. It runs `ANALYZE TABLE`, and rebuilds the vector index when the replaced chunks reach 25% of all chunks (`--rebuild-share`).
 
 `--dry-run` stops after step 2 and does not load the embedding model. `--limit N` replaces at most N of the changed articles. Each run writes `eval/results/<timestamp>_sync.json` and `.md` with the changed articles and what was replaced.

@@ -42,3 +42,6 @@ htmlcov/
 
 # Docker volumes / local persistent mounts
 mariadb_data/
+
+# Output of data/build_article_list.py (a candidate list, never the research snapshot)
+data/articles.generated.csv

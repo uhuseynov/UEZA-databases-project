@@ -2,7 +2,7 @@
 
 from typing import Literal
 
-from pydantic import Field, model_validator
+from pydantic import Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -18,7 +18,8 @@ class Settings(BaseSettings):
     log_level: Literal["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"] = "INFO"
 
     app_port: int = Field(default=8000, ge=1, le=65535)
-    app_host: str = "0.0.0.0"
+    # Loopback by default: the API has no authentication. 0.0.0.0 is an explicit opt-in.
+    app_host: str = "127.0.0.1"
 
     # ---------------------------------------------------------
     # MariaDB
@@ -52,6 +53,9 @@ class Settings(BaseSettings):
     )
 
     mediawiki_requests_per_second: float = Field(default=2.0, gt=0)
+    # At most this many GET /articles/{title} requests fetch at the same time (per process);
+    # the others wait without using a thread.
+    mediawiki_api_concurrency: int = Field(default=4, ge=1)
 
     mediawiki_max_retries: int = Field(default=3, ge=0)
     mediawiki_batch_size: int = Field(default=20, ge=1)
@@ -108,18 +112,7 @@ class Settings(BaseSettings):
     eval_results_dir: str = "eval/results"
 
     # ---------------------------------------------------------
-    # Validation
-    # ---------------------------------------------------------
-
-    @model_validator(mode="after")
-    def validate_settings(self):
-        if self.chunk_config not in {"A", "B", "C"}:
-            raise ValueError("Invalid chunk configuration")
-
-        return self
-
-    # ---------------------------------------------------------
-    # Database URLs
+    # Database URL
     # ---------------------------------------------------------
 
     @property
@@ -130,22 +123,6 @@ class Settings(BaseSettings):
 
         return URL.create(
             drivername="mysql+aiomysql",
-            username=self.mariadb_user,
-            password=self.mariadb_password,
-            host=self.mariadb_host,
-            port=self.mariadb_port,
-            database=self.mariadb_database,
-            query={"charset": "utf8mb4"},
-        ).render_as_string(hide_password=False)
-
-    @property
-    def sync_database_url(self) -> str:
-        """Synchronous SQLAlchemy connection URL."""
-
-        from sqlalchemy.engine import URL
-
-        return URL.create(
-            drivername="mysql+pymysql",
             username=self.mariadb_user,
             password=self.mariadb_password,
             host=self.mariadb_host,

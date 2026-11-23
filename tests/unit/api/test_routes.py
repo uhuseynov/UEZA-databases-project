@@ -107,7 +107,11 @@ def test_search_rejects_a_bad_date(client):
 def test_ask_returns_answer_with_sources(client, service):
     response = client.post(
         "/ask",
-        json={"question": "Which method averages trees?", "k": 5, "filters": {"root_category": "Core"}},
+        json={
+            "question": "Which method averages trees?",
+            "k": 5,
+            "filters": {"root_category": "Core"},
+        },
     )
 
     assert response.status_code == 200
@@ -132,7 +136,7 @@ def test_llm_failure_is_a_502():
     response = TestClient(app).post("/ask", json={"question": "x"})
 
     assert response.status_code == 502
-    assert "down" in response.json()["detail"]
+    assert response.json() == {"detail": "The language model request failed. Try again later."}
 
 
 def test_database_failure_is_a_503_without_internal_details():

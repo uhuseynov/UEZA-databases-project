@@ -8,7 +8,7 @@ We chose Artificial Intelligence on English Wikipedia. The articles link to each
 - 23 core articles added by hand (for example Artificial intelligence, Supervised learning, Retrieval-augmented generation), because the root categories missed them.
 - Stubs under 3000 characters, "List of..." pages and people/company/fiction subcategories were skipped.
 - Each root has a cap of 50 so that no category dominates. Computer vision has a cap of 25 because its subcategories drift into 3D imaging and optics.
-- Off-topic articles (products, films, optics, finite-state machines) were removed by hand in three rounds. The list is in the `remove` variable of `data/build_article_list.py`.
+- Off-topic articles (products, films, optics, finite-state machines) were removed by hand in three rounds. The list is in the `remove` variable of `data/build_article_list.py`. The script repeats the method, not the data: it writes a new candidate list to `data/articles.generated.csv` and never touches `data/articles.csv`, the committed research snapshot. A rerun gives a different list, because categories, lengths and edit dates have changed since. How to run it, what it guarantees and how to regenerate safely: [Scripts and Experiments](./development/Scripts.md#building-the-article-list-databuild_article_listpy).
 
 ## Limitations
 
@@ -58,4 +58,8 @@ We do not use 1024 tokens: the embedding models read about 512 tokens, so the re
 | `BAAI/bge-base-en-v1.5` | 768 | better quality and precision, slower and bigger index |
 | `intfloat/e5-base-v2` | 768 | strong baseline for search (needs "query: " / "passage: " prefixes) |
 
-The vector dimension decides the size of the VECTOR column, so the final choice
+The vector dimension decides the size of the VECTOR column, so the final choice fixes the table: another dimension needs a table created for it ([Schema Management](./database/Schema.md)).
+
+## Status
+
+This page records the plan. Chunk configuration A and `BAAI/bge-base-en-v1.5` are what was measured; configurations B and C are implemented in the chunker but were not compared, and the other two models were not tried (each needs a full re-ingest). See the Status section of the [README](../README.md#status).

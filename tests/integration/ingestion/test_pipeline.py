@@ -204,7 +204,7 @@ async def read_state(
 
 
 async def test_first_ingest(database: Database) -> None:
-    repository = ArticleRepository(database)
+    repository = ArticleRepository(database, settings.embedding_dimension)
 
     await repository.replace_article(
         wiki=make_article(),
@@ -233,7 +233,7 @@ async def test_first_ingest(database: Database) -> None:
 async def test_repeat_ingest_is_idempotent(
     database: Database,
 ) -> None:
-    repository = ArticleRepository(database)
+    repository = ArticleRepository(database, settings.embedding_dimension)
 
     chunks = [
         "Title: Test\n\nFirst chunk.",
@@ -264,7 +264,7 @@ async def test_repeat_ingest_is_idempotent(
 async def test_revision_replaces_old_chunks(
     database: Database,
 ) -> None:
-    repository = ArticleRepository(database)
+    repository = ArticleRepository(database, settings.embedding_dimension)
 
     await repository.replace_article(
         wiki=make_article(revision_id=100),
@@ -316,7 +316,7 @@ async def test_revision_replaces_old_chunks(
 async def test_invalid_vector_rejected(
     database: Database,
 ) -> None:
-    repository = ArticleRepository(database)
+    repository = ArticleRepository(database, settings.embedding_dimension)
 
     with pytest.raises(ValueError):
         await repository.replace_article(
@@ -334,7 +334,7 @@ async def test_invalid_vector_rejected(
 async def test_mismatched_counts_rejected(
     database: Database,
 ) -> None:
-    repository = ArticleRepository(database)
+    repository = ArticleRepository(database, settings.embedding_dimension)
 
     with pytest.raises(ValueError):
         await repository.replace_article(
@@ -352,7 +352,7 @@ async def test_mismatched_counts_rejected(
 async def test_page_id_mismatch_rejected(
     database: Database,
 ) -> None:
-    repository = ArticleRepository(database)
+    repository = ArticleRepository(database, settings.embedding_dimension)
 
     invalid_row = csv_row()
     invalid_row["pageid"] = "123"
@@ -375,7 +375,7 @@ async def test_transaction_rolls_back_on_db_error(
 ) -> None:
     """Failed replacement must preserve the original article."""
 
-    repository = ArticleRepository(database)
+    repository = ArticleRepository(database, settings.embedding_dimension)
 
     await repository.replace_article(
         wiki=make_article(revision_id=100),
@@ -419,7 +419,7 @@ async def test_transaction_rolls_back_on_db_error(
 async def test_chunk_positions_are_sequential(
     database: Database,
 ) -> None:
-    repository = ArticleRepository(database)
+    repository = ArticleRepository(database, settings.embedding_dimension)
 
     chunks = [f"Title: Test\n\nChunk {index}" for index in range(5)]
 
@@ -450,7 +450,7 @@ async def test_chunk_positions_are_sequential(
 
 
 async def test_replace_reports_whether_the_article_existed(database: Database) -> None:
-    repository = ArticleRepository(database)
+    repository = ArticleRepository(database, settings.embedding_dimension)
     arguments = dict(
         wiki=make_article(),
         csv_row=csv_row(),
@@ -463,7 +463,7 @@ async def test_replace_reports_whether_the_article_existed(database: Database) -
 
 
 async def test_rebuild_keeps_the_vector_index_definition(database: Database) -> None:
-    repository = ArticleRepository(database)
+    repository = ArticleRepository(database, settings.embedding_dimension)
 
     async def index_line() -> str:
         async with database.get_session() as session:
@@ -488,7 +488,7 @@ async def test_rebuild_keeps_the_vector_index_definition(database: Database) -> 
 
 
 async def test_rebuild_with_another_m_and_back(database: Database) -> None:
-    repository = ArticleRepository(database)
+    repository = ArticleRepository(database, settings.embedding_dimension)
     name, m, distance = await repository.vector_index()
     other = 8 if m != 8 else 12
 
@@ -501,9 +501,8 @@ async def test_rebuild_with_another_m_and_back(database: Database) -> None:
     assert await repository.vector_index() == (name, m, distance)
 
 
-
 async def test_chunk_counts_cover_every_article(database: Database) -> None:
-    repository = ArticleRepository(database)
+    repository = ArticleRepository(database, settings.embedding_dimension)
 
     counts = await repository.chunk_counts()
 

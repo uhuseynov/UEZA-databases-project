@@ -1,6 +1,6 @@
 # Evaluation
 
-"It works well" has to be a number. The evaluation runs the ground-truth questions against the real MariaDB search and reports recall, latency and how well "not found" is detected.
+"It works well" has to be a number. The evaluation runs the ground-truth questions against the real MariaDB search and reports recall, latency and how well "not found" is detected. The measured results are in [Results](./Results.md); this page describes the method.
 
 ```bash
 make eval          # Recall@K, MRR, latency, not-found analysis (EVAL_RUNS=5)
@@ -12,7 +12,7 @@ uv run python -m src.evaluation faiss     # FAISS on the same vectors, next to M
 uv run python -m src.evaluation answers   # every question through the language model: is NOT_FOUND right?
 ```
 
-Each run writes `eval/results/<timestamp>_<label>.json` (every number and every question) and a `.md` file with the tables for the README; `explain` writes a `.md` file only.
+Each run writes `eval/results/<timestamp>_<label>.json` (every number and every question) and a `.md` file with the tables ([Results](./Results.md) quotes them; every run is listed in the [eval/results index](../../eval/results/README.md)); `explain` writes a `.md` file only.
 
 ## Ground truth
 
@@ -95,7 +95,7 @@ Measured on 6 November 2026 with `qwen2.5:3b` in Ollama on the laptop's CPU, the
 | answerable | 60 | 40 | 31 | 18 | 2 |
 | unanswerable | 11 | 0 | – | 3 | 8 |
 
-- **No unanswerable question got an answer.** The distance threshold rejected the 8 off-topic ones, and the model answered `NOT_FOUND` for the three that pass it (Leela Chess Zero, PROSPECTOR and Xiaoice), exactly the gap the threshold leaves (see the README).
+- **No unanswerable question got an answer.** The distance threshold rejected the 8 off-topic ones, and the model answered `NOT_FOUND` for the three that pass it (Leela Chess Zero, PROSPECTOR and Xiaoice), exactly the gap the threshold leaves (see [Results](./Results.md#not-found)).
 - **The model is too cautious.** It answered `NOT_FOUND` for 18 answerable questions, and for 14 of them a chunk of the correct article was among its 5 passages. Six of the 18 are filtered questions such as "Among NLP articles shorter than 30000 characters, which one covers ...", which ask about articles rather than facts.
 - **Of the 40 answers**, 31 cite a passage of a correct article. Of the other 9, three answer correctly without any citation, three name the right thing but cite a related article (Q-learning described in "Reinforcement learning", Gemma found in "Google DeepMind", "Latent diffusion model" for the diffusion question), two consist of only a citation (`[1]`), and one is wrong: "AlphaFold" for the program that analysed mass spectrometry data (Dendral); none of its passages came from the articles that describe Dendral.
 - **Time:** a call took 33.5 s at the median on the CPU, and one call took 29 minutes; 61 of the 71 questions reached the model.

@@ -216,8 +216,11 @@ async def fetch_chunks(database, chunk_ids: Sequence[int]) -> list[tuple[int, st
 
 
 async def server_times(
-    retriever: Any, vectors: Sequence[Sequence[float]], questions: Sequence[Question],
-    indices: Sequence[int], k: int,
+    retriever: Any,
+    vectors: Sequence[Sequence[float]],
+    questions: Sequence[Question],
+    indices: Sequence[int],
+    k: int,
 ) -> list[float]:
     """MariaDB's own time for each statement, from ANALYZE (one run per question)."""
     if not hasattr(retriever, "analyze"):
@@ -338,13 +341,24 @@ async def faiss_baseline(
     def subset(indices: list[int]) -> tuple[list[Question], list[list[int]]]:
         return [questions[i] for i in indices], [exact[i] for i in indices]
 
-    async def run(name: str, indices: list[int], search_one, ef: int | None = None) -> dict[str, Any]:
+    async def run(
+        name: str, indices: list[int], search_one, ef: int | None = None
+    ) -> dict[str, Any]:
         async def search(position: int) -> list[int]:
             return await search_one(indices[position])
 
         subset_questions, subset_exact = subset(indices)
-        return await measure(name, subset_questions, search, subset_exact, title_by_id,
-                             k=k, runs=runs, warmup_runs=warmup_runs, ef=ef)
+        return await measure(
+            name,
+            subset_questions,
+            search,
+            subset_exact,
+            title_by_id,
+            k=k,
+            runs=runs,
+            warmup_runs=warmup_runs,
+            ef=ef,
+        )
 
     # Questions without a filter
     async def flat_plain(i: int) -> list[int]:
@@ -360,13 +374,15 @@ async def faiss_baseline(
 
     plain_rows = [await run("FAISS flat (exact)", plain, flat_plain)]
     for ef in ef_values:
+
         async def hnsw_plain(i: int, ef: int = ef) -> list[int]:
             return indexes.search_hnsw(query_vectors[i], k, ef)
 
         plain_rows.append(await run("FAISS HNSW", plain, hnsw_plain, ef))
     plain_rows.append(await run("MariaDB statement", plain, mariadb))
-    plain_rows.append(await run("FAISS HNSW, then MariaDB for the text", plain, two_systems_plain,
-                                ef_two_systems))
+    plain_rows.append(
+        await run("FAISS HNSW, then MariaDB for the text", plain, two_systems_plain, ef_two_systems)
+    )
 
     # Questions with a filter
     async def flat_filtered(i: int) -> list[int]:
@@ -379,24 +395,42 @@ async def faiss_baseline(
 
     filtered_rows = [await run("FAISS flat over the allowed ids (exact)", filtered, flat_filtered)]
     for ef in ef_values:
+
         async def hnsw_selector(i: int, ef: int = ef) -> list[int]:
             return indexes.search_hnsw(query_vectors[i], k, ef, allowed[i])
 
-        filtered_rows.append(await run("FAISS HNSW with the allowed ids as selector", filtered,
-                                       hnsw_selector, ef))
+        filtered_rows.append(
+            await run("FAISS HNSW with the allowed ids as selector", filtered, hnsw_selector, ef)
+        )
     for fetch in fetch_values:
-        async def post_filter(i: int, fetch: int = fetch) -> list[int]:
-            return indexes.search_hnsw_post_filter(query_vectors[i], k, fetch, ef_two_systems,
-                                                   allowed[i])
 
-        filtered_rows.append(await run(f"FAISS HNSW, {fetch} nearest, then filter", filtered,
-                                       post_filter, max(ef_two_systems, fetch)))
+        async def post_filter(i: int, fetch: int = fetch) -> list[int]:
+            return indexes.search_hnsw_post_filter(
+                query_vectors[i], k, fetch, ef_two_systems, allowed[i]
+            )
+
+        filtered_rows.append(
+            await run(
+                f"FAISS HNSW, {fetch} nearest, then filter",
+                filtered,
+                post_filter,
+                max(ef_two_systems, fetch),
+            )
+        )
     filtered_rows.append(await run("MariaDB statement", filtered, mariadb))
-    filtered_rows.append(await run("MariaDB ids, FAISS HNSW with selector, MariaDB text",
-                                   filtered, two_systems_filtered, ef_two_systems))
+    filtered_rows.append(
+        await run(
+            "MariaDB ids, FAISS HNSW with selector, MariaDB text",
+            filtered,
+            two_systems_filtered,
+            ef_two_systems,
+        )
+    )
 
     server_ms = {
-        "plain": latency_stats(await server_times(retriever, raw_vectors, questions, plain, k)).as_dict(),
+        "plain": latency_stats(
+            await server_times(retriever, raw_vectors, questions, plain, k)
+        ).as_dict(),
         "filtered": latency_stats(
             await server_times(retriever, raw_vectors, questions, filtered, k)
         ).as_dict(),
@@ -406,9 +440,17 @@ async def faiss_baseline(
         "kind": "faiss_baseline",
         "label": "faiss",
         "created_at": datetime.now(UTC).isoformat(timespec="seconds"),
-        "config": {"m": m, "ef_construction": ef_construction, "ef_values": list(ef_values),
-                   "fetch_values": list(fetch_values), "ef_two_systems": ef_two_systems,
-                   "runs": runs, "warmup_runs": warmup_runs, "k": k, "threads": threads},
+        "config": {
+            "m": m,
+            "ef_construction": ef_construction,
+            "ef_values": list(ef_values),
+            "fetch_values": list(fetch_values),
+            "ef_two_systems": ef_two_systems,
+            "runs": runs,
+            "warmup_runs": warmup_runs,
+            "k": k,
+            "threads": threads,
+        },
         "environment": {**(environment or {}), "faiss_version": faiss.__version__},
         "corpus": {
             "chunks": len(corpus.ids),
@@ -421,8 +463,12 @@ async def faiss_baseline(
             **indexes.sizes(),
         },
         "update": indexes.update_costs(article_chunks),
-        "exact_agreement": {"plain": agree["plain"], "plain_questions": len(plain),
-                            "filtered": agree["filtered"], "filtered_questions": len(filtered)},
+        "exact_agreement": {
+            "plain": agree["plain"],
+            "plain_questions": len(plain),
+            "filtered": agree["filtered"],
+            "filtered_questions": len(filtered),
+        },
         "filter_ids_sql": {
             "latency": latency_stats(sql_ms).as_dict(),
             "allowed_chunks": sorted(len(ids) for ids in allowed_ids.values()),

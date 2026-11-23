@@ -63,7 +63,13 @@ def test_latency_stats():
 
 
 def test_distance_stats():
-    assert distance_stats([0.2, 0.4]) == {"samples": 2, "mean": 0.3, "min": 0.2, "p50": 0.3, "max": 0.4}
+    assert distance_stats([0.2, 0.4]) == {
+        "samples": 2,
+        "mean": 0.3,
+        "min": 0.2,
+        "p50": 0.3,
+        "max": 0.4,
+    }
     assert distance_stats([])["samples"] == 0
 
 

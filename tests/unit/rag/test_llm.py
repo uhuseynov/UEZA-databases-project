@@ -84,3 +84,42 @@ async def test_connection_problem_raises_llm_error():
 
     with pytest.raises(LLMError, match="failed"):
         await make_llm(handler).complete(MESSAGES)
+
+
+async def test_timeout_raises_llm_error():
+    def handler(request: httpx.Request) -> httpx.Response:
+        raise httpx.ReadTimeout("timed out", request=request)
+
+    with pytest.raises(LLMError, match="ReadTimeout"):
+        await make_llm(handler).complete(MESSAGES)
+
+
+async def test_error_message_has_no_credentials_or_query_string():
+    def handler(request: httpx.Request) -> httpx.Response:
+        raise httpx.ConnectError(f"cannot connect to {request.url}", request=request)
+
+    client = httpx.AsyncClient(transport=httpx.MockTransport(handler))
+    llm = ChatLLM(
+        base_url="https://alice:hunter2@llm.example:8443/v1?key=sekrit",
+        api_key="sk-live-123",
+        model="m",
+        client=client,
+    )
+
+    with pytest.raises(LLMError) as caught:
+        await llm.complete(MESSAGES)
+
+    message = str(caught.value)
+    assert "llm.example:8443/v1" in message
+    for secret in ("alice", "hunter2", "sekrit", "sk-live-123"):
+        assert secret not in message
+
+
+async def test_upstream_reply_that_echoes_the_api_key_is_redacted():
+    llm = make_llm(lambda request: httpx.Response(401, text="bad key: secret"), api_key="secret")
+
+    with pytest.raises(LLMError) as caught:
+        await llm.complete(MESSAGES)
+
+    assert "401" in str(caught.value)
+    assert "secret" not in str(caught.value)

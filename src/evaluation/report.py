@@ -43,8 +43,10 @@ def render_evaluation(report: dict[str, Any]) -> str:
     metrics = report["metrics"]
     config = report["config"]
     k_values = config["k_values"]
-    mode = "exact search (no index)" if config["exact"] else (
-        f"HNSW index, mhnsw_ef_search={config['ef_search'] or 'server default'}"
+    mode = (
+        "exact search (no index)"
+        if config["exact"]
+        else (f"HNSW index, mhnsw_ef_search={config['ef_search'] or 'server default'}")
     )
     mode += (
         f", statement shape {config.get('shape', 'join')}, "
@@ -112,8 +114,11 @@ def render_evaluation(report: dict[str, Any]) -> str:
             + ", ".join(metrics["filtered_with_fewer_than_k_results"]),
         ]
     if metrics["unstable_questions"]:
-        parts += ["", "Questions whose results changed between runs: "
-                  + ", ".join(metrics["unstable_questions"])]
+        parts += [
+            "",
+            "Questions whose results changed between runs: "
+            + ", ".join(metrics["unstable_questions"]),
+        ]
     if metrics["errors"]:
         parts += ["", "## Errors", ""]
         parts += [f"- {qid}: `{error}`" for qid, error in metrics["errors"].items()]
@@ -207,8 +212,19 @@ def render_m_sweep(report: dict[str, Any]) -> str:
         "## Searches",
         "",
         _table(
-            ["M", "state", "shape", "ef_search", f"index recall@{k}", "Recall@1", f"Recall@{k}",
-             "MRR", "mean ms", "p50 ms", "p95 ms"],
+            [
+                "M",
+                "state",
+                "shape",
+                "ef_search",
+                f"index recall@{k}",
+                "Recall@1",
+                f"Recall@{k}",
+                "MRR",
+                "mean ms",
+                "p50 ms",
+                "p95 ms",
+            ],
             rows,
         ),
     ]
@@ -242,8 +258,14 @@ def render_faiss(report: dict[str, Any]) -> str:
     def rows(entries: list[dict[str, Any]], filtered: bool) -> list[list[Any]]:
         table = []
         for row in entries:
-            cells = [row["method"], row["ef"] if row["ef"] is not None else "–",
-                     row[f"index_recall@{k}"], row["recall@1"], row[f"recall@{k}"], row["mrr"]]
+            cells = [
+                row["method"],
+                row["ef"] if row["ef"] is not None else "–",
+                row[f"index_recall@{k}"],
+                row["recall@1"],
+                row[f"recall@{k}"],
+                row["mrr"],
+            ]
             if filtered:
                 cells += [row["returned_mean"], row["fewer_than_k"]]
             cells += [row["latency"]["mean_ms"], row["latency"]["p50_ms"], row["latency"]["p95_ms"]]
@@ -264,11 +286,26 @@ def render_faiss(report: dict[str, Any]) -> str:
         "## Corpus and build",
         "",
         _table(
-            ["chunks", "dimension", "read from MariaDB", "flat build", "HNSW build",
-             "flat size", "HNSW size"],
-            [[corpus["chunks"], corpus["dimension"], f"{corpus['load_seconds']:.2f} s",
-              f"{build['flat_seconds']:.3f} s", f"{build['hnsw_seconds']:.2f} s",
-              _bytes(build["flat_bytes"]), _bytes(build["hnsw_bytes"])]],
+            [
+                "chunks",
+                "dimension",
+                "read from MariaDB",
+                "flat build",
+                "HNSW build",
+                "flat size",
+                "HNSW size",
+            ],
+            [
+                [
+                    corpus["chunks"],
+                    corpus["dimension"],
+                    f"{corpus['load_seconds']:.2f} s",
+                    f"{build['flat_seconds']:.3f} s",
+                    f"{build['hnsw_seconds']:.2f} s",
+                    _bytes(build["flat_bytes"]),
+                    _bytes(build["hnsw_bytes"]),
+                ]
+            ],
         ),
         "",
         f"MariaDB's full scan and FAISS's exact search returned the same top {k} for "
@@ -281,14 +318,20 @@ def render_faiss(report: dict[str, Any]) -> str:
         "",
         "## Questions with a filter",
         "",
-        _table(["method", "ef", *quality, "returned", f"< {k} rows", *timing],
-               rows(report["filtered"], True)),
+        _table(
+            ["method", "ef", *quality, "returned", f"< {k} rows", *timing],
+            rows(report["filtered"], True),
+        ),
         "",
         _server_sentence(report.get("mariadb_server_ms")),
         "",
         f"Finding the ids of the allowed chunks in MariaDB took {_fmt(sql['latency']['mean_ms'])} ms "
         f"on average (p95 {_fmt(sql['latency']['p95_ms'])} ms). Allowed chunks per question: "
-        + (f"{allowed[0]} to {allowed[-1]}, median {allowed[len(allowed) // 2]}." if allowed else "none."),
+        + (
+            f"{allowed[0]} to {allowed[-1]}, median {allowed[len(allowed) // 2]}."
+            if allowed
+            else "none."
+        ),
         "",
         "## Updates",
         "",

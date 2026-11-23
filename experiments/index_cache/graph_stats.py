@@ -48,9 +48,23 @@ def measure(label: str) -> None:
     for shape in ("join", "nearest_first"):
         log(f"Measuring: {label}, {shape}")
         completed = subprocess.run(
-            [sys.executable, "-m", "src.evaluation", "ef-sweep", "--ef", "20", "80",
-             "--shape", shape, "--vector-format", "binary", "--label", f"{label}-{shape}"],
-            capture_output=True, text=True,
+            [
+                sys.executable,
+                "-m",
+                "src.evaluation",
+                "ef-sweep",
+                "--ef",
+                "20",
+                "80",
+                "--shape",
+                shape,
+                "--vector-format",
+                "binary",
+                "--label",
+                f"{label}-{shape}",
+            ],
+            capture_output=True,
+            text=True,
         )
         if completed.returncode != 0:
             sys.exit(f"evaluation failed:\n{completed.stderr[-3000:]}")

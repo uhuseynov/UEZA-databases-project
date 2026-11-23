@@ -14,8 +14,11 @@ services:
       MARIADB_USER: ${MARIADB_USER:-ueza}
       MARIADB_PASSWORD: ${MARIADB_PASSWORD:-ueza_password}
 
+    # Published on the loopback interface only: the host (make run, make ingest, the tests)
+    # reaches it at 127.0.0.1, other machines on the network do not. The app container uses
+    # the internal address db:3306. The password defaults below are for local development.
     ports:
-      - "${MARIADB_PORT:-3306}:3306"
+      - "127.0.0.1:${MARIADB_PORT:-3306}:3306"
 
     volumes:
       - mariadb_data:/var/lib/mysql
@@ -35,28 +38,39 @@ services:
 
     restart: unless-stopped
 
-    environment:
-      APP_ENV: ${APP_ENV:-development}
-      LOG_LEVEL: ${LOG_LEVEL:-INFO}
+    # Every setting of src/config.py (LLM, embeddings, RAG, MediaWiki, ...) comes from .env.
+    # The file is optional (CI has none; the defaults of src/config.py then apply). It is read
+    # when the container starts and is neither copied into the image (.dockerignore) nor
+    # baked into a layer. Values under `environment:` take precedence over it.
+    env_file:
+      - path: .env
+        required: false
 
+    environment:
+      # Inside the Compose network the database is the `db` service, whatever .env says
+      # (.env points MARIADB_HOST at 127.0.0.1 for the app that runs on the host).
       MARIADB_HOST: db
       MARIADB_PORT: 3306
       MARIADB_USER: ${MARIADB_USER:-ueza}
       MARIADB_PASSWORD: ${MARIADB_PASSWORD:-ueza_password}
       MARIADB_DATABASE: ${MARIADB_DATABASE:-ueza_db}
 
+      # Both caches live in the article_cache volume (mounted at /app/.cache), so neither the
+      # downloaded articles nor the ~440 MB embedding model are fetched again when the
+      # container is recreated. HF_HOME is where sentence-transformers keeps its models.
       CACHE_DIR: /app/.cache/articles
-      CACHE_TTL_SECONDS: ${CACHE_TTL_SECONDS:-86400}
+      HF_HOME: /app/.cache/huggingface
 
-      MEDIAWIKI_USER_AGENT: "${MEDIAWIKI_USER_AGENT:-UEZA-Databases-Project/0.1 (https://github.com/uhuseynov/UEZA-databases-project; mailto:info@constructor.university)}"
-      MEDIAWIKI_REQUESTS_PER_SECOND: ${MEDIAWIKI_REQUESTS_PER_SECOND:-2.0}
-      MEDIAWIKI_MAX_RETRIES: ${MEDIAWIKI_MAX_RETRIES:-3}
-      MEDIAWIKI_BATCH_SIZE: ${MEDIAWIKI_BATCH_SIZE:-20}
-      MEDIAWIKI_TIMEOUT: ${MEDIAWIKI_TIMEOUT:-10.0}
-      MEDIAWIKI_MAXLAG: ${MEDIAWIKI_MAXLAG:-5}
+    # Lets .env use http://host.docker.internal:11434/v1 for an Ollama running on the host
+    # (built in on Docker Desktop and OrbStack, needed on Linux).
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
 
+    # Published on the loopback interface only, like the database: the API has no
+    # authentication. APP_BIND_ADDRESS=0.0.0.0 in .env publishes it on every interface; read
+    # "Exposing the app" in docs/development/Docker.md first.
     ports:
-      - "${APP_PORT:-8000}:8000"
+      - "${APP_BIND_ADDRESS:-127.0.0.1}:${APP_PORT:-8000}:8000"
 
     volumes:
       - article_cache:/app/.cache
