@@ -161,10 +161,12 @@ def test_nearest_first_takes_the_k_nearest_chunks_before_the_join():
 
 
 def test_nearest_first_exact_orders_the_inner_query_by_an_expression():
-    query = build_search_query(VECTOR, k=5, shape="nearest_first", exact=True,
-                               vector_format="text")
+    query = build_search_query(VECTOR, k=5, shape="nearest_first", exact=True, vector_format="text")
 
-    assert "ORDER BY VEC_DISTANCE_COSINE(embedding, VEC_FromText(:query_vector)) + 0 LIMIT :k" in query.sql
+    assert (
+        "ORDER BY VEC_DISTANCE_COSINE(embedding, VEC_FromText(:query_vector)) + 0 LIMIT :k"
+        in query.sql
+    )
 
 
 def test_nearest_first_keeps_the_join_when_there_is_a_filter():
@@ -215,14 +217,15 @@ async def test_analyze_runs_the_statement_under_analyze_format_json():
     assert result == plan
 
 
-
 def test_chunk_ids_query_uses_the_same_filter_predicates_as_the_search():
     filters = SearchFilters(root_category="Core", linked_from="Artificial intelligence")
 
     ids = build_chunk_ids_query(filters)
     search = build_search_query(VECTOR, k=5, filters=filters)
 
-    assert ids.sql.startswith("SELECT c.id FROM article_chunks c\nJOIN articles a ON a.id = c.article_id\nWHERE ")
+    assert ids.sql.startswith(
+        "SELECT c.id FROM article_chunks c\nJOIN articles a ON a.id = c.article_id\nWHERE "
+    )
     where = ids.sql.split("WHERE ", 1)[1]
     assert where in search.sql
     assert ids.params == {"root_category": "Core", "linked_from": "Artificial intelligence"}

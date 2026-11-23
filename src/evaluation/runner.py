@@ -209,9 +209,7 @@ def summarize(results: Sequence[QuestionResult], config: EvalConfig) -> dict[str
     latency["per_run_mean_ms"] = [round(m, 3) for m in run_means]
     latency["run_to_run"] = latency_stats(run_means).as_dict()
 
-    answerable_distances = [
-        r.top_distance for r in answerable if r.top_distance is not None
-    ]
+    answerable_distances = [r.top_distance for r in answerable if r.top_distance is not None]
     unanswerable_distances = [
         r.top_distance for r in ok if not r.answerable and r.top_distance is not None
     ]
@@ -274,8 +272,14 @@ async def _exact_baseline(
 ) -> tuple[dict[str, Any], dict[str, list[int]], tuple[int, ...]]:
     """The exact search (full scan, no index): the true nearest neighbours."""
     k_values = tuple(sorted({kv for kv in K_VALUES if kv <= k} | {k}))
-    config = EvalConfig(label="exact", k_values=k_values, runs=runs, warmup_runs=warmup_runs,
-                        exact=True, vector_format=vector_format)
+    config = EvalConfig(
+        label="exact",
+        k_values=k_values,
+        runs=runs,
+        warmup_runs=warmup_runs,
+        exact=True,
+        vector_format=vector_format,
+    )
     exact = await run_questions(questions, vectors, retriever, config)
     exact_ids = {r.id: r.chunk_ids for r in exact if r.error is None}
     return _sweep_row("exact", exact, config, exact_ids, k), exact_ids, k_values
@@ -301,23 +305,40 @@ async def ef_search_sweep(
     """
     vectors, _ = await embed_questions(embedder, questions)
     exact_row, exact_ids, k_values = await _exact_baseline(
-        questions, vectors, retriever, runs=runs, warmup_runs=warmup_runs, k=k,
+        questions,
+        vectors,
+        retriever,
+        runs=runs,
+        warmup_runs=warmup_runs,
+        k=k,
         vector_format=vector_format,
     )
 
     rows = [exact_row]
     for ef in ef_values:
-        config = EvalConfig(label=f"ef={ef}", k_values=k_values, runs=runs,
-                            warmup_runs=warmup_runs, ef_search=ef, shape=shape,
-                            vector_format=vector_format)
+        config = EvalConfig(
+            label=f"ef={ef}",
+            k_values=k_values,
+            runs=runs,
+            warmup_runs=warmup_runs,
+            ef_search=ef,
+            shape=shape,
+            vector_format=vector_format,
+        )
         results = await run_questions(questions, vectors, retriever, config)
         rows.append(_sweep_row(ef, results, config, exact_ids, k))
 
     return {
         "kind": "ef_search_sweep",
         "created_at": datetime.now(UTC).isoformat(timespec="seconds"),
-        "config": {"ef_values": list(ef_values), "runs": runs, "warmup_runs": warmup_runs, "k": k,
-                   "shape": shape, "vector_format": vector_format},
+        "config": {
+            "ef_values": list(ef_values),
+            "runs": runs,
+            "warmup_runs": warmup_runs,
+            "k": k,
+            "shape": shape,
+            "vector_format": vector_format,
+        },
         "environment": environment or {},
         "rows": rows,
     }
@@ -350,7 +371,12 @@ async def m_sweep(
     plain = [q for q in questions if not q.filtered]
     vectors, _ = await embed_questions(embedder, plain)
     exact_row, exact_ids, k_values = await _exact_baseline(
-        plain, vectors, retriever, runs=runs, warmup_runs=warmup_runs, k=k,
+        plain,
+        vectors,
+        retriever,
+        runs=runs,
+        warmup_runs=warmup_runs,
+        k=k,
         vector_format=vector_format,
     )
 
@@ -367,21 +393,40 @@ async def m_sweep(
                 await before()
             for shape in shapes:
                 for ef in ef_values:
-                    config = EvalConfig(label=f"M={m} {state} {shape} ef={ef}", k_values=k_values,
-                                        runs=runs, warmup_runs=warmup_runs, ef_search=ef,
-                                        shape=shape, vector_format=vector_format)
+                    config = EvalConfig(
+                        label=f"M={m} {state} {shape} ef={ef}",
+                        k_values=k_values,
+                        runs=runs,
+                        warmup_runs=warmup_runs,
+                        ef_search=ef,
+                        shape=shape,
+                        vector_format=vector_format,
+                    )
                     results = await run_questions(plain, vectors, retriever, config)
-                    rows.append({"m": m, "state": state, "shape": shape,
-                                 **_sweep_row(ef, results, config, exact_ids, k)})
+                    rows.append(
+                        {
+                            "m": m,
+                            "state": state,
+                            "shape": shape,
+                            **_sweep_row(ef, results, config, exact_ids, k),
+                        }
+                    )
 
     return {
         "kind": "m_sweep",
         "label": "m-sweep",
         "created_at": datetime.now(UTC).isoformat(timespec="seconds"),
-        "config": {"m_values": list(m_values), "ef_values": list(ef_values),
-                   "shapes": list(shapes), "runs": runs, "warmup_runs": warmup_runs, "k": k,
-                   "vector_format": vector_format, "questions": len(plain),
-                   "restarted": restart is not None},
+        "config": {
+            "m_values": list(m_values),
+            "ef_values": list(ef_values),
+            "shapes": list(shapes),
+            "runs": runs,
+            "warmup_runs": warmup_runs,
+            "k": k,
+            "vector_format": vector_format,
+            "questions": len(plain),
+            "restarted": restart is not None,
+        },
         "environment": environment or {},
         "builds": builds,
         "rows": rows,

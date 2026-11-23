@@ -197,9 +197,7 @@ class MediaWikiClient:
                 try:
                     latest[int(page["pageid"])] = (
                         int(revision["revid"]),
-                        datetime.fromisoformat(
-                            str(revision["timestamp"]).replace("Z", "+00:00")
-                        ),
+                        datetime.fromisoformat(str(revision["timestamp"]).replace("Z", "+00:00")),
                     )
                 except (KeyError, TypeError, ValueError) as exc:
                     raise MediaWikiInvalidResponseError("Incomplete revision") from exc

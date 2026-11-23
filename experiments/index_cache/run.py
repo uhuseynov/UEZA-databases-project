@@ -77,8 +77,16 @@ def run(command: list[str], *, stdin: str | None = None, check: bool = True) -> 
 def root_sql(sql: str, *, check: bool = True, scalar: bool = False) -> str:
     """Run SQL as root in the db container, with the container's own root password."""
     output = "-N -B" if scalar else "--table"
-    command = ["docker", "compose", "exec", "-T", "db", "sh", "-c",
-               f'exec mariadb -uroot -p"$MARIADB_ROOT_PASSWORD" "$MARIADB_DATABASE" {output}']
+    command = [
+        "docker",
+        "compose",
+        "exec",
+        "-T",
+        "db",
+        "sh",
+        "-c",
+        f'exec mariadb -uroot -p"$MARIADB_ROOT_PASSWORD" "$MARIADB_DATABASE" {output}',
+    ]
     result = run(command, stdin=sql, check=check)
     return result.strip() if scalar else result
 
@@ -98,9 +106,22 @@ def set_cache(size: int) -> None:
 def measure(label: str, args: argparse.Namespace) -> None:
     log(f"Measuring: {label}")
     completed = subprocess.run(
-        [sys.executable, "-m", "src.evaluation", "run", "--runs", str(args.runs), "--label", label,
-         "--shape", args.shape, "--vector-format", args.vector_format],
-        capture_output=True, text=True,
+        [
+            sys.executable,
+            "-m",
+            "src.evaluation",
+            "run",
+            "--runs",
+            str(args.runs),
+            "--label",
+            label,
+            "--shape",
+            args.shape,
+            "--vector-format",
+            args.vector_format,
+        ],
+        capture_output=True,
+        text=True,
     )
     if completed.returncode != 0:
         sys.exit(f"evaluation failed:\n{completed.stderr[-3000:]}")

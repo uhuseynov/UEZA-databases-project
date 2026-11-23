@@ -16,7 +16,14 @@ def chunk(title: str, distance: float) -> RetrievedChunk:
 QUESTIONS = [
     Question("1", "q-cites-right", ("Random forest",), True),
     Question("2", "q-cites-wrong", ("Overfitting",), True),
-    Question("3", "q-refused", ("Bagging",), True, SearchFilters(root_category="Core"), "root_category = Core"),
+    Question(
+        "3",
+        "q-refused",
+        ("Bagging",),
+        True,
+        SearchFilters(root_category="Core"),
+        "root_category = Core",
+    ),
     Question("4", "football?", (), False),
     Question("5", "near-topic?", (), False),
     Question("6", "hallucinated?", (), False),
@@ -28,10 +35,16 @@ LLM = {"embed_ms": 1.0, "retrieve_ms": 2.0, "llm_ms": 1500.0, "total_ms": 1510.0
 NO_LLM = {"embed_ms": 1.0, "retrieve_ms": 2.0, "llm_ms": 0.0, "total_ms": 3.0}
 
 ANSWERS = {
-    "q-cites-right": Answer("q", "Random forests average many trees [1].", True, chunks=CONTEXT, timings_ms=LLM),
-    "q-cites-wrong": Answer("q", "It is bagging [2]. NOT_FOUND otherwise.", True, chunks=CONTEXT, timings_ms=LLM),
+    "q-cites-right": Answer(
+        "q", "Random forests average many trees [1].", True, chunks=CONTEXT, timings_ms=LLM
+    ),
+    "q-cites-wrong": Answer(
+        "q", "It is bagging [2]. NOT_FOUND otherwise.", True, chunks=CONTEXT, timings_ms=LLM
+    ),
     "q-refused": Answer("q", NOT_FOUND_MESSAGE, False, chunks=CONTEXT, timings_ms=LLM),
-    "football?": Answer("q", NOT_FOUND_MESSAGE, False, chunks=(chunk("Robot soccer", 0.6),), timings_ms=NO_LLM),
+    "football?": Answer(
+        "q", NOT_FOUND_MESSAGE, False, chunks=(chunk("Robot soccer", 0.6),), timings_ms=NO_LLM
+    ),
     "near-topic?": Answer("q", NOT_FOUND_MESSAGE, False, chunks=CONTEXT, timings_ms=LLM),
     "hallucinated?": Answer("q", "It was made in 1999.", True, chunks=CONTEXT, timings_ms=LLM),
 }
@@ -55,11 +68,20 @@ async def test_outcomes_are_counted_for_answerable_and_unanswerable_questions():
 
     summary = report["summary"]
     assert summary["answerable"] == {
-        "questions": 4, "answered": 2, "answered_citing_a_correct_article": 1,
-        "answered_without_citation": 0, "not_found": 1, "rejected": 0, "errors": 1,
+        "questions": 4,
+        "answered": 2,
+        "answered_citing_a_correct_article": 1,
+        "answered_without_citation": 0,
+        "not_found": 1,
+        "rejected": 0,
+        "errors": 1,
     }
     assert summary["unanswerable"] == {
-        "questions": 3, "rejected": 1, "not_found": 1, "answered": 1, "errors": 0,
+        "questions": 3,
+        "rejected": 1,
+        "not_found": 1,
+        "answered": 1,
+        "errors": 0,
     }
     assert summary["replies_mentioning_not_found"] == 1
     assert summary["llm_latency"]["samples"] == 5

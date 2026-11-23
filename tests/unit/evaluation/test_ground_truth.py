@@ -10,7 +10,10 @@ from src.rag.models import SearchFilters
     ("description", "expected"),
     [
         ("", SearchFilters()),
-        ("root_category = Reinforcement learning", SearchFilters(root_category="Reinforcement learning")),
+        (
+            "root_category = Reinforcement learning",
+            SearchFilters(root_category="Reinforcement learning"),
+        ),
         ("length > 250000", SearchFilters(min_length=250001)),
         ("length < 10000", SearchFilters(max_length=9999)),
         ("length >= 5", SearchFilters(min_length=5)),
@@ -72,8 +75,7 @@ def test_load_ground_truth(tmp_path):
 def test_load_rejects_answerable_question_without_article(tmp_path):
     path = tmp_path / "ground_truth.csv"
     path.write_text(
-        "id,question,correct_article,needs_filter,filter_description,answerable\n"
-        '1,"Q?",,N,,Y\n',
+        'id,question,correct_article,needs_filter,filter_description,answerable\n1,"Q?",,N,,Y\n',
         encoding="utf-8",
     )
 

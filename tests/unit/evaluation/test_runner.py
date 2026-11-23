@@ -18,7 +18,12 @@ QUESTIONS = [
     Question("1", "q1", ("Random forest",), True),
     Question("2", "q2", ("Overfitting",), True),
     Question(
-        "3", "q3", ("Gradient boosting",), True, SearchFilters(root_category="Core"), "root_category = Core"
+        "3",
+        "q3",
+        ("Gradient boosting",),
+        True,
+        SearchFilters(root_category="Core"),
+        "root_category = Core",
     ),
     Question("4", "football?", (), False),
 ]
@@ -50,10 +55,27 @@ class FakeRetriever:
         self.calls: list[dict] = []
         self.vector_to_question = {index: text for text, index in INDEX.items()}
 
-    async def retrieve(self, query_vector, k=5, filters=None, *, exact=False, ef_search=None,
-                       shape="join", vector_format="text"):
-        self.calls.append({"k": k, "filters": filters, "exact": exact, "ef_search": ef_search,
-                           "shape": shape, "vector_format": vector_format})
+    async def retrieve(
+        self,
+        query_vector,
+        k=5,
+        filters=None,
+        *,
+        exact=False,
+        ef_search=None,
+        shape="join",
+        vector_format="text",
+    ):
+        self.calls.append(
+            {
+                "k": k,
+                "filters": filters,
+                "exact": exact,
+                "ef_search": ef_search,
+                "shape": shape,
+                "vector_format": vector_format,
+            }
+        )
         question = self.vector_to_question[query_vector[0]]
         chunks = RESULTS[question][:k]
         if not exact and ef_search is not None and ef_search < 20 and question == "q2":
@@ -62,12 +84,28 @@ class FakeRetriever:
 
 
 class FailingRetriever(FakeRetriever):
-    async def retrieve(self, query_vector, k=5, filters=None, *, exact=False, ef_search=None,
-                       shape="join", vector_format="text"):
+    async def retrieve(
+        self,
+        query_vector,
+        k=5,
+        filters=None,
+        *,
+        exact=False,
+        ef_search=None,
+        shape="join",
+        vector_format="text",
+    ):
         if filters is not None and filters.root_category:
             raise RuntimeError("Unknown column 'a.root_category'")
-        return await super().retrieve(query_vector, k, filters, exact=exact, ef_search=ef_search,
-                                      shape=shape, vector_format=vector_format)
+        return await super().retrieve(
+            query_vector,
+            k,
+            filters,
+            exact=exact,
+            ef_search=ef_search,
+            shape=shape,
+            vector_format=vector_format,
+        )
 
 
 async def test_evaluate_computes_recall_mrr_and_latency():
@@ -123,7 +161,9 @@ async def test_sweep_compares_index_with_exact_search():
 
 
 async def test_reports_are_written_as_json_and_markdown(tmp_path):
-    report = await evaluate(QUESTIONS, FakeEmbedder(), FakeRetriever(), EvalConfig(label="My run", runs=1))
+    report = await evaluate(
+        QUESTIONS, FakeEmbedder(), FakeRetriever(), EvalConfig(label="My run", runs=1)
+    )
 
     json_path, md_path = write_report(report, tmp_path)
 
@@ -154,7 +194,9 @@ def test_render_evaluation_lists_errors():
         "config": {"k_values": [1], "exact": True, "ef_search": None, "runs": 1, "warmup_runs": 0},
         "metrics": {
             "retrieval": {"all": {"questions": 0, "recall@1": float("nan"), "mrr": float("nan")}},
-            "latency": {"run_to_run": {"mean_ms": float("nan"), "std_ms": float("nan"), "samples": 0}},
+            "latency": {
+                "run_to_run": {"mean_ms": float("nan"), "std_ms": float("nan"), "samples": 0}
+            },
             "not_found": {
                 "answerable_top_distance": EMPTY_DISTANCES,
                 "unanswerable_top_distance": EMPTY_DISTANCES,
@@ -183,7 +225,9 @@ async def test_evaluate_passes_shape_and_vector_format_to_every_search():
 
     report = await evaluate(QUESTIONS, FakeEmbedder(), retriever, config)
 
-    assert {(c["shape"], c["vector_format"]) for c in retriever.calls} == {("nearest_first", "binary")}
+    assert {(c["shape"], c["vector_format"]) for c in retriever.calls} == {
+        ("nearest_first", "binary")
+    }
     assert report["config"]["shape"] == "nearest_first"
 
 
@@ -199,8 +243,16 @@ async def test_m_sweep_rebuilds_measures_and_restarts_for_every_m():
         events.append(("restart",))
 
     report = await m_sweep(
-        QUESTIONS, FakeEmbedder(), retriever, [6, 16], [10, 40],
-        rebuild=rebuild, restart=restart, shapes=["join", "nearest_first"], runs=1, k=3,
+        QUESTIONS,
+        FakeEmbedder(),
+        retriever,
+        [6, 16],
+        [10, 40],
+        rebuild=rebuild,
+        restart=restart,
+        shapes=["join", "nearest_first"],
+        runs=1,
+        k=3,
     )
 
     assert events == [("rebuild", 6), ("restart",), ("rebuild", 16), ("restart",)]
@@ -211,8 +263,12 @@ async def test_m_sweep_rebuilds_measures_and_restarts_for_every_m():
     assert rows[0]["shape"] == "exact"
     # exact + 2 M x 2 states x 2 shapes x 2 ef values
     assert len(rows) == 1 + 16
-    row = next(r for r in rows if (r["m"], r["state"], r["shape"], r["ef_search"])
-               == (16, "restarted", "nearest_first", 10))
+    row = next(
+        r
+        for r in rows
+        if (r["m"], r["state"], r["shape"], r["ef_search"])
+        == (16, "restarted", "nearest_first", 10)
+    )
     # ef=10 returns 1 of the 2 exact neighbours for q2: (1 + 0.5 + 1) / 3
     assert row["index_recall@3"] == pytest.approx(0.8333, abs=1e-4)
     assert "latency_plain" in row
@@ -226,8 +282,17 @@ async def test_m_sweep_without_restart_measures_only_after_the_build():
     async def rebuild(m):
         return 0.1
 
-    report = await m_sweep(QUESTIONS, FakeEmbedder(), FakeRetriever(), [8], [20],
-                           rebuild=rebuild, shapes=["join"], runs=1, k=3)
+    report = await m_sweep(
+        QUESTIONS,
+        FakeEmbedder(),
+        FakeRetriever(),
+        [8],
+        [20],
+        rebuild=rebuild,
+        shapes=["join"],
+        runs=1,
+        k=3,
+    )
 
     assert [row["state"] for row in report["rows"]] == [None, "built"]
     assert report["config"]["restarted"] is False

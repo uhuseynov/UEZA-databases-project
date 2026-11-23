@@ -88,7 +88,9 @@ class ChatLLM:
         try:
             content = response.json()["choices"][0]["message"]["content"]
         except (KeyError, IndexError, TypeError, ValueError) as exc:
-            raise LLMError(f"LLM response from {endpoint} did not have the expected format") from exc
+            raise LLMError(
+                f"LLM response from {endpoint} did not have the expected format"
+            ) from exc
 
         if not isinstance(content, str):
             raise LLMError(f"LLM response from {endpoint} is not text")

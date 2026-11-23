@@ -145,9 +145,7 @@ def test_the_real_client_releases_its_http_connections(tmp_path, article_respons
     created: list[MediaWikiClient] = []
 
     def factory() -> MediaWikiClient:
-        client = MediaWikiClient(
-            user_agent="UEZA-test", requests_per_second=100_000, max_retries=0
-        )
+        client = MediaWikiClient(user_agent="UEZA-test", requests_per_second=100_000, max_retries=0)
         client._client.close()  # replace the real pool by a mock transport
         client._client = httpx.Client(
             transport=httpx.MockTransport(
@@ -227,9 +225,7 @@ async def test_blocking_fetches_do_not_block_the_event_loop(make_client):
 
 
 @pytest.mark.anyio
-async def test_concurrent_requests_run_in_parallel_and_each_closes_its_client(
-    make_client, clients
-):
+async def test_concurrent_requests_run_in_parallel_and_each_closes_its_client(make_client, clients):
     app = make_app(lambda: make_client(delay=0.4))
     transport = httpx.ASGITransport(app=app)
 

@@ -68,8 +68,11 @@ async def evaluate_answers(
         try:
             answer = await service.answer(question.question, filters=question.filters)
         except Exception as exc:  # noqa: BLE001 - recorded, the other questions continue
-            record |= {"outcome": ERROR, "error": f"{type(exc).__name__}: {exc}"[:300],
-                       "seconds": round(time.perf_counter() - start, 2)}
+            record |= {
+                "outcome": ERROR,
+                "error": f"{type(exc).__name__}: {exc}"[:300],
+                "seconds": round(time.perf_counter() - start, 2),
+            }
             records.append(record)
             continue
 
@@ -84,7 +87,8 @@ async def evaluate_answers(
             "mentions_not_found": outcome == ANSWERED and NOT_FOUND in answer.text.upper(),
             "context_titles": list(dict.fromkeys(chunk.title for chunk in answer.chunks)),
             "top_distance": round(min((c.distance for c in answer.chunks), default=float("nan")), 6)
-            if answer.chunks else None,
+            if answer.chunks
+            else None,
             "llm_ms": answer.timings_ms.get("llm_ms"),
             "seconds": round(time.perf_counter() - start, 2),
         }
@@ -153,20 +157,27 @@ def render_answers(report: dict[str, Any]) -> str:
         f"`NOT_FOUND` next to other text (counted as answered): "
         f"{summary['replies_mentioning_not_found']}.",
         f"Model time per call: mean {llm['mean_ms'] / 1000:.1f} s, p95 {llm['p95_ms'] / 1000:.1f} s "
-        f"over {llm['samples']} calls." if llm["samples"] else "The model was not called.",
+        f"over {llm['samples']} calls."
+        if llm["samples"]
+        else "The model was not called.",
     ]
 
     def lines(records):
         return [
             f"- **{r['id']}** {r['question']}  \n  {r['outcome']}"
             + (f", cites {', '.join(r['cited']) or 'nothing'}" if r["outcome"] == ANSWERED else "")
-            + (f": {r.get('reply', r.get('error', ''))[:400]}" if r["outcome"] in (ANSWERED, ERROR) else "")
+            + (
+                f": {r.get('reply', r.get('error', ''))[:400]}"
+                if r["outcome"] in (ANSWERED, ERROR)
+                else ""
+            )
             for r in records
         ]
 
     unanswerable = [r for r in report["questions"] if not r["answerable"]]
     wrong = [
-        r for r in report["questions"]
+        r
+        for r in report["questions"]
         if r["answerable"] and (r["outcome"] != ANSWERED or not r.get("cites_correct"))
     ]
     parts += ["", "## Unanswerable questions", "", *lines(unanswerable)]

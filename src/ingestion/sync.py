@@ -122,7 +122,10 @@ async def sync_articles(
 
     logger.info(
         "Checked %d articles in %.1f s: %d changed, %d no longer on Wikipedia",
-        result.checked, result.check_seconds, len(result.changed), len(result.missing),
+        result.checked,
+        result.check_seconds,
+        len(result.changed),
+        len(result.missing),
     )
 
     to_replace = result.changed[:limit] if limit is not None else result.changed
@@ -163,7 +166,8 @@ async def sync_articles(
             result.rebuilt = True
             logger.info(
                 "Replaced %.0f%% of the chunks: rebuilt the vector index (%.1f s)",
-                100 * result.replaced_share, result.rebuild_seconds,
+                100 * result.replaced_share,
+                result.rebuild_seconds,
             )
 
     result.seconds = time.perf_counter() - start
@@ -214,10 +218,17 @@ def render_sync(result: SyncResult) -> str:
             ),
         ]
     if result.failures:
-        lines += ["", "## Failures", ""] + [f"- {title}: {error}" for title, error in result.failures]
+        lines += ["", "## Failures", ""] + [
+            f"- {title}: {error}" for title, error in result.failures
+        ]
     if result.changed:
-        lines += ["", "## Changed articles", "", "| title | stored revision | latest revision | latest edit |",
-                  "|---|---|---|---|"]
+        lines += [
+            "",
+            "## Changed articles",
+            "",
+            "| title | stored revision | latest revision | latest edit |",
+            "|---|---|---|---|",
+        ]
         lines += [
             f"| {c.title} | {c.stored_revision} | {c.latest_revision} | {c.latest_time} |"
             for c in result.changed

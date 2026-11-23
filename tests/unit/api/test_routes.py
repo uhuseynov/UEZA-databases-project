@@ -107,7 +107,11 @@ def test_search_rejects_a_bad_date(client):
 def test_ask_returns_answer_with_sources(client, service):
     response = client.post(
         "/ask",
-        json={"question": "Which method averages trees?", "k": 5, "filters": {"root_category": "Core"}},
+        json={
+            "question": "Which method averages trees?",
+            "k": 5,
+            "filters": {"root_category": "Core"},
+        },
     )
 
     assert response.status_code == 200

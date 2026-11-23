@@ -501,7 +501,6 @@ async def test_rebuild_with_another_m_and_back(database: Database) -> None:
     assert await repository.vector_index() == (name, m, distance)
 
 
-
 async def test_chunk_counts_cover_every_article(database: Database) -> None:
     repository = ArticleRepository(database, settings.embedding_dimension)
 
