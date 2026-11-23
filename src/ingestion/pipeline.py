@@ -6,8 +6,11 @@ import logging
 from datetime import datetime
 from pathlib import Path
 
+from src.database.repositories.articles import ArticleRepository
 from src.ingestion.chunker import chunk_article
 from src.ingestion.cleaner import clean_wikitext
+from src.ingestion.mediawiki import MediaWikiClient
+from src.rag.embedder import Embedder
 
 logger = logging.getLogger(__name__)
 
@@ -81,10 +84,10 @@ class IngestionPipeline:
 
     def __init__(
         self,
-        client,
-        embedder,
-        repository,
-    ):
+        client: MediaWikiClient,
+        embedder: Embedder,
+        repository: ArticleRepository,
+    ) -> None:
         self.client = client
         self.embedder = embedder
         self.repository = repository
@@ -191,7 +194,7 @@ class IngestionPipeline:
         total_chunks = 0
         self.replaced = 0
         successful = 0
-        failures = []
+        failures: list[tuple[str, str]] = []
 
         logger.info(
             "Starting ingestion of %d articles",

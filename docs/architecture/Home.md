@@ -48,7 +48,7 @@ FastAPI
 
 ### Database
 
-`src/database/` contains the SQLAlchemy base, asynchronous connection/session management, the article repository, the vector serialization helpers, and placeholders for models and services. The schema is `schema.sql`.
+`src/database/` contains asynchronous connection/session management, the article repository and the vector serialization helpers. The schema is `schema.sql`; there are no ORM models.
 
 [Database Documentation →](../database/Home.md)
 
@@ -64,7 +64,7 @@ FastAPI
 
 At startup the database connection pool is initialized. At shutdown the engine is disposed.
 
-The current article endpoint is a simple integration path for exercising `MediaWikiClient`; API routing can later be separated into dedicated route modules as the application grows.
+`GET /articles/{title}` (in `src/api/routes.py`) exercises `MediaWikiClient` and the article cache: it runs the synchronous client in a worker thread, so the event loop keeps serving other requests, and closes the per-request client afterwards. MediaWiki errors are a 400, a blank title a 422.
 
 ## Development Infrastructure
 

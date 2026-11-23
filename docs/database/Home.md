@@ -2,21 +2,19 @@
 
 [← Documentation Home](../Home.md)
 
-The database layer provides infrastructure for connecting the application to MariaDB and and the helpers that write vectors for MariaDB. The schema itself is [`schema.sql`](../../schema.sql).
+The database layer provides infrastructure for connecting the application to MariaDB, the article repository and the helpers that write vectors for MariaDB. The schema itself is [`schema.sql`](../../schema.sql).
 
 ## Current Structure
 
 ```text
 src/database/
-├── base.py
 ├── connection.py
 ├── vectors.py
-├── models/
-├── repositories/
-└── service/
+└── repositories/
+    └── articles.py
 ```
 
-`models`, `repositories`, and `service` are currently structural placeholders. Database entities and vector-search behavior should be documented when those implementations are added.
+There are no ORM models: the repository and the retriever write their SQL directly (see [Schema Management](./Schema.md)).
 
 ## Connection Model
 

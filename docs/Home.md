@@ -49,12 +49,9 @@ src/
 ├── logger.py
 ├── main.py
 ├── database/
-│   ├── base.py
 │   ├── connection.py
 │   ├── vectors.py
-│   ├── models/
-│   ├── repositories/
-│   └── service/
+│   └── repositories/
 ├── ingestion/
 │   ├── cache.py
 │   └── mediawiki/

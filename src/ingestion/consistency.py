@@ -1,14 +1,17 @@
 """Database consistency checks for ingested articles."""
 
+from typing import Any
+
 from sqlalchemy import text
 
+from src.database import Database
 from src.ingestion.pipeline import read_articles
 
 
 async def check_database(
-    database,
+    database: Database,
     csv_path: str = "data/articles.csv",
-) -> dict:
+) -> dict[str, Any]:
     """Validate article coverage and related records."""
 
     expected = read_articles(csv_path)

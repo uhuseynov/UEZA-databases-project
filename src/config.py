@@ -2,7 +2,7 @@
 
 from typing import Literal
 
-from pydantic import Field, model_validator
+from pydantic import Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -106,17 +106,6 @@ class Settings(BaseSettings):
 
     ground_truth_path: str = "data/ground_truth.csv"
     eval_results_dir: str = "eval/results"
-
-    # ---------------------------------------------------------
-    # Validation
-    # ---------------------------------------------------------
-
-    @model_validator(mode="after")
-    def validate_settings(self):
-        if self.chunk_config not in {"A", "B", "C"}:
-            raise ValueError("Invalid chunk configuration")
-
-        return self
 
     # ---------------------------------------------------------
     # Database URL

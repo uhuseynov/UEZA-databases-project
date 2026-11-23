@@ -2,11 +2,15 @@
 
 import re
 import time
+from collections.abc import Mapping, Sequence
 from datetime import UTC
+from typing import Any
 
 from sqlalchemy import text
 
+from src.database import Database
 from src.database.vectors import vector_to_text
+from src.ingestion.mediawiki import WikiArticle
 
 _VECTOR_KEY = re.compile(r"VECTOR KEY `(?P<name>\w+)` \(`embedding`\)(?P<options>[^\n]*)")
 _INDEX_M = re.compile(r"`?M`?\s*=\s*'?(?P<m>\d+)'?")
@@ -47,7 +51,7 @@ def vector_column_dimension(create_table: str) -> int:
 
 
 class ArticleRepository:
-    def __init__(self, database, dimension: int):
+    def __init__(self, database: Database, dimension: int) -> None:
         """``dimension`` is the configured EMBEDDING_DIMENSION. The column is declared in
         schema.sql (``VECTOR(768)``) and is never changed by the application."""
 
@@ -57,10 +61,10 @@ class ArticleRepository:
     async def replace_article(
         self,
         *,
-        wiki,
-        csv_row,
-        chunks,
-        vectors,
+        wiki: WikiArticle,
+        csv_row: Mapping[str, str],
+        chunks: Sequence[str],
+        vectors: Sequence[Sequence[float]],
     ) -> bool:
         """Atomically replace an article and its related rows.
 
@@ -220,7 +224,7 @@ class ArticleRepository:
         return replaced
 
     @staticmethod
-    def _article_params(wiki, csv_row):
+    def _article_params(wiki: WikiArticle, csv_row: Mapping[str, str]) -> dict[str, Any]:
         return {
             "title": csv_row["title"],
             "url": (f"https://en.wikipedia.org/?curid={wiki.page_id}"),
@@ -230,7 +234,7 @@ class ArticleRepository:
             "last_edit_date": (wiki.last_modified.astimezone(UTC).replace(tzinfo=None)),
         }
 
-    async def revision_ids(self):
+    async def revision_ids(self) -> dict[int, int]:
         """Return page_id -> revision_id mapping."""
 
         async with self.database.get_session() as session:
@@ -251,7 +255,7 @@ class ArticleRepository:
 
             return {int(row[0]): int(row[1]) for row in result.all()}
 
-    async def analyze(self):
+    async def analyze(self) -> None:
         """Refresh database statistics after ingestion."""
 
         async with self.database.get_session() as session:

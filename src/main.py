@@ -1,13 +1,12 @@
 from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
 
-from fastapi import FastAPI, HTTPException, Request
+from fastapi import FastAPI
 
 from src.api.routes import router as rag_router
 from src.config import settings
 from src.containers import Container
 from src.database import Database
-from src.ingestion.mediawiki import MediaWikiClient, MediaWikiError, WikiArticle
 
 
 @asynccontextmanager
@@ -30,7 +29,6 @@ def create_app() -> FastAPI:
     """Application factory with dependency injection setup."""
     container = Container()
     container.app_logger().setup()
-    container.wire(modules=[__name__])
 
     app = FastAPI(
         title="UEZA Databases Project",
@@ -44,17 +42,6 @@ def create_app() -> FastAPI:
     @app.get("/health")
     async def health_check():
         return {"status": "ok"}
-
-    @app.get("/articles/{title}")
-    async def get_wiki_article(
-        title: str,
-        request: Request,
-    ) -> WikiArticle:
-        try:
-            client: MediaWikiClient = request.app.state.container.mediawiki_client()
-            return client.get_article(title)
-        except MediaWikiError as exc:
-            raise HTTPException(status_code=400, detail=str(exc))
 
     return app
 

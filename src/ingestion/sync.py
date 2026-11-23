@@ -18,12 +18,15 @@ import asyncio
 import json
 import logging
 import time
+from collections.abc import Callable
 from dataclasses import asdict, dataclass, field
 from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
-from src.ingestion.pipeline import read_articles
+from src.database.repositories.articles import ArticleRepository
+from src.ingestion.mediawiki import MediaWikiClient
+from src.ingestion.pipeline import IngestionPipeline, read_articles
 
 logger = logging.getLogger(__name__)
 
@@ -62,7 +65,9 @@ class SyncResult:
         return self.deleted_chunks / self.chunks_before if self.chunks_before else 0.0
 
 
-async def find_changes(client, repository, rows: list[dict[str, str]]) -> SyncResult:
+async def find_changes(
+    client: MediaWikiClient, repository: ArticleRepository, rows: list[dict[str, str]]
+) -> SyncResult:
     """Which stored articles have a newer revision on Wikipedia, and which are gone."""
 
     stored = await repository.revision_ids()
@@ -91,9 +96,9 @@ async def find_changes(client, repository, rows: list[dict[str, str]]) -> SyncRe
 
 async def sync_articles(
     *,
-    client,
-    repository,
-    pipeline_factory,
+    client: MediaWikiClient,
+    repository: ArticleRepository,
+    pipeline_factory: Callable[[], IngestionPipeline],
     csv_path: str,
     config: str = "A",
     dry_run: bool = False,
