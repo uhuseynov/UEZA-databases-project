@@ -16,9 +16,11 @@ The test jobs form a strict dependency chain, and `Lint` runs next to it in para
 
 ## Lint
 
-The `Lint` job installs only the `dev` dependency group (Ruff needs neither torch nor the runtime packages) and runs `ruff check --output-format=github .`, so findings appear as annotations on the changed lines. The rule set is in `pyproject.toml` (`[tool.ruff.lint]`): Pyflakes, the pycodestyle errors that are bugs, import order, pyupgrade and bugbear. Locally: `make lint` (and `make lint-fix`).
+The `Lint` job installs only the `dev` dependency group (Ruff needs neither torch nor the runtime packages) and runs three checks, each of which fails the job (and so `CI Passed`): `ruff check --output-format=github .` (findings appear as annotations on the changed lines), `ruff format --check --diff .` (the log shows what the formatter would change) and `python3 scripts/check_docs.py` (see below). The rule set is in `pyproject.toml` (`[tool.ruff.lint]`): Pyflakes, the pycodestyle errors that are bugs, import order, pyupgrade and bugbear. Locally: `make lint` runs the first two (lint and format check, `make format` fixes the formatting, `make lint-fix` the safe lint findings), `make docs-check` runs the third, and `make ci` runs all of them plus the unit tests.
 
-`ruff format --check` (`make format-check`) is **not** part of CI yet: part of the code base predates the formatter, so enforcing it needs one dedicated formatting commit (`make format`) first.
+## Documentation check
+
+[`scripts/check_docs.py`](../../scripts/check_docs.py) uses only the standard library and takes under a second. It checks that relative Markdown links and `#anchors` resolve, that repository paths written in backticks exist, that every `make <target>` mentioned exists in the Makefile, and that the settings table of [Configuration](../architecture/Configuration.md) lists exactly the fields of `src/config.py` (and that `.env.example` and the docs only use names the project knows). It does not judge prose, check external links or run commands. Its own tests are in `tests/unit/scripts/`, and the same check on the real documentation is one of them.
 
 ## Unit Tests
 

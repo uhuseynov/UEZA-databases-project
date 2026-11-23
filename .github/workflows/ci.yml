@@ -54,6 +54,13 @@ jobs:
       - name: Ruff lint
         run: uv run --no-sync ruff check --output-format=github .
 
+      - name: Ruff format check
+        run: uv run --no-sync ruff format --check --diff .
+
+      # Standard library only: links, anchors, paths, make targets and setting names.
+      - name: Documentation check
+        run: python3 scripts/check_docs.py
+
   # ===========================================================================
   # Unit Tests
   # ===========================================================================

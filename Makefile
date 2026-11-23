@@ -413,10 +413,11 @@ shell: ## Opens a shell inside the application container
 # =============================================================================
 
 .PHONY: lint
-lint: ## Ruff lint (what CI enforces)
-	@printf "$(BLUE)🔍 Running Ruff lint...$(RESET)\n"
+lint: ## Ruff lint and format check (what the CI Lint job runs, without the docs check)
+	@printf "$(BLUE)🔍 Running Ruff lint and format check...$(RESET)\n"
 	@$(RUFF) check .
-	@printf "$(GREEN)✅ Lint passed.$(RESET)\n"
+	@$(RUFF) format --check .
+	@printf "$(GREEN)✅ Lint and formatting passed.$(RESET)\n"
 
 
 .PHONY: lint-fix
@@ -424,7 +425,6 @@ lint-fix: ## Ruff lint, applying the safe automatic fixes
 	@$(RUFF) check --fix .
 
 
-# Not part of CI yet: some files predate the formatter. `make format` rewrites them.
 .PHONY: format-check
 format-check: ## Reports files that `ruff format` would change (does not modify anything)
 	@$(RUFF) format --check .
@@ -435,13 +435,19 @@ format: ## Formats all Python files with Ruff (rewrites files)
 	@$(RUFF) format .
 
 
+.PHONY: docs-check
+docs-check: ## Checks documentation links, anchors, paths, make targets and setting names
+	@python3 scripts/check_docs.py
+
+
 # =============================================================================
 ##@ CI
 # =============================================================================
 
 .PHONY: check
-check: ## Runs local checks before committing
+check: ## Runs local checks before committing: lint, formatting, docs, unit tests
 	@$(MAKE) lint
+	@$(MAKE) docs-check
 	@$(MAKE) test-unit
 
 
@@ -450,6 +456,8 @@ ci: ## Runs CI checks using locked dependencies
 	@printf "$(BLUE)🔍 Running CI checks...$(RESET)\n"
 	@$(UV) sync --locked
 	@$(RUFF) check .
+	@$(RUFF) format --check .
+	@python3 scripts/check_docs.py
 	@$(PYTEST) tests/unit
 	@printf "$(GREEN)✅ CI checks passed.$(RESET)\n"
 
