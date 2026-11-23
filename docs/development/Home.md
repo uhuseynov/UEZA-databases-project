@@ -33,7 +33,7 @@ Git does not automatically enable repository-managed hooks after clone, so each 
 Common commands are exposed through the root `Makefile`:
 
 ```bash
-make run             # FastAPI with hot reload
+make run             # FastAPI with hot reload, on 127.0.0.1 (APP_HOST=0.0.0.0 exposes it)
 make lint            # Ruff lint, as in CI (make lint-fix applies safe fixes)
 make format-check    # files ruff format would change (not enforced yet)
 make test-unit       # unit tests

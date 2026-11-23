@@ -47,7 +47,7 @@ The CI process connects from the runner through `127.0.0.1:3306`. MariaDB logs a
 This stage runs only after integration tests pass. It builds the application image, starts the complete Compose stack without rebuilding it, waits for service health checks, and verifies:
 
 ```text
-GET /health → HTTP success
+GET /health → HTTP success   (through the loopback-published port)
 ```
 
 This exercises the real container startup path, including the application entrypoint, FastAPI startup, MariaDB connectivity, and the application health check.

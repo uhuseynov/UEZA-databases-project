@@ -66,8 +66,11 @@ services:
     extra_hosts:
       - "host.docker.internal:host-gateway"
 
+    # Published on the loopback interface only, like the database: the API has no
+    # authentication. APP_BIND_ADDRESS=0.0.0.0 in .env publishes it on every interface; read
+    # "Exposing the app" in docs/development/Docker.md first.
     ports:
-      - "${APP_PORT:-8000}:8000"
+      - "${APP_BIND_ADDRESS:-127.0.0.1}:${APP_PORT:-8000}:8000"
 
     volumes:
       - article_cache:/app/.cache

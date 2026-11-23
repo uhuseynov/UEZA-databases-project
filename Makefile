@@ -32,6 +32,7 @@ RUFF    := $(UV) run ruff
 VERSION := $(shell git describe --tags --always --dirty 2>/dev/null || echo "dev")
 COMMIT  := $(shell git rev-parse --short HEAD 2>/dev/null || echo "unknown")
 
+APP_HOST         ?= 127.0.0.1
 APP_PORT         ?= 8000
 MARIADB_USER     ?= ueza
 MARIADB_PASSWORD ?= ueza_password
@@ -161,7 +162,7 @@ lock: ## Updates uv.lock
 run: ## Runs FastAPI locally with hot reload
 	@printf "$(BLUE)🚀 Starting FastAPI...$(RESET)\n"
 	@$(UV) run uvicorn src.main:app \
-		--host 0.0.0.0 \
+		--host $(APP_HOST) \
 		--port $(APP_PORT) \
 		--reload
 

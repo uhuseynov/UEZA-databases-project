@@ -41,7 +41,27 @@ Four values are set in `docker-compose.yml` and win over `.env`: `MARIADB_HOST=d
 
 ## Network exposure and credentials
 
-MariaDB is published as `127.0.0.1:${MARIADB_PORT:-3306}`: the host reaches it, other machines do not, and the app container uses `db:3306` internally. The defaults (`ueza` / `ueza_password`, root password `root_password`) are development values for a database on your own machine. Set `MARIADB_PASSWORD` and `MARIADB_ROOT_PASSWORD` in `.env` before running the stack anywhere shared. The password is only used when the database volume is first created; an existing volume keeps its old one. The web app port (`APP_PORT`) is published on all interfaces.
+MariaDB is published as `127.0.0.1:${MARIADB_PORT:-3306}` and the web app as `127.0.0.1:${APP_PORT:-8000}`: the host reaches them, other machines do not, and the app container uses `db:3306` internally. The defaults (`ueza` / `ueza_password`, root password `root_password`) are development values for a database on your own machine. Set `MARIADB_PASSWORD` and `MARIADB_ROOT_PASSWORD` in `.env` before running the stack anywhere shared. The password is only used when the database volume is first created; an existing volume keeps its old one.
+
+## Exposing the app
+
+The API has **no authentication and no rate limiting**, which is why Compose publishes it on the loopback interface only. Setting `APP_BIND_ADDRESS=0.0.0.0` in `.env` (or `APP_BIND_ADDRESS=<an interface address>`) publishes it on every network interface of the machine; Compose then lists `0.0.0.0:<port>`. Do it only on a network you trust, or behind a reverse proxy or firewall that authenticates callers. What anyone who can reach the port can do:
+
+- **`POST /ask`** sends their questions to your language model: it spends your API credit (or keeps a local model busy) and returns text retrieved from the database.
+- **`GET /articles/{title}`** makes the server fetch any Wikipedia article and write it to the article cache, so it can be used to generate outbound requests and fill the cache volume.
+- **`GET /search`** runs vector searches against the database.
+- **`/docs`, `/redoc` and `/openapi.json`** describe the whole API.
+- Errors do not reveal internals: a failed language model call returns the fixed message "The language model request failed. Try again later." and a database failure a generic message; the details are in the application log.
+
+The app started on the host is local by default too: `make run` and `python -m src.main` bind `APP_HOST`, which defaults to `127.0.0.1`. To expose it deliberately, set `APP_HOST=0.0.0.0` in `.env` or run `make run APP_HOST=0.0.0.0` (a value in `.env` takes precedence over a plain environment variable; the command-line form always wins). The same risks apply as above. A `.env` copied from an older `.env.example` still contains `APP_HOST=0.0.0.0`: change it if you do not want that. Inside the container, uvicorn always listens on `0.0.0.0` (the published port needs it); only `APP_BIND_ADDRESS` decides who can reach it from outside.
+
+## Container user
+
+The application runs as the unprivileged user `ueza` (uid and gid 10001), not as root. The image's code and virtual environment belong to root and are read-only to the application; only `/app/.cache` (the article cache and the Hugging Face model cache) is writable by it.
+
+The container starts as root for a moment so `scripts/entrypoint.sh` can repair file ownership, then drops privileges with `setpriv` before it starts `uvicorn`, which is process 1. This is what keeps existing installations working: a `article_cache` volume created by an earlier version of the image holds root-owned files, and on the next start the entrypoint hands `/app/.cache` to `ueza` once (it only looks first, so nothing is changed or walked when the ownership is already right). A new volume is created with the right owner. If you start the container as another user (`docker run --user`, or `user:` in Compose), the entrypoint runs the command as that user and does not touch ownership.
+
+`docker compose exec app ...` opens a shell as root (the image's default user); add `--user ueza` to run a command as the application does, for example `docker compose exec --user ueza app python -m src.ingestion ingest --limit 3`.
 
 ## Model cache
 

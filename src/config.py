@@ -18,7 +18,8 @@ class Settings(BaseSettings):
     log_level: Literal["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"] = "INFO"
 
     app_port: int = Field(default=8000, ge=1, le=65535)
-    app_host: str = "0.0.0.0"
+    # Loopback by default: the API has no authentication. 0.0.0.0 is an explicit opt-in.
+    app_host: str = "127.0.0.1"
 
     # ---------------------------------------------------------
     # MariaDB

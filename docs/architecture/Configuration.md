@@ -16,7 +16,7 @@ Precedence, highest first: real environment variables, then `.env`, then the def
 | --- | --- | --- |
 | `APP_ENV` | `development` | `development` or `production`; production switches the logs to JSON ([Logging](./Logging.md)) |
 | `LOG_LEVEL` | `INFO` | `DEBUG` to `CRITICAL`; `DEBUG` also echoes SQL |
-| `APP_HOST`, `APP_PORT` | `0.0.0.0`, `8000` | only `python -m src.main`; `make run` and the Docker image pass their own host and port |
+| `APP_HOST`, `APP_PORT` | `127.0.0.1`, `8000` | the interface and port of the app on your machine (`make run`, `python -m src.main`). `127.0.0.1` keeps it local; `0.0.0.0` exposes the unauthenticated API ([Exposing the app](../development/Docker.md#exposing-the-app)). The Docker image listens on `0.0.0.0:8000` inside the container whatever these say. |
 | `MARIADB_HOST`, `MARIADB_PORT` | `db`, `3306` | the database; `127.0.0.1` when the app runs on your machine ([below](#docker-and-local-development)) |
 | `MARIADB_USER`, `MARIADB_PASSWORD`, `MARIADB_DATABASE` | `ueza`, `ueza_password`, `ueza_db` | database credentials; development defaults |
 | `MARIADB_POOL_RECYCLE`, `MARIADB_POOL_PRE_PING` | `3600`, `true` | connection pool |
@@ -35,7 +35,7 @@ Precedence, highest first: real environment variables, then `.env`, then the def
 | `RAG_MAX_DISTANCE` | `0.42` | chunks further than this cosine distance are dropped; none left means "not found" without calling the model |
 | `GROUND_TRUTH_PATH`, `EVAL_RESULTS_DIR` | `data/ground_truth.csv`, `eval/results` | the [evaluation](../evaluation/Home.md) |
 
-Variables read by Docker Compose and the Makefile rather than by `src/config.py`: `MARIADB_ROOT_PASSWORD` (the database container), `MARIADB_PORT` and `APP_PORT` (the ports published on the host), and the Makefile's own `EVAL_RUNS`, `INGEST_CONFIG`, `INGEST_CSV`, `INGEST_LIMIT`, `M` and `ARGS` ([Development Workflow](../development/Home.md)).
+Variables read by Docker Compose and the Makefile rather than by `src/config.py`: `MARIADB_ROOT_PASSWORD` (the database container), `MARIADB_PORT` and `APP_PORT` (the ports published on the host) and `APP_BIND_ADDRESS` (the host interface the app port is published on, default `127.0.0.1`; see [Exposing the app](../development/Docker.md#exposing-the-app)), and the Makefile's own `EVAL_RUNS`, `INGEST_CONFIG`, `INGEST_CSV`, `INGEST_LIMIT`, `M` and `ARGS` ([Development Workflow](../development/Home.md)).
 
 ## Database URL
 

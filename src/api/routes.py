@@ -19,6 +19,8 @@ logger = logging.getLogger(__name__)
 
 STATIC_DIR = Path(__file__).parent / "static"
 DATABASE_ERROR = "Database search failed. Is MariaDB running and is the schema loaded?"
+# Fixed on purpose: the details of an upstream failure (URL, reply body) go to the log only.
+LLM_ERROR = "The language model request failed. Try again later."
 
 router = APIRouter()
 
@@ -105,8 +107,10 @@ async def ask(
         logger.exception("Search failed")
         raise HTTPException(status_code=503, detail=DATABASE_ERROR) from exc
     except LLMError as exc:
-        logger.exception("LLM call failed")
-        raise HTTPException(status_code=502, detail=f"The language model failed: {exc}") from exc
+        # The message names the endpoint without credentials and quotes the start of the
+        # upstream reply; no traceback, whose chained errors could repeat the raw request.
+        logger.error("LLM call failed: %s", exc)
+        raise HTTPException(status_code=502, detail=LLM_ERROR) from exc
 
     return AskResponse.from_answer(answer, filters)
 

@@ -8,7 +8,7 @@ Everything that is neither the application nor a test: helper scripts, the scrip
 
 | File | Run by | Does |
 | --- | --- | --- |
-| `scripts/entrypoint.sh` | the Docker image (`ENTRYPOINT`) | waits until MariaDB accepts connections (up to 60 s), then starts the container's command (`uvicorn`). It does not touch the schema ([Schema Management](../database/Schema.md)). |
+| `scripts/entrypoint.sh` | the Docker image (`ENTRYPOINT`) | waits until MariaDB accepts connections (up to 60 s), hands `/app/.cache` to the application user if an older root-run container left it root-owned, drops root, and starts the container's command (`uvicorn`) as `ueza` ([Docker and Compose](./Docker.md#container-user)). It does not touch the schema ([Schema Management](../database/Schema.md)). |
 | `scripts/setup-hooks.sh` | `make hooks`, `make setup` | sets `core.hooksPath` to `.githooks` and makes the hooks executable |
 | `.githooks/commit-msg` | Git | validates the Conventional Commit subject ([Git Hooks](./Git-Hooks.md)) |
 | `.githooks/pre-push` | Git | runs the unit tests before a push |

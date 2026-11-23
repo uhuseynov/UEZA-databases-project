@@ -110,7 +110,7 @@ curl -X POST http://localhost:8000/ask \
        "filters": {"edited_since": "2026-01-01"}}'
 ```
 
-Errors: invalid input → 422, database not reachable or schema missing → 503, language model failed → 502. `k` is at most 50 for `/search` and 20 for `/ask`, whose chunks all go into the prompt; the retriever itself accepts up to 100.
+Errors: invalid input → 422, database not reachable or schema missing → 503, language model failed → 502 (the body is always "The language model request failed. Try again later.": connection errors, timeouts, HTTP errors and malformed replies look the same to the client, and the cause, with the endpoint but without credentials or query string, is in the application log). `k` is at most 50 for `/search` and 20 for `/ask`, whose chunks all go into the prompt; the retriever itself accepts up to 100.
 
 **`GET /articles/{title}`**: the article as the MediaWiki client returns it (latest revision, through the [article cache](../ingestion/Cache.md)), for checking the source integration. MediaWiki errors are a 400, a blank title a 422.
 
