@@ -38,6 +38,9 @@ make test-unit       # unit tests
 make test-integration
 make test-all
 make db-up           # MariaDB only
+make reindex         # rebuild the vector index (M=32 for another M, ARGS="..." forwards flags)
+make ingest-sync     # re-ingest the articles that changed on Wikipedia (ARGS="--limit 5")
+make ingest-sync-dry-run
 make up              # complete Docker Compose stack
 make down
 make migrate

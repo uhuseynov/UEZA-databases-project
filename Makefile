@@ -233,6 +233,8 @@ eval-explain: ## Prints the query plans: is the vector index used, with and with
 INGEST_CONFIG ?= $(or $(CHUNK_CONFIG),A)
 INGEST_CSV ?= $(or $(ARTICLES_CSV_PATH),data/articles.csv)
 INGEST_LIMIT ?=
+# Extra flags for `make ingest-sync` and `make reindex`, e.g. make ingest-sync ARGS="--limit 5"
+ARGS ?=
 
 .PHONY: ingest
 ingest: db-up ## Load Wikipedia articles into MariaDB
@@ -260,6 +262,27 @@ ingest-test: db-up ## Ingest only three articles
 		--csv $(INGEST_CSV) \
 		--config $(INGEST_CONFIG) \
 		--limit 3
+
+.PHONY: reindex
+reindex: db-up ## Rebuilds the vector index (same M; M=32 sets another; ARGS="..." forwards flags)
+	@$(UV) run python -m src.ingestion reindex \
+		$(if $(M),--m $(M),) \
+		$(ARGS)
+
+.PHONY: ingest-sync
+ingest-sync: db-up ## Re-ingests the articles that changed on Wikipedia (ARGS="--limit 5 --rebuild-share 0.5")
+	@$(UV) run python -m src.ingestion sync \
+		--csv $(INGEST_CSV) \
+		--config $(INGEST_CONFIG) \
+		$(ARGS)
+
+.PHONY: ingest-sync-dry-run
+ingest-sync-dry-run: db-up ## Lists the articles that changed on Wikipedia without loading them
+	@$(UV) run python -m src.ingestion sync \
+		--csv $(INGEST_CSV) \
+		--config $(INGEST_CONFIG) \
+		--dry-run \
+		$(ARGS)
 
 
 # =============================================================================

@@ -31,7 +31,33 @@ The current stack contains:
 - `db`: MariaDB 12.3.3 with a persistent `mariadb_data` volume and health check.
 - `app`: the FastAPI application with a persistent `article_cache` volume and `/health` health check.
 
-The application receives `MARIADB_HOST=db` inside the Compose network. Host-side development should use `MARIADB_HOST=localhost` when connecting through the published database port.
+The application receives `MARIADB_HOST=db` inside the Compose network. Host-side development should use `MARIADB_HOST=127.0.0.1` when connecting through the published database port.
+
+## Configuration of the app container
+
+The `app` service reads `.env` through `env_file` (optional: without the file, the defaults of `src/config.py` apply, as in CI), so every setting reaches the container, including the language model (`LLM_*`), embeddings (`EMBEDDING_*`), `RAG_MAX_DISTANCE` and the MediaWiki settings. The file is read when the container starts. It is excluded from the image by `.dockerignore`, so no value is baked into a layer.
+
+Four values are set in `docker-compose.yml` and win over `.env`: `MARIADB_HOST=db`, `MARIADB_PORT=3306`, `CACHE_DIR` and `HF_HOME`. Inside the container `localhost` is the container itself, so a language model on your machine (for example Ollama) is reached at `http://host.docker.internal:11434/v1`; `extra_hosts` makes that name work on Linux too.
+
+## Network exposure and credentials
+
+MariaDB is published as `127.0.0.1:${MARIADB_PORT:-3306}`: the host reaches it, other machines do not, and the app container uses `db:3306` internally. The defaults (`ueza` / `ueza_password`, root password `root_password`) are development values for a database on your own machine. Set `MARIADB_PASSWORD` and `MARIADB_ROOT_PASSWORD` in `.env` before running the stack anywhere shared. The password is only used when the database volume is first created; an existing volume keeps its old one. The web app port (`APP_PORT`) is published on all interfaces.
+
+## Model cache
+
+Both caches live in the `article_cache` volume: the MediaWiki articles in `/app/.cache/articles` and the Hugging Face models in `/app/.cache/huggingface` (`HF_HOME`). The embedding model (about 440 MB) is therefore downloaded once, not every time the container is recreated.
+
+## What runs where
+
+| Task | Where | Command |
+| --- | --- | --- |
+| Web app, `/search`, `/ask` | Docker or host | `make up` / `make run` |
+| Ingest, `ingest-check`, `reindex`, live sync | host | `make ingest`, `make ingest-check`, `make reindex`, `make ingest-sync` |
+| Evaluation, FAISS baseline, answers | host | `make eval`, `uv run python -m src.evaluation faiss` |
+| Tests | host | `make test-unit`, `make test-integration` |
+| Experiments | host | `experiments/` |
+
+The image holds the runtime dependencies only: no development group (`faiss-cpu`, `pytest`), no `eval/`, `tests/` or `experiments/`, so the host-only tasks do not run in it. The ingest and the evaluation connect to the database through the published port (`MARIADB_HOST=127.0.0.1`).
 
 ## Persistent Data
 
