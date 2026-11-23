@@ -8,7 +8,7 @@ We chose Artificial Intelligence on English Wikipedia. The articles link to each
 - 23 core articles added by hand (for example Artificial intelligence, Supervised learning, Retrieval-augmented generation), because the root categories missed them.
 - Stubs under 3000 characters, "List of..." pages and people/company/fiction subcategories were skipped.
 - Each root has a cap of 50 so that no category dominates. Computer vision has a cap of 25 because its subcategories drift into 3D imaging and optics.
-- Off-topic articles (products, films, optics, finite-state machines) were removed by hand in three rounds. The list is in the `remove` variable of `data/build_article_list.py`. The script is a record of how the list was made; rerunning it would overwrite `data/articles.csv` with a different list ([Scripts and Experiments](./development/Scripts.md#building-the-article-list-databuild_article_listpy)).
+- Off-topic articles (products, films, optics, finite-state machines) were removed by hand in three rounds. The list is in the `remove` variable of `data/build_article_list.py`. The script repeats the method, not the data: it writes a new candidate list to `data/articles.generated.csv` and never touches `data/articles.csv`, the committed research snapshot. A rerun gives a different list, because categories, lengths and edit dates have changed since. How to run it, what it guarantees and how to regenerate safely: [Scripts and Experiments](./development/Scripts.md#building-the-article-list-databuild_article_listpy).
 
 ## Limitations
 

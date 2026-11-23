@@ -15,20 +15,52 @@ Everything that is neither the application nor a test: helper scripts, the scrip
 
 ## Building the article list: `data/build_article_list.py`
 
-The script that produced `data/articles.csv` (see [Data decisions](../data_decisions.md#selection-262-articles)): it reads six root categories and one level of subcategories from Wikipedia, drops list pages and the hand-removed off-topic articles (the `remove` list), caps each root, adds the hand-picked core articles, and writes the CSV.
+The script that produced the committed `data/articles.csv` (selection rules: [Data decisions](../data_decisions.md#selection-262-articles)). It reads six root categories and one level of subcategories from English Wikipedia, drops list pages and the hand-removed off-topic articles (the `REMOVE` list), caps each root, adds the hand-picked core articles, and writes a CSV with the columns `title, pageid, length, last_edit, root_category, category`.
+
+### The committed snapshot and generated lists
+
+| | `data/articles.csv` | `data/articles.generated.csv` |
+| --- | --- | --- |
+| What it is | the research snapshot: 262 articles whose `last_edit` dates the ingest, the ground-truth questions and every measured result rely on | a new candidate list from a fresh run |
+| Written by | nobody: the script refuses to, whatever the options | the script, on request |
+| In Git | committed | ignored (`.gitignore`), so a run cannot be committed by accident |
+
+A fresh run reads the *current* category members, article lengths and edit times, so it gives a different list and different `last_edit` dates than the snapshot. The dates matter: the ingest loads each article at its revision on that date, and several evaluation questions filter on edit dates. That is why a generated list is only ever a candidate.
+
+### Running it
 
 ```bash
-uv run python data/build_article_list.py   # do not run it casually, see below
+uv run python -m data.build_article_list                       # -> data/articles.generated.csv
+uv run python -m data.build_article_list --output my_list.csv  # another file
+uv run python -m data.build_article_list --overwrite           # replace an earlier generated file
+uv run python -m data.build_article_list --help
 ```
 
-**It is a record of how the list was made, not a safe way to regenerate it.** Checked by reading the script and the environment (it was not run, because it queries Wikipedia and rewrites the file):
+(`-m`, from the repository root, so that it shares the application's settings.) It sends one request per category it reads and one per 50 article titles, pausing 0.2 s between requests.
 
-- **It overwrites `data/articles.csv`** directly. The ingest, `make ingest-check`, the sync and the ground truth all depend on that file, and a new run would not reproduce it: it reads the *current* category members, lengths and edit times, so the list, the `last_edit` snapshot dates and with them the questions with edit-date filters would change.
-- **`requests` is not a declared dependency.** `import requests` works today only because the package is installed transitively (`langchain-text-splitters` → `langsmith` → `requests`; `uv run python -c "import requests"` succeeds). If that chain changes, the script stops working while the rest of the project does not.
-- **Its user agent differs from the project's** (`UZA-databases-project (…@constructor.university)` against `MEDIAWIKI_USER_AGENT`, [Configuration](../architecture/Configuration.md)). Both name a contact, which is what Wikimedia asks for, so this is an inconsistency, not a failure.
-- It sends requests without a timeout or status check and runs on import (no `main` guard).
+Safety rules, all covered by tests with a mocked MediaWiki:
 
-The data page and the CSV are consistent with each other; the script is not unusable, but running it needs care. The smallest corrections would be to write to another file (for example `data/articles.generated.csv`), to use `httpx` (already a dependency) instead of `requests`, and to reuse the project's user agent. None of this has been changed.
+- **The default output is a separate file**, `data/articles.generated.csv`.
+- **An existing output file is never replaced unless `--overwrite` is given.** Without it the script stops before sending a request (exit code 2).
+- **`data/articles.csv` is never written, with or without `--overwrite`**, and there is no flag for it. The check recognises the file under any spelling of its path: relative, with `..`, through a symbolic link, or a hard link. Replacing the snapshot is a deliberate research decision, described below, not something a script option should do.
+- **No half-written output.** All requests finish first; the CSV is then written to a temporary file in the same directory and moved into place (exit code 1 and no file if any request fails, and an existing file is left as it was). Without `--overwrite` the final step refuses to replace a file that appeared in the meantime.
+- **Requests use the project's conventions:** `httpx`, the user agent from `MEDIAWIKI_USER_AGENT` ([Configuration](../architecture/Configuration.md)), the timeout from `MEDIAWIKI_TIMEOUT`, and a clear error for HTTP errors, timeouts, API errors and malformed answers.
+- **Importing the module does nothing**: no request, no file.
+
+The selection itself (roots, minimum length 3000, cap of 50 per root and 25 for Computer vision, the `REMOVE` and `CORE` lists, the order of the rows, the CSV columns and the latest-revision timestamp as `last_edit`) is unchanged. A test pins the definition by a digest of the original script's rules, and the new code was compared with the original on 20 generated, mocked worlds: the output was identical in every case.
+
+### What a run does not reproduce
+
+- Wikipedia changes: categories gain and lose members, articles grow, so two runs on different days differ, and neither equals the snapshot.
+- Like the original, it takes the first 500 members of each category (no continuation) and only one level of subcategories. This is kept on purpose: it is part of how the committed list was defined.
+- There are no retries: a transient failure stops the run, and nothing is written. Run it again.
+
+### Safe regeneration
+
+1. Run the script. It writes `data/articles.generated.csv` and leaves the snapshot alone.
+2. Compare: `diff data/articles.csv data/articles.generated.csv`.
+3. Use the generated file for experiments with `--csv data/articles.generated.csv` (for example `uv run python -m src.ingestion ingest --csv data/articles.generated.csv --limit 3`) against a *disposable* database, never the one with the research data.
+4. Only if you intend to start a new research snapshot: replace `data/articles.csv` by hand (`cp`), then re-ingest into a fresh database, review the ground-truth questions (titles, `correct_article`, edit-date filters, "linked from" questions), and re-run the evaluation. Results measured on the earlier snapshot are not comparable with the new ones.
 
 ## Experiments (`experiments/`)
 
