@@ -49,3 +49,5 @@ make help
 ```
 
 See [Git Hooks and Commit Messages](./Git-Hooks.md) and [Continuous Integration](./Continuous-Integration.md) for the repository gates around commits and pushes.
+
+More: [Docker and Compose](./Docker.md) (what runs in the container and what on the host), [Scripts and Experiments](./Scripts.md), and [Installing Podman on Windows](../database/podman.md). `make help` lists every target.

@@ -14,7 +14,7 @@ The cache uses `CACHE_DIR` and `CACHE_TTL_SECONDS`. The dependency injection con
 
 Each article is stored as a JSON file under the configured cache directory.
 
-Article titles are normalized into filesystem-safe filenames by lowercasing the title and replacing unsupported characters with underscores.
+The file name is the SHA-256 hash of the title exactly as the client was asked for it (`<hash>.json`), so any title gives a safe, collision-resistant name. A request is a cache hit only when it uses the same spelling that was stored: the entry is stored under the canonical title MediaWiki returned.
 
 The serialized data contains the page ID, canonical title, raw text, length, revision ID, last-modified timestamp, categories, and outgoing links.
 
@@ -58,4 +58,4 @@ Unreadable, malformed, or incomplete cache files are treated as cache misses ins
 
 ## Scope
 
-The cache is an ingestion optimization, not the source of truth for synchronization. Revision-aware synchronization should be implemented explicitly when live synchronization is added.
+The cache is an ingestion optimization, not the source of truth for synchronization. The [live sync](./Home.md#live-sync) detects changes without the cache: it compares revision ids from MediaWiki with the stored `articles.revision_id`. Every fetch of the *latest* revision goes through the cache (`make ingest-latest`, the re-ingest of changed articles in `sync`, and `GET /articles/{title}`), so a cached copy younger than `CACHE_TTL_SECONDS` is served instead of asking MediaWiki again. This was read from the code, not measured. The default snapshot ingest asks for a historical revision and bypasses the cache.

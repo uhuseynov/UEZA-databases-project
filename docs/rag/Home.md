@@ -71,7 +71,7 @@ The model is never asked when nothing relevant was found:
 2. If no chunk is left, the answer is "not found" and the LLM is not called.
 3. Otherwise the model is told to reply `NOT_FOUND` when the passages do not contain the answer, and that reply is reported as "not found" as well.
 
-The threshold is a measured value, not a guess: `make eval` reports the closest-chunk distance for answerable and unanswerable questions and the cut-off that separates them best. At 0.42, 97% of the answerable questions keep their context and all off-topic questions are rejected. Questions that are close to the topic but not answered by the articles mostly pass the threshold, so for them the model's `NOT_FOUND` is the check that counts (see the [README](../../README.md#not-found)).
+The threshold is a measured value, not a guess: `make eval` reports the closest-chunk distance for answerable and unanswerable questions and the cut-off that separates them best. At 0.42, 97% of the answerable questions keep their context and all off-topic questions are rejected. Questions that are close to the topic but not answered by the articles mostly pass the threshold, so for them the model's `NOT_FOUND` is the check that counts (see [Results](../evaluation/Results.md#not-found)).
 
 ## The prompt
 
@@ -83,9 +83,11 @@ The system prompt tells the model to use only the numbered passages, to cite the
 
 ```dotenv
 LLM_API_BASE_URL=http://localhost:11434/v1
-LLM_MODEL=qwen2.5:7b
+LLM_MODEL=qwen2.5:3b
 LLM_API_KEY=ollama
 ```
+
+`qwen2.5:3b` is the model the measured answers come from ([Results](../evaluation/Results.md#answers-with-the-language-model)); a larger model is untested. In the Docker stack `localhost` is the container itself: use `http://host.docker.internal:11434/v1` there ([Docker and Compose](../development/Docker.md)).
 
 Search (`/search`) does not need a language model at all.
 
@@ -108,11 +110,17 @@ curl -X POST http://localhost:8000/ask \
        "filters": {"edited_since": "2026-01-01"}}'
 ```
 
-Errors: invalid input → 422, database not reachable or schema missing → 503, language model failed → 502.
+Errors: invalid input → 422, database not reachable or schema missing → 503, language model failed → 502. `k` is at most 50 for `/search` and 20 for `/ask`, whose chunks all go into the prompt; the retriever itself accepts up to 100.
+
+**`GET /articles/{title}`**: the article as the MediaWiki client returns it (latest revision, through the [article cache](../ingestion/Cache.md)), for checking the source integration. MediaWiki errors are a 400, a blank title a 422.
+
+**`GET /health`**: `{"status": "ok"}`, used by the Docker health check.
 
 The embedding model is loaded on the first request (a few seconds, once). It loads in a worker thread, so the health check keeps answering.
 
 ## Configuration
+
+All settings are listed in [Configuration](../architecture/Configuration.md); the ones that matter here:
 
 | Variable | Default | Used for |
 |---|---|---|

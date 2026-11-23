@@ -1,91 +1,48 @@
 # UEZA Databases Project
 
-Technical documentation for the UEZA Databases Project.
+Technical documentation for UEZA: Wikipedia question answering with native vector search in MariaDB. Start with the [README](../README.md) for the overview, the quick start and the main results.
 
-The project explores native vector search and retrieval-augmented generation using MariaDB. The documentation follows the implementation: completed infrastructure is documented as current behavior, while unfinished ingestion and RAG stages are marked as planned.
+## Start here
 
-## Documentation
+- [Architecture](./architecture/Home.md): the ingest and query flows, modules, dependency directions
+- [Data decisions](./data_decisions.md): topic, the 262 articles, cleaning and chunking rules
 
-### Architecture
+## Architecture
 
 - [Architecture Overview](./architecture/Home.md)
-- [Configuration](./architecture/Configuration.md)
+- [Configuration](./architecture/Configuration.md): every setting and where it is used
 - [Dependency Injection](./architecture/Dependency-Injection.md)
 - [Logging](./architecture/Logging.md)
 
-### Database
+## Database
 
 - [Database Overview](./database/Home.md)
+- [Data Model](./database/Data-Model.md)
+- [Schema Management](./database/Schema.md): `schema.sql` as the schema definition, changing it, its limits
 - [Connection and Sessions](./database/Connection.md)
-- [Schema Management](./database/Schema.md)
 - [Vector Search and Index Parameters](./database/Vector-Search.md)
 - [Vector Index State](./database/Index-State.md)
 - [FAISS Baseline](./database/FAISS-Baseline.md)
+- [Findings](./database/Findings.md): what we learned, why MariaDB, where it loses
+- [Podman on Windows](./database/podman.md)
 
-### Ingestion
+## Ingestion
 
 - [Ingestion Overview](./ingestion/Home.md): pipeline, snapshot and live sync
 - [Article Cache](./ingestion/Cache.md)
 - [MediaWiki Integration](./ingestion/mediawiki/Home.md)
 
-### Retrieval, RAG and Evaluation
+## Retrieval, RAG and Evaluation
 
-- [Retrieval and RAG](./rag/Home.md): hybrid search statement, not-found logic, prompt, API and web UI
-- [Evaluation](./evaluation/Home.md): ground truth, Recall@K, latency method, index sweeps, FAISS, answers with the language model
+- [Retrieval and RAG](./rag/Home.md): the search statement, not-found logic, prompt, API and web UI
+- [Evaluation](./evaluation/Home.md): ground truth, metrics, method, index sweeps, FAISS, the language model's answers
+- [Results](./evaluation/Results.md): the measured results
+- [eval/results index](../eval/results/README.md): every recorded run and which experiment it belongs to
 
-### Development
+## Development
 
 - [Development Workflow](./development/Home.md)
-- [Git Hooks and Commit Messages](./development/Git-Hooks.md)
-- [Continuous Integration](./development/Continuous-Integration.md)
 - [Docker and Compose](./development/Docker.md)
-
-## Current Application Structure
-
-```text
-src/
-├── config.py
-├── containers.py
-├── logger.py
-├── main.py
-├── database/
-│   ├── connection.py
-│   ├── vectors.py
-│   └── repositories/
-├── ingestion/
-│   ├── cache.py
-│   └── mediawiki/
-├── rag/
-│   ├── embedder.py
-│   ├── retriever.py
-│   ├── llm.py
-│   ├── prompt.py
-│   └── service.py
-├── api/
-│   ├── routes.py
-│   ├── schemas.py
-│   └── static/index.html
-└── evaluation/
-    ├── ground_truth.py
-    ├── metrics.py
-    ├── runner.py
-    └── report.py
-```
-
-## Current Foundation
-
-The repository currently contains:
-
-- Pydantic-based application configuration
-- Dependency injection using `dependency-injector`
-- FastAPI application bootstrap and lifecycle management
-- Async SQLAlchemy database connection management for MariaDB
-- The schema in `schema.sql`, loaded by MariaDB on the first start of an empty volume
-- Application logging
-- Disk-backed MediaWiki article caching
-- MediaWiki retrieval, pagination, rate limiting, retry handling, and tests
-- Multi-stage Docker image and MariaDB 12.3.3 Compose stack
-- Repository-managed Git hooks and Conventional Commit validation
-- Gated GitHub Actions CI for unit, integration, Docker, and smoke tests
-
-Retrieval (hybrid vector + SQL search), the RAG pipeline, the API and web UI, and the evaluation harness are documented under [Retrieval and RAG](./rag/Home.md) and [Evaluation](./evaluation/Home.md). Cleaning, chunking and loading the chunks and vectors into MariaDB (the ingest) are later stages and are not documented as completed implementations yet.
+- [Continuous Integration](./development/Continuous-Integration.md)
+- [Git Hooks and Commit Messages](./development/Git-Hooks.md)
+- [Scripts and Experiments](./development/Scripts.md): helper scripts, `data/build_article_list.py`, `experiments/`
