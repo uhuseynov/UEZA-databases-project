@@ -67,7 +67,7 @@ def main():
             print(f"   {label}: vector index in the plan: {'yes' if uses_index else 'NO'}")
             for ef in EF_VALUES:
                 recalls, times, counts = [], [], []
-                for vector, exact in zip(vectors, truth[where]):
+                for vector, exact in zip(vectors, truth[where], strict=True):
                     ids, ms = timed(vector, where, name, ef)
                     recalls.append(len(set(ids) & set(exact)) / max(1, len(exact)))
                     times.append(ms)

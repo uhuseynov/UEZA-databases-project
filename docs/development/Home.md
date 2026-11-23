@@ -34,6 +34,8 @@ Common commands are exposed through the root `Makefile`:
 
 ```bash
 make run             # FastAPI with hot reload
+make lint            # Ruff lint, as in CI (make lint-fix applies safe fixes)
+make format-check    # files ruff format would change (not enforced yet)
 make test-unit       # unit tests
 make test-integration
 make test-all

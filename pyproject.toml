@@ -44,13 +44,23 @@ explicit = true
 dev = [
     "faiss-cpu>=1.15.1",
     "pytest>=9.1.1",
+    "ruff>=0.17.6",
 ]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 
 markers = [
-    "integration: tests that require network access or external services",
+    "integration: tests that need a running MariaDB, or that exercise several components together (none contacts Wikipedia, an LLM or the model hub)",
 ]
 
 addopts = ["-ra"]
+
+[tool.ruff]
+target-version = "py314"
+line-length = 100
+
+[tool.ruff.lint]
+# Pyflakes and the pycodestyle errors that are bugs (E4, E7, E9), import order, pyupgrade
+# and the bugbear checks. Line length (E501) is left to `ruff format`, not to the linter.
+select = ["E4", "E7", "E9", "F", "I", "UP", "B"]

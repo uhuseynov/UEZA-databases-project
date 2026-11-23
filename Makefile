@@ -27,6 +27,7 @@ APP_NAME := ueza-databases-project
 UV      := uv
 DC      := docker compose
 PYTEST  := $(UV) run pytest
+RUFF    := $(UV) run ruff
 
 VERSION := $(shell git describe --tags --always --dirty 2>/dev/null || echo "dev")
 COMMIT  := $(shell git rev-parse --short HEAD 2>/dev/null || echo "unknown")
@@ -407,11 +408,39 @@ shell: ## Opens a shell inside the application container
 
 
 # =============================================================================
+##@ Code quality
+# =============================================================================
+
+.PHONY: lint
+lint: ## Ruff lint (what CI enforces)
+	@printf "$(BLUE)🔍 Running Ruff lint...$(RESET)\n"
+	@$(RUFF) check .
+	@printf "$(GREEN)✅ Lint passed.$(RESET)\n"
+
+
+.PHONY: lint-fix
+lint-fix: ## Ruff lint, applying the safe automatic fixes
+	@$(RUFF) check --fix .
+
+
+# Not part of CI yet: some files predate the formatter. `make format` rewrites them.
+.PHONY: format-check
+format-check: ## Reports files that `ruff format` would change (does not modify anything)
+	@$(RUFF) format --check .
+
+
+.PHONY: format
+format: ## Formats all Python files with Ruff (rewrites files)
+	@$(RUFF) format .
+
+
+# =============================================================================
 ##@ CI
 # =============================================================================
 
 .PHONY: check
 check: ## Runs local checks before committing
+	@$(MAKE) lint
 	@$(MAKE) test-unit
 
 
@@ -419,6 +448,7 @@ check: ## Runs local checks before committing
 ci: ## Runs CI checks using locked dependencies
 	@printf "$(BLUE)🔍 Running CI checks...$(RESET)\n"
 	@$(UV) sync --locked
+	@$(RUFF) check .
 	@$(PYTEST) tests/unit
 	@printf "$(GREEN)✅ CI checks passed.$(RESET)\n"
 

@@ -1,5 +1,4 @@
 import json
-import math
 import struct
 from datetime import datetime
 

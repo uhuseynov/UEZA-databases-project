@@ -1,6 +1,8 @@
 import csv
 import time
+
 import requests
+
 URL = "https://en.wikipedia.org/w/api.php"
 HEADERS = {"User-Agent": "UZA-databases-project (zyusifli@constructor.university)"}
 roots = [
