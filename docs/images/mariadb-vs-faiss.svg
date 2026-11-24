@@ -1,0 +1,68 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="880" height="268" viewBox="0 0 880 268" role="img" aria-label="MariaDB against FAISS plus MariaDB">
+<title>MariaDB against FAISS plus MariaDB</title>
+<style>
+  .surface { fill: #fcfcfb; }
+  .t1 { fill: #0b0b0b; } .t2 { fill: #52514e; }
+  .grid { stroke: #e4e3df; } .axis { stroke: #9b9a94; }
+  .s1 { fill: #2a78d6; } .s2 { fill: #eb6834; }
+  .l1 { stroke: #2a78d6; fill: none; } .l2 { stroke: #eb6834; fill: none; }
+  .neutral { fill: #c4c2bb; } .band { fill: #2a78d6; opacity: 0.08; }
+  .ring { stroke: #fcfcfb; }
+  @media (prefers-color-scheme: dark) {
+    .surface { fill: #1a1a19; }
+    .t1 { fill: #f0efec; } .t2 { fill: #c3c2b7; }
+    .grid { stroke: #34332f; } .axis { stroke: #6f6e68; }
+    .s1 { fill: #3987e5; } .s2 { fill: #d95926; }
+    .l1 { stroke: #3987e5; } .l2 { stroke: #d95926; }
+    .neutral { fill: #5b5a55; } .band { fill: #3987e5; opacity: 0.14; }
+    .ring { stroke: #1a1a19; }
+  }
+  text { font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+</style>
+<rect width="880" height="268" rx="8" class="surface"/>
+<text x="24.0" y="32.0" class="t1" font-size="15" text-anchor="start" font-weight="600">Time per question from Python, end to end: MariaDB alone against FAISS plus MariaDB</text>
+<text x="14.0" y="64.0" class="t1" font-size="13" text-anchor="start" font-weight="600">Without a filter (54 questions)</text>
+<line x1="200.0" y1="78.0" x2="200.0" y2="188.0" class="axis" stroke-width="1"/>
+<text x="200.0" y="206.0" class="t2" font-size="11" text-anchor="middle">0</text>
+<line x1="238.0" y1="78.0" x2="238.0" y2="188.0" class="grid" stroke-width="1"/>
+<text x="238.0" y="206.0" class="t2" font-size="11" text-anchor="middle">5</text>
+<line x1="276.0" y1="78.0" x2="276.0" y2="188.0" class="grid" stroke-width="1"/>
+<text x="276.0" y="206.0" class="t2" font-size="11" text-anchor="middle">10</text>
+<line x1="314.0" y1="78.0" x2="314.0" y2="188.0" class="grid" stroke-width="1"/>
+<text x="314.0" y="206.0" class="t2" font-size="11" text-anchor="middle">15</text>
+<line x1="352.0" y1="78.0" x2="352.0" y2="188.0" class="grid" stroke-width="1"/>
+<text x="352.0" y="206.0" class="t2" font-size="11" text-anchor="middle">20</text>
+<line x1="390.0" y1="78.0" x2="390.0" y2="188.0" class="grid" stroke-width="1"/>
+<text x="390.0" y="206.0" class="t2" font-size="11" text-anchor="middle">25 ms</text>
+<text x="190.0" y="109.0" class="t1" font-size="12" text-anchor="end">MariaDB, one statement</text>
+<path d="M200.0,92.0 H234.7 Q238.7,92.0 238.7,96.0 V114.0 Q238.7,118.0 234.7,118.0 H200.0 Z" class="s1"/>
+<text x="246.7" y="104.0" class="t1" font-size="12" text-anchor="start" font-weight="600">5.1 ms</text>
+<text x="246.7" y="119.0" class="t2" font-size="11" text-anchor="start">95% of the exact top 10</text>
+<text x="190.0" y="159.0" class="t1" font-size="12" text-anchor="end">FAISS + MariaDB</text>
+<path d="M200.0,142.0 H243.6 Q247.6,142.0 247.6,146.0 V164.0 Q247.6,168.0 243.6,168.0 H200.0 Z" class="s2"/>
+<text x="255.6" y="154.0" class="t1" font-size="12" text-anchor="start" font-weight="600">6.3 ms</text>
+<text x="255.6" y="169.0" class="t2" font-size="11" text-anchor="start">90% of the exact top 10</text>
+<text x="434.0" y="64.0" class="t1" font-size="13" text-anchor="start" font-weight="600">With a filter (17 questions)</text>
+<line x1="620.0" y1="78.0" x2="620.0" y2="188.0" class="axis" stroke-width="1"/>
+<text x="620.0" y="206.0" class="t2" font-size="11" text-anchor="middle">0</text>
+<line x1="654.0" y1="78.0" x2="654.0" y2="188.0" class="grid" stroke-width="1"/>
+<text x="654.0" y="206.0" class="t2" font-size="11" text-anchor="middle">5</text>
+<line x1="688.0" y1="78.0" x2="688.0" y2="188.0" class="grid" stroke-width="1"/>
+<text x="688.0" y="206.0" class="t2" font-size="11" text-anchor="middle">10</text>
+<line x1="722.0" y1="78.0" x2="722.0" y2="188.0" class="grid" stroke-width="1"/>
+<text x="722.0" y="206.0" class="t2" font-size="11" text-anchor="middle">15</text>
+<line x1="756.0" y1="78.0" x2="756.0" y2="188.0" class="grid" stroke-width="1"/>
+<text x="756.0" y="206.0" class="t2" font-size="11" text-anchor="middle">20</text>
+<line x1="790.0" y1="78.0" x2="790.0" y2="188.0" class="grid" stroke-width="1"/>
+<text x="790.0" y="206.0" class="t2" font-size="11" text-anchor="middle">25 ms</text>
+<text x="610.0" y="109.0" class="t1" font-size="12" text-anchor="end">MariaDB, one statement</text>
+<path d="M620.0,92.0 H673.0 Q677.0,92.0 677.0,96.0 V114.0 Q677.0,118.0 673.0,118.0 H620.0 Z" class="s1"/>
+<text x="685.0" y="104.0" class="t1" font-size="12" text-anchor="start" font-weight="600">8.4 ms</text>
+<text x="685.0" y="119.0" class="t2" font-size="11" text-anchor="start">exact top 10</text>
+<text x="610.0" y="159.0" class="t1" font-size="12" text-anchor="end">FAISS + MariaDB</text>
+<path d="M620.0,142.0 H732.6 Q736.6,142.0 736.6,146.0 V164.0 Q736.6,168.0 732.6,168.0 H620.0 Z" class="s2"/>
+<text x="744.6" y="154.0" class="t1" font-size="12" text-anchor="start" font-weight="600">17.2 ms</text>
+<text x="744.6" y="169.0" class="t2" font-size="11" text-anchor="start">87% of the exact top 10</text>
+<text x="24.0" y="240.0" class="t2" font-size="10.5" text-anchor="start">The same 6,144 vectors, FAISS HNSW at efSearch 40, MariaDB at mhnsw_ef_search 40. FAISS needs MariaDB for the text, and with a filter</text>
+<text x="24.0" y="256.0" class="t2" font-size="10.5" text-anchor="start">first for the ids of the allowed chunks. Raw report: eval/results/20261106-172053_faiss.md</text>
+</svg>

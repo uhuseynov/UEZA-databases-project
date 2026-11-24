@@ -20,7 +20,7 @@ import httpx
 import pytest
 
 import data.build_article_list as script
-from src.config import settings
+from src.config import Settings
 from src.ingestion.pipeline import read_articles
 from tests.unit.data.fake_wiki import FakeWiki
 
@@ -223,8 +223,10 @@ def test_requests_carry_the_project_user_agent_and_the_configured_timeout(monkey
 
 
 def test_the_default_user_agent_is_the_one_of_the_application():
-    assert "UEZA-Databases-Project" in settings.mediawiki_user_agent
-    assert "mailto:" in settings.mediawiki_user_agent
+    # The default of the setting, not `settings`: a local .env may set MEDIAWIKI_USER_AGENT.
+    default = Settings.model_fields["mediawiki_user_agent"].default
+    assert "UEZA-Databases-Project" in default
+    assert "mailto:" in default
     assert "requests" not in sys.modules.get("data.build_article_list").__dict__
 
 
@@ -443,7 +445,10 @@ def test_the_snapshot_is_recognised_under_other_spellings_of_its_path(monkeypatc
     snapshot.write_text("the research snapshot\n", encoding="utf-8")
     monkeypatch.setattr(script, "COMMITTED_SNAPSHOT", snapshot)
     symlink = tmp_path / "link.csv"
-    symlink.symlink_to(snapshot)
+    try:
+        symlink.symlink_to(snapshot)
+    except OSError:  # Windows without Developer Mode: ordinary users cannot create symlinks
+        symlink = None
     hardlink = tmp_path / "hard.csv"
     os.link(snapshot, hardlink)
     monkeypatch.chdir(snapshot.parent)
@@ -453,8 +458,8 @@ def test_the_snapshot_is_recognised_under_other_spellings_of_its_path(monkeypatc
         snapshot.parent / ".." / "data" / "articles.csv",
         Path("articles.csv"),
         Path("./articles.csv"),
-        symlink,
         hardlink,
+        *([symlink] if symlink else []),
     ]
     for path in spellings:
         with pytest.raises(script.OutputRefused, match="committed research snapshot"):
@@ -463,7 +468,8 @@ def test_the_snapshot_is_recognised_under_other_spellings_of_its_path(monkeypatc
             script.write_csv([], path, overwrite=True)
 
     assert snapshot.read_text(encoding="utf-8") == "the research snapshot\n"
-    assert sorted(p.name for p in tmp_path.iterdir()) == ["data", "hard.csv", "link.csv"]
+    expected = ["data", "hard.csv", *(["link.csv"] if symlink else [])]
+    assert sorted(p.name for p in tmp_path.iterdir()) == expected
 
 
 def test_a_file_that_appears_during_the_run_is_not_replaced(monkeypatch, tmp_path):

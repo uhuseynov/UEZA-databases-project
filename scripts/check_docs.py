@@ -33,6 +33,7 @@ TOP_LEVEL_DIRS = (
     "scripts",
     "data",
     "experiments",
+    "examples",
     "docs",
     "eval",
     ".githooks",

@@ -101,7 +101,7 @@ Run the app with `make run` (or `make up` for the full Docker stack) and open <h
 curl "http://localhost:8000/search?q=Which+method+averages+many+decision+trees&k=5&root_category=Core"
 ```
 
-**`POST /ask`**: answer, sources, the chunks used and timings.
+**`POST /ask`**: answer, sources, the chunks used and timings. When `found` is false, `not_found_reason` says why: `"distance"` when no chunk was closer than `max_distance` (`RAG_MAX_DISTANCE`), so the language model was not asked and `chunks` holds the rejected ones with their distances, or `"model"` when the model read the chunks and replied `NOT_FOUND`.
 
 ```bash
 curl -X POST http://localhost:8000/ask \
@@ -110,7 +110,7 @@ curl -X POST http://localhost:8000/ask \
        "filters": {"edited_since": "2026-01-01"}}'
 ```
 
-Errors: invalid input → 422, database not reachable or schema missing → 503, language model failed → 502 (the body is always "The language model request failed. Try again later.": connection errors, timeouts, HTTP errors and malformed replies look the same to the client, and the cause, with the endpoint but without credentials or query string, is in the application log). `k` is at most 50 for `/search` and 20 for `/ask`, whose chunks all go into the prompt; the retriever itself accepts up to 100.
+Errors: invalid input → 422, database not reachable or schema missing → 503, language model failed → 502 (the body is always the same fixed message, which names the `.env` settings to check: connection errors, timeouts, HTTP errors and malformed replies look the same to the client, and the cause, with the endpoint but without credentials or query string, is in the application log). `k` is at most 50 for `/search` and 20 for `/ask`, whose chunks all go into the prompt; the retriever itself accepts up to 100.
 
 **`GET /articles/{title}`**: the article as the MediaWiki client returns it (latest revision, through the [article cache](../ingestion/Cache.md)), for checking the source integration. MediaWiki errors are a 400, a blank title a 422. Spellings of a title that MediaWiki treats as one (`Machine_learning`, `machine learning`, URL-encoded forms) share one cache entry ([Article Cache](../ingestion/Cache.md#cache-keys)); requests share one rate limit per process, and at most `MEDIAWIKI_API_CONCURRENCY` fetch at once ([Rate Limiting](../ingestion/mediawiki/Rate-Limiting.md#concurrent-api-requests)).
 

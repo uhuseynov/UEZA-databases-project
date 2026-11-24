@@ -1,4 +1,5 @@
 from datetime import date, datetime, time
+from typing import Literal
 
 from pydantic import BaseModel, Field, field_validator
 
@@ -85,6 +86,10 @@ class AskResponse(BaseModel):
     sources: list[SourceOut]
     chunks: list[ChunkOut]
     timings_ms: dict[str, float]
+    # "distance": no chunk was closer than max_distance, so the model was not asked;
+    # "model": the model read the chunks and replied NOT_FOUND; null when found.
+    not_found_reason: Literal["distance", "model"] | None = None
+    max_distance: float | None = None
 
     @classmethod
     def from_answer(cls, answer: Answer, filters: SearchFilters) -> AskResponse:
@@ -96,4 +101,6 @@ class AskResponse(BaseModel):
             sources=[SourceOut(title=s.title, url=s.url) for s in answer.sources],
             chunks=[ChunkOut.from_chunk(c) for c in answer.chunks],
             timings_ms=answer.timings_ms,
+            not_found_reason=answer.not_found_reason,
+            max_distance=answer.max_distance,
         )

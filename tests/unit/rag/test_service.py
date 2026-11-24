@@ -1,6 +1,6 @@
 import pytest
 
-from src.rag.models import RetrievedChunk, SearchFilters
+from src.rag.models import NOT_FOUND_DISTANCE, NOT_FOUND_MODEL, RetrievedChunk, SearchFilters
 from src.rag.service import NOT_FOUND_MESSAGE, RAGService
 
 pytestmark = pytest.mark.anyio
@@ -70,6 +70,8 @@ async def test_answer_uses_close_chunks_and_cites_sources():
     assert retriever.calls[0][1:] == (3, filters)
     assert "Football" not in llm.calls[0][1]["content"]
     assert set(answer.timings_ms) == {"embed_ms", "retrieve_ms", "llm_ms", "total_ms"}
+    assert answer.not_found_reason is None
+    assert answer.max_distance == 0.5
 
 
 async def test_no_close_chunk_means_not_found_without_calling_the_llm():
@@ -82,6 +84,10 @@ async def test_no_close_chunk_means_not_found_without_calling_the_llm():
     assert answer.sources == ()
     assert llm.calls == []
     assert answer.timings_ms["llm_ms"] == 0.0
+    assert answer.not_found_reason == NOT_FOUND_DISTANCE
+    assert answer.max_distance == 0.5
+    # The rejected chunks are kept, so a client can show how far the closest one was.
+    assert [c.distance for c in answer.chunks] == [0.8]
 
 
 async def test_llm_not_found_reply_is_reported_as_not_found():
@@ -92,6 +98,7 @@ async def test_llm_not_found_reply_is_reported_as_not_found():
     assert not answer.found
     assert answer.text == NOT_FOUND_MESSAGE
     assert len(llm.calls) == 1
+    assert answer.not_found_reason == NOT_FOUND_MODEL
 
 
 async def test_k_overrides_the_default():

@@ -42,7 +42,14 @@
     .chunk:first-of-type { border-top: 0; margin-top: 0; padding-top: 0; }
     .meta { font-size: .82rem; color: var(--muted); }
     .chunk p { margin: 6px 0 0; white-space: pre-wrap; }
-    .error { color: #c62828; white-space: pre-wrap; }
+    #status.error { color: #c62828; white-space: pre-wrap; flex-basis: 100%; }
+    .examples { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin-top: 8px; }
+    .chip {
+      padding: 3px 10px; border-radius: 999px; border: 1px solid var(--border);
+      background: transparent; color: var(--text); font-size: .82rem; cursor: pointer;
+    }
+    .chip:hover { border-color: var(--accent); color: var(--accent); }
+    #reason { margin-top: 10px; }
   </style>
 </head>
 <body>
@@ -55,6 +62,20 @@
     <label for="question">Question</label>
     <textarea id="question" required maxlength="1000"
       placeholder="Which method averages many decision trees trained on random subsets of the data?"></textarea>
+    <div class="examples" id="examples">
+      <span class="meta">Examples:</span>
+      <button type="button" class="chip"
+        data-question="Which method averages many decision trees trained on random subsets of the data?">Decision trees</button>
+      <button type="button" class="chip"
+        data-question="Which program defeated a top professional Go player in 2016?">Go, 2016</button>
+      <button type="button" class="chip"
+        data-question="Among articles linked from Large language model, which one covers crafting inputs to steer a model?"
+        data-filters='{"linked_from": "Large language model"}'>With a SQL filter</button>
+      <button type="button" class="chip"
+        data-question="How does the offside rule work in football?">Off topic</button>
+      <button type="button" class="chip"
+        data-question="What is the name of the social chatbot that Microsoft launched in China in 2014?">On topic, not in the articles</button>
+    </div>
 
     <details>
       <summary>SQL filters (optional)</summary>
@@ -98,10 +119,11 @@
     <h2 style="font-size:1.05rem;margin:0 0 8px">Answer</h2>
     <div id="answer" class="answer"></div>
     <div id="sources" class="sources meta" style="margin-top:10px"></div>
+    <div id="reason" class="meta" hidden></div>
   </section>
 
   <section id="chunks-card" class="card" hidden>
-    <h2 style="font-size:1.05rem;margin:0 0 8px">Retrieved chunks</h2>
+    <h2 id="chunks-title" style="font-size:1.05rem;margin:0 0 8px">Retrieved chunks</h2>
     <div id="timings" class="meta" style="margin-bottom:10px"></div>
     <div id="chunks"></div>
   </section>
@@ -135,8 +157,9 @@
     return a;
   }
 
-  function showChunks(chunks, timings) {
+  function showChunks(chunks, timings, title = "Retrieved chunks") {
     $("chunks-card").hidden = false;
+    $("chunks-title").textContent = title;
     $("timings").textContent = Object.entries(timings)
       .map(([name, ms]) => `${name.replace("_ms", "")}: ${ms} ms`).join(" · ");
     const box = $("chunks");
@@ -150,6 +173,36 @@
       item.append(head, el("p", chunk.text));
       box.append(item);
     });
+  }
+
+  // Why an answer is "not found": the API says whether the distance threshold rejected every
+  // chunk (the model was not asked) or the model read the chunks and replied NOT_FOUND.
+  function notFoundReason(data) {
+    if (data.not_found_reason === "distance") {
+      const closest = Math.min(...data.chunks.map((c) => c.distance));
+      const threshold = data.max_distance ?? "RAG_MAX_DISTANCE";
+      return Number.isFinite(closest)
+        ? `No chunk was close enough to the question: the closest is at cosine distance ${closest.toFixed(3)}, ` +
+          `above the threshold of ${threshold} (RAG_MAX_DISTANCE). The language model was not asked.`
+        : "No chunk matched these filters. The language model was not asked.";
+    }
+    if (data.not_found_reason === "model") {
+      return `The language model read the ${data.chunks.length} chunks below and replied NOT_FOUND: ` +
+             "they do not contain the answer.";
+    }
+    return "";
+  }
+
+  // A small local model on a CPU needs about 30 s per answer: show that the page is working.
+  function startTimer(label) {
+    const start = Date.now();
+    const tick = () => {
+      const seconds = Math.round((Date.now() - start) / 1000);
+      const hint = seconds >= 5 ? " (a local model on a CPU takes about 30 s)" : "";
+      $("status").textContent = `${label} ${seconds} s${hint}`;
+    };
+    tick();
+    return setInterval(tick, 1000);
   }
 
   async function call(url, options) {
@@ -170,8 +223,9 @@
 
     for (const id of ["ask", "search"]) $(id).disabled = true;
     $("status").className = "";
-    $("status").textContent = mode === "ask" ? "Searching and asking the model…" : "Searching…";
     $("answer-card").hidden = true;
+    $("chunks-card").hidden = true;
+    const timer = startTimer(mode === "ask" ? "Searching and asking the model…" : "Searching…");
 
     try {
       if (mode === "ask") {
@@ -189,7 +243,14 @@
           sources.append("Sources: ");
           data.sources.forEach((s, i) => { if (i) sources.append(", "); sources.append(link(s.title, s.url)); });
         }
-        showChunks(data.chunks, data.timings_ms);
+        const reason = notFoundReason(data);
+        $("reason").hidden = !reason;
+        $("reason").textContent = reason;
+        const title = data.chunks.length === 0 ? "Retrieved chunks"
+          : data.not_found_reason === "distance"
+            ? "Closest chunks (none under the threshold, not sent to the model)"
+            : "Chunks sent to the model";
+        showChunks(data.chunks, data.timings_ms, title);
       } else {
         const params = new URLSearchParams({ q: question, k, ...filters });
         const data = await call(`/search?${params}`);
@@ -200,8 +261,20 @@
       $("status").className = "error";
       $("status").textContent = error.message;
     } finally {
+      clearInterval(timer);
       for (const id of ["ask", "search"]) $(id).disabled = false;
     }
+  }
+
+  // An example fills in the question and its filters (all other filters are cleared).
+  for (const chip of document.querySelectorAll("#examples .chip")) {
+    chip.addEventListener("click", () => {
+      const filters = JSON.parse(chip.dataset.filters ?? "{}");
+      $("question").value = chip.dataset.question;
+      for (const name of FILTERS) $(name).value = filters[name] ?? "";
+      if (Object.keys(filters).length) document.querySelector("details").open = true;
+      $("question").focus();
+    });
   }
 
   $("form").addEventListener("submit", (event) => { event.preventDefault(); run("ask"); });

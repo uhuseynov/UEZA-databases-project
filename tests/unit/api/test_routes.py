@@ -5,6 +5,7 @@ from dependency_injector import providers
 from fastapi.testclient import TestClient
 from sqlalchemy.exc import OperationalError
 
+from src.api.routes import LLM_ERROR
 from src.main import create_app
 from src.rag.llm import LLMError
 from src.rag.models import Answer, RetrievedChunk, SearchFilters, Source
@@ -120,7 +121,33 @@ def test_ask_returns_answer_with_sources(client, service):
     assert body["answer"] == "Random forest [1]."
     assert body["sources"] == [{"title": CHUNK.title, "url": CHUNK.url}]
     assert body["filters"] == {"root_category": "Core"}
+    assert body["not_found_reason"] is None
     assert service.calls[0][3] == SearchFilters(root_category="Core")
+
+
+class NotFoundService(FakeService):
+    async def answer(self, question, k=None, filters=None):
+        return Answer(
+            question=question,
+            text="The articles in our corpus do not answer this question.",
+            found=False,
+            chunks=(CHUNK,),
+            timings_ms={"embed_ms": 1.0, "retrieve_ms": 2.0, "llm_ms": 0.0, "total_ms": 3.0},
+            not_found_reason="distance",
+            max_distance=0.42,
+        )
+
+
+def test_ask_says_why_an_answer_was_not_found():
+    app = create_app()
+    app.state.container.rag_service.override(providers.Object(NotFoundService()))
+
+    body = TestClient(app).post("/ask", json={"question": "Who won the 2022 World Cup?"}).json()
+
+    assert body["found"] is False
+    assert body["not_found_reason"] == "distance"
+    assert body["max_distance"] == 0.42
+    assert body["chunks"][0]["distance"] == round(CHUNK.distance, 4)
 
 
 def test_ask_validates_k(client):
@@ -136,7 +163,8 @@ def test_llm_failure_is_a_502():
     response = TestClient(app).post("/ask", json={"question": "x"})
 
     assert response.status_code == 502
-    assert response.json() == {"detail": "The language model request failed. Try again later."}
+    assert response.json() == {"detail": LLM_ERROR}
+    assert "Try again later" not in LLM_ERROR
 
 
 def test_database_failure_is_a_503_without_internal_details():

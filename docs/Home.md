@@ -22,6 +22,7 @@ Technical documentation for UEZA: Wikipedia question answering with native vecto
 - [Connection and Sessions](./database/Connection.md)
 - [Vector Search and Index Parameters](./database/Vector-Search.md)
 - [Vector Index State](./database/Index-State.md)
+- [Choosing M](./database/Choosing-M.md)
 - [FAISS Baseline](./database/FAISS-Baseline.md)
 - [Findings](./database/Findings.md): what we learned, why MariaDB, where it loses
 - [Podman on Windows](./database/podman.md)
