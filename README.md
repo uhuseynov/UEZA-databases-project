@@ -111,8 +111,8 @@ Each point was tested by changing that one thing and nothing else. The numbers a
 - **Send the query vector as binary.** MariaDB evaluates `VEC_FromText('[...]')` again for every row it compares. Written as a hex literal of its binary value, the same search returned the same chunks for all 71 questions, and a full scan went from 608 to 24 ms, filtered searches from 95 to 12.6 ms.
 - **Take the nearest chunks first, then join.** With `articles` joined in the same `SELECT`, the index searched far more of the graph than the 10 rows needed and ignored `mhnsw_ef_search` (32 to 67 ms). With the nearest chunks taken first in a derived table, a search takes 0.3 ms inside MariaDB and `M` and `mhnsw_ef_search` behave as in any HNSW index.
 - **`M=16` with `mhnsw_ef_search` 40.** `M=32` returns 4 more of every 100 exact neighbours, but takes 4.5 times as long to build and does not find the right article for one question more ([Choosing M](./docs/database/Choosing-M.md)).
-- **After a rebuild, InnoDB thinks the graph is empty.** `ADD VECTOR INDEX` leaves the hidden graph table with the statistics of 0 rows, and after a restart MariaDB sizes every search by that number: index recall stayed near 0.9 for every `M`. Inserting and deleting one row after the rebuild makes InnoDB count the table; `make reindex` does that.
-- **Deleted vectors stay in the graph until a rebuild.** After every chunk was replaced, the graph no longer fit the default 16 MB index cache, which MariaDB then drops after every search. We run with 64 MB and rebuild after large changes; with the nearest-first statement, replacing every chunk now costs about 3 ms per search.
+- **After a rebuild, InnoDB thinks the graph is empty.** `ADD VECTOR INDEX` leaves the hidden graph table with the statistics of 0 rows, and after a restart MariaDB sizes every search by that number: index recall stayed near 0.9 for every `M`. Inserting and deleting one row after the rebuild makes InnoDB count the table; `make reindex` does that. Reported as [MDEV-42430](https://jira.mariadb.org/browse/MDEV-42430).
+- **Deleted vectors stay in the graph until a rebuild.** After every chunk was replaced, the graph no longer fit the default 16 MB index cache, which MariaDB then drops after every search. We run with 64 MB and rebuild after large changes; with the nearest-first statement, replacing every chunk now costs about 3 ms per search. Reported as [MDEV-42431](https://jira.mariadb.org/browse/MDEV-42431).
 - **With a filter, MariaDB starts from the filter.** It reads the chunks of the matching articles and computes their distances, so filtered searches are exact.
 
 ![Choosing M: index recall rises with M, the right article in the top 10 stops rising at M=8, and the index build grows from 2 s to 135 s](./docs/images/m-sweep.svg)
@@ -172,13 +172,13 @@ Done:
 - the language model's `NOT_FOUND` answers on the same questions
 - a worked SQL example, a stand-alone write-up of the `M` choice, and charts drawn from the reports (`make charts`)
 - a web page that says why an answer was not found: the distance threshold, or the model
+- the two index behaviours reported to MariaDB: [MDEV-42430](https://jira.mariadb.org/browse/MDEV-42430) (graph statistics after a rebuild) and [MDEV-42431](https://jira.mariadb.org/browse/MDEV-42431) (the whole-cache reset)
 
 Not done, as future work:
 
 - chunk sizes (configs B and C) and other embedding models compared on the same questions; each needs a full re-ingest, and another dimension needs a second table
 - a larger language model, or a less strict prompt, against the refusals of the 3B model
 - concurrent searches and a larger corpus
-- reporting the two index behaviours (graph statistics after a rebuild, the whole-cache reset) to MariaDB
 
 ## Team
 
