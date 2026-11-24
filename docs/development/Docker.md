@@ -51,7 +51,7 @@ The API has **no authentication and no rate limiting**, which is why Compose pub
 - **`GET /articles/{title}`** makes the server fetch any Wikipedia article and write it to the article cache, so it can be used to generate outbound requests and fill the cache volume.
 - **`GET /search`** runs vector searches against the database.
 - **`/docs`, `/redoc` and `/openapi.json`** describe the whole API.
-- Errors do not reveal internals: a failed language model call returns the fixed message "The language model request failed. Try again later." and a database failure a generic message; the details are in the application log.
+- Errors do not reveal internals: a failed language model call returns a fixed message that names the `.env` settings to check (`LLM_API_BASE_URL`, `LLM_MODEL`, `LLM_API_KEY`) and a database failure a generic message; the details are in the application log.
 
 The app started on the host is local by default too: `make run` and `python -m src.main` bind `APP_HOST`, which defaults to `127.0.0.1`. To expose it deliberately, set `APP_HOST=0.0.0.0` in `.env` or run `make run APP_HOST=0.0.0.0` (a value in `.env` takes precedence over a plain environment variable; the command-line form always wins). The same risks apply as above. A `.env` copied from an older `.env.example` still contains `APP_HOST=0.0.0.0`: change it if you do not want that. Inside the container, uvicorn always listens on `0.0.0.0` (the published port needs it); only `APP_BIND_ADDRESS` decides who can reach it from outside.
 

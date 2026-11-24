@@ -20,7 +20,11 @@ logger = logging.getLogger(__name__)
 STATIC_DIR = Path(__file__).parent / "static"
 DATABASE_ERROR = "Database search failed. Is MariaDB running and is the schema loaded?"
 # Fixed on purpose: the details of an upstream failure (URL, reply body) go to the log only.
-LLM_ERROR = "The language model request failed. Try again later."
+# It names the settings to check, because the usual cause is a missing or wrong .env entry.
+LLM_ERROR = (
+    "The language model request failed. Check LLM_API_BASE_URL, LLM_MODEL and LLM_API_KEY "
+    "in .env and that the model server is running (README, Quick start)."
+)
 
 router = APIRouter()
 

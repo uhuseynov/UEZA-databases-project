@@ -30,7 +30,7 @@ Time of the MariaDB statement alone, in milliseconds, measured from Python (the 
 | with filters | 85 | 11.8 | 9.6 | 24.4 |
 | all | 355 | 9.2 | 7.7 | 19.6 |
 
-The five timed passes averaged 8.5, 10.2, 8.6, 9.3 and 9.3 ms. The exact full scan took 19.3 ms per plain question. Inside MariaDB a plain search takes well under a millisecond (0.3 ms for one search under `ANALYZE`); most of the 8 ms is the round trip through the driver and Docker Desktop.
+The five timed passes averaged 8.5, 10.2, 8.6, 9.3 and 9.3 ms: 9.2 ms with a standard deviation of 0.7 ms between passes. The plain questions varied little from pass to pass (8.0 to 8.7 ms, standard deviation 0.23 ms, 2.7%), the filtered ones more (9.2 to 15.9 ms, 2.6 ms, 22%), mostly in one slow second pass. Every question returned the same chunks in all five passes, so the quality numbers above do not vary between runs; only the time does. The exact full scan took 19.3 ms per plain question. Inside MariaDB a plain search takes well under a millisecond (0.3 ms for one search under `ANALYZE`); most of the 8 ms is the round trip through the driver and Docker Desktop.
 
 A filtered search never uses the vector index: MariaDB reads the chunks of the matching articles and computes every distance, so it is exact. Every filter in the ground truth averaged 8 to 21 ms; the slowest is "linked from Artificial intelligence", which covers 141 of the 262 articles.
 

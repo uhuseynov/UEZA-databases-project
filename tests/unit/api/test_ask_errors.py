@@ -11,12 +11,13 @@ import pytest
 from dependency_injector import providers
 from fastapi.testclient import TestClient
 
+from src.api.routes import LLM_ERROR
 from src.main import create_app
 from src.rag.llm import ChatLLM
 from src.rag.models import RetrievedChunk
 from src.rag.service import RAGService
 
-GENERIC = {"detail": "The language model request failed. Try again later."}
+GENERIC = {"detail": LLM_ERROR}
 BASE_URL = "https://alice:hunter2@llm.internal.example:8443/v1?token=query-secret"
 API_KEY = "sk-live-0123456789"
 UPSTREAM_BODY = "internal stack: db-host-7 failed, key echo sk-live-0123456789"

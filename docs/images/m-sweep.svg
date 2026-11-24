@@ -1,0 +1,95 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="880" height="376" viewBox="0 0 880 376" role="img" aria-label="M sweep: recall and build time against M">
+<title>M sweep: recall and build time against M</title>
+<style>
+  .surface { fill: #fcfcfb; }
+  .t1 { fill: #0b0b0b; } .t2 { fill: #52514e; }
+  .grid { stroke: #e4e3df; } .axis { stroke: #9b9a94; }
+  .s1 { fill: #2a78d6; } .s2 { fill: #eb6834; }
+  .l1 { stroke: #2a78d6; fill: none; } .l2 { stroke: #eb6834; fill: none; }
+  .neutral { fill: #c4c2bb; } .band { fill: #2a78d6; opacity: 0.08; }
+  .ring { stroke: #fcfcfb; }
+  @media (prefers-color-scheme: dark) {
+    .surface { fill: #1a1a19; }
+    .t1 { fill: #f0efec; } .t2 { fill: #c3c2b7; }
+    .grid { stroke: #34332f; } .axis { stroke: #6f6e68; }
+    .s1 { fill: #3987e5; } .s2 { fill: #d95926; }
+    .l1 { stroke: #3987e5; } .l2 { stroke: #d95926; }
+    .neutral { fill: #5b5a55; } .band { fill: #3987e5; opacity: 0.14; }
+    .ring { stroke: #1a1a19; }
+  }
+  text { font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+</style>
+<rect width="880" height="376" rx="8" class="surface"/>
+<text x="24.0" y="32.0" class="t1" font-size="15" text-anchor="start" font-weight="600">Choosing M: past 16, more of the exact neighbours, no better answers, much longer builds</text>
+<text x="64.0" y="62.0" class="t1" font-size="13" text-anchor="start" font-weight="600">Share at mhnsw_ef_search 40</text>
+<line x1="64.0" y1="296.0" x2="430.0" y2="296.0" class="grid" stroke-width="1"/>
+<text x="56.0" y="300.0" class="t2" font-size="11" text-anchor="end">0.80</text>
+<line x1="64.0" y1="248.0" x2="430.0" y2="248.0" class="grid" stroke-width="1"/>
+<text x="56.0" y="252.0" class="t2" font-size="11" text-anchor="end">0.85</text>
+<line x1="64.0" y1="200.0" x2="430.0" y2="200.0" class="grid" stroke-width="1"/>
+<text x="56.0" y="204.0" class="t2" font-size="11" text-anchor="end">0.90</text>
+<line x1="64.0" y1="152.0" x2="430.0" y2="152.0" class="grid" stroke-width="1"/>
+<text x="56.0" y="156.0" class="t2" font-size="11" text-anchor="end">0.95</text>
+<line x1="64.0" y1="104.0" x2="430.0" y2="104.0" class="grid" stroke-width="1"/>
+<text x="56.0" y="108.0" class="t2" font-size="11" text-anchor="end">1.00</text>
+<rect x="201.7" y="104" width="28" height="192" class="band"/>
+<text x="215.7" y="98.0" class="t2" font-size="11" text-anchor="middle">shipped: M=16</text>
+<text x="64.0" y="314.0" class="t2" font-size="11" text-anchor="middle">6</text>
+<text x="108.5" y="314.0" class="t2" font-size="11" text-anchor="middle">8</text>
+<text x="215.7" y="314.0" class="t2" font-size="11" text-anchor="middle">16</text>
+<text x="322.8" y="314.0" class="t2" font-size="11" text-anchor="middle">32</text>
+<text x="385.5" y="314.0" class="t2" font-size="11" text-anchor="middle">48</text>
+<text x="430.0" y="314.0" class="t2" font-size="11" text-anchor="middle">64</text>
+<text x="247.0" y="334.0" class="t2" font-size="11" text-anchor="middle">M (links per node, log scale)</text>
+<path d="M64.0,233.8 L108.5,189.3 L215.7,153.8 L322.8,116.5 L385.5,105.8 L430.0,109.4" class="l1" stroke-width="2"/>
+<circle cx="64.0" cy="233.8" r="4.5" class="s1 ring" stroke-width="2"/>
+<circle cx="108.5" cy="189.3" r="4.5" class="s1 ring" stroke-width="2"/>
+<circle cx="215.7" cy="153.8" r="4.5" class="s1 ring" stroke-width="2"/>
+<circle cx="322.8" cy="116.5" r="4.5" class="s1 ring" stroke-width="2"/>
+<circle cx="385.5" cy="105.8" r="4.5" class="s1 ring" stroke-width="2"/>
+<circle cx="430.0" cy="109.4" r="4.5" class="s1 ring" stroke-width="2"/>
+<circle cx="69.0" cy="77" r="4.5" class="s1"/>
+<text x="78.0" y="81.0" class="t1" font-size="12" text-anchor="start">exact top-10 neighbours found</text>
+<path d="M64.0,171.0 L108.5,126.4 L215.7,126.4 L322.8,126.4 L385.5,126.4 L430.0,126.4" class="l2" stroke-width="2"/>
+<circle cx="64.0" cy="171.0" r="4.5" class="s2 ring" stroke-width="2"/>
+<circle cx="108.5" cy="126.4" r="4.5" class="s2 ring" stroke-width="2"/>
+<circle cx="215.7" cy="126.4" r="4.5" class="s2 ring" stroke-width="2"/>
+<circle cx="322.8" cy="126.4" r="4.5" class="s2 ring" stroke-width="2"/>
+<circle cx="385.5" cy="126.4" r="4.5" class="s2 ring" stroke-width="2"/>
+<circle cx="430.0" cy="126.4" r="4.5" class="s2 ring" stroke-width="2"/>
+<circle cx="304.0" cy="77" r="4.5" class="s2"/>
+<text x="313.0" y="81.0" class="t1" font-size="12" text-anchor="start">right article in the top 10</text>
+<text x="227.7" y="169.8" class="t2" font-size="11" text-anchor="start">0.948</text>
+<text x="500.0" y="62.0" class="t1" font-size="13" text-anchor="start" font-weight="600">Index build, seconds (6,144 chunks)</text>
+<line x1="500.0" y1="296.0" x2="852.0" y2="296.0" class="axis" stroke-width="1"/>
+<text x="492.0" y="300.0" class="t2" font-size="11" text-anchor="end">0</text>
+<line x1="500.0" y1="248.0" x2="852.0" y2="248.0" class="grid" stroke-width="1"/>
+<text x="492.0" y="252.0" class="t2" font-size="11" text-anchor="end">35</text>
+<line x1="500.0" y1="200.0" x2="852.0" y2="200.0" class="grid" stroke-width="1"/>
+<text x="492.0" y="204.0" class="t2" font-size="11" text-anchor="end">70</text>
+<line x1="500.0" y1="152.0" x2="852.0" y2="152.0" class="grid" stroke-width="1"/>
+<text x="492.0" y="156.0" class="t2" font-size="11" text-anchor="end">105</text>
+<line x1="500.0" y1="104.0" x2="852.0" y2="104.0" class="grid" stroke-width="1"/>
+<text x="492.0" y="108.0" class="t2" font-size="11" text-anchor="end">140</text>
+<path d="M511.7,296.0 V294.6 Q511.7,293.2 513.2,293.2 H545.5 Q546.9,293.2 546.9,294.6 V296.0 Z" class="neutral"/>
+<text x="529.3" y="287.2" class="t1" font-size="11" text-anchor="middle">2.1</text>
+<text x="529.3" y="314.0" class="t2" font-size="11" text-anchor="middle">6</text>
+<path d="M570.4,296.0 V294.5 Q570.4,292.9 571.9,292.9 H604.1 Q605.6,292.9 605.6,294.5 V296.0 Z" class="neutral"/>
+<text x="588.0" y="286.9" class="t1" font-size="11" text-anchor="middle">2.3</text>
+<text x="588.0" y="314.0" class="t2" font-size="11" text-anchor="middle">8</text>
+<path d="M629.1,296.0 V292.2 Q629.1,288.5 632.8,288.5 H660.5 Q664.3,288.5 664.3,292.2 V296.0 Z" class="s1"/>
+<text x="646.7" y="282.5" class="t1" font-size="11" text-anchor="middle">5.5</text>
+<text x="646.7" y="314.0" class="t2" font-size="11" text-anchor="middle">16</text>
+<path d="M687.7,296.0 V266.2 Q687.7,262.2 691.7,262.2 H718.9 Q722.9,262.2 722.9,266.2 V296.0 Z" class="neutral"/>
+<text x="705.3" y="256.2" class="t1" font-size="11" text-anchor="middle">24.6</text>
+<text x="705.3" y="314.0" class="t2" font-size="11" text-anchor="middle">32</text>
+<path d="M746.4,296.0 V222.4 Q746.4,218.4 750.4,218.4 H777.6 Q781.6,218.4 781.6,222.4 V296.0 Z" class="neutral"/>
+<text x="764.0" y="212.4" class="t1" font-size="11" text-anchor="middle">56.6</text>
+<text x="764.0" y="314.0" class="t2" font-size="11" text-anchor="middle">48</text>
+<path d="M805.1,296.0 V115.2 Q805.1,111.2 809.1,111.2 H836.3 Q840.3,111.2 840.3,115.2 V296.0 Z" class="neutral"/>
+<text x="822.7" y="105.2" class="t1" font-size="11" text-anchor="middle">134.8</text>
+<text x="822.7" y="314.0" class="t2" font-size="11" text-anchor="middle">64</text>
+<text x="676.0" y="334.0" class="t2" font-size="11" text-anchor="middle">M</text>
+<text x="24.0" y="348.0" class="t2" font-size="10.5" text-anchor="start">MariaDB 12.3.3, 768-dimensional bge-base vectors, 54 questions without a filter, nearest-first statement, measured right after each build.</text>
+<text x="24.0" y="364.0" class="t2" font-size="10.5" text-anchor="start">M 6, 48 and 64 come from the first sweep, which sent the query vector as text. Raw reports: eval/results/20261030-*_m-sweep.md</text>
+</svg>

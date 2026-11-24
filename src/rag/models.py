@@ -56,6 +56,12 @@ class Source:
     url: str | None
 
 
+# Why an answer is "not found": no chunk was closer than the distance threshold, so the
+# language model was not asked, or the model read the chunks and replied NOT_FOUND.
+NOT_FOUND_DISTANCE = "distance"
+NOT_FOUND_MODEL = "model"
+
+
 @dataclass(slots=True, frozen=True)
 class Answer:
     question: str
@@ -64,3 +70,5 @@ class Answer:
     sources: tuple[Source, ...] = ()
     chunks: tuple[RetrievedChunk, ...] = ()
     timings_ms: dict[str, float] = field(default_factory=dict)
+    not_found_reason: str | None = None  # NOT_FOUND_DISTANCE, NOT_FOUND_MODEL or None
+    max_distance: float | None = None  # the threshold the chunks were held to

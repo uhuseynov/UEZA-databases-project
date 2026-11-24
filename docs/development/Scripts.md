@@ -11,6 +11,8 @@ Everything that is neither the application nor a test: helper scripts, the scrip
 | `scripts/entrypoint.sh` | the Docker image (`ENTRYPOINT`) | waits until MariaDB accepts connections (up to 60 s), hands `/app/.cache` to the application user if an older root-run container left it root-owned, drops root, and starts the container's command (`uvicorn`) as `ueza` ([Docker and Compose](./Docker.md#container-user)). It does not touch the schema ([Schema Management](../database/Schema.md)). |
 | `scripts/setup-hooks.sh` | `make hooks`, `make setup` | sets `core.hooksPath` to `.githooks` and makes the hooks executable |
 | `scripts/check_docs.py` | `make docs-check`, CI | checks the documentation against the repository: links and anchors, paths, `make` targets, setting names ([Continuous Integration](./Continuous-Integration.md#documentation-check)) |
+| `scripts/plot_results.py` | `make charts` | draws the README charts (`docs/images/m-sweep.svg`, `docs/images/mariadb-vs-faiss.svg`) from the committed reports in `eval/results`; standard library only. A unit test fails when a committed chart no longer matches its report. |
+| `examples/vector_search.sql` | `make example` | the technique in one SQL file, on ten hand-made 4-dimensional vectors: nearest-neighbour search, the binary query vector, a filter and a join in the same statement, the exact search and a rolled-back transaction. `tests/integration/test_example_sql.py` checks every result it promises. |
 | `.githooks/commit-msg` | Git | validates the Conventional Commit subject ([Git Hooks](./Git-Hooks.md)) |
 | `.githooks/pre-push` | Git | runs the unit tests before a push |
 

@@ -311,6 +311,14 @@ db-shell: ## Opens a MariaDB shell
 		$(MARIADB_DATABASE)
 
 
+.PHONY: example
+example: db-up ## Runs examples/vector_search.sql: vector search, SQL filters and a transaction on 10 chunks
+	@$(DC) exec -T db mariadb --table -vvv \
+		-u$(MARIADB_USER) \
+		-p$(MARIADB_PASSWORD) \
+		$(MARIADB_DATABASE) < examples/vector_search.sql
+
+
 .PHONY: db-logs
 db-logs: ## Tails MariaDB logs
 	@$(DC) logs -f db
@@ -433,6 +441,11 @@ format-check: ## Reports files that `ruff format` would change (does not modify 
 .PHONY: format
 format: ## Formats all Python files with Ruff (rewrites files)
 	@$(RUFF) format .
+
+
+.PHONY: charts
+charts: ## Redraws the README charts (docs/images/*.svg) from the reports in eval/results
+	@uv run python scripts/plot_results.py
 
 
 .PHONY: docs-check

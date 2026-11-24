@@ -11,6 +11,7 @@ MariaDB 12.3.3 holds the articles, their metadata, the text chunks and the embed
 | [Connection and Sessions](./Connection.md) | the async engine and the transactional session |
 | [Vector Search and Index Parameters](./Vector-Search.md) | the vector index, how MariaDB plans a search with filters, `M` and `mhnsw_ef_search` |
 | [Vector Index State](./Index-State.md) | how the index's speed and recall depend on its history: the cache, deleted vectors, the graph statistics |
+| [Choosing M](./Choosing-M.md) | a stand-alone write-up of the M sweep: which `M` and `mhnsw_ef_search` to ship, and what made the first measurements wrong |
 | [FAISS Baseline](./FAISS-Baseline.md) | the same vectors and questions in FAISS |
 | [Findings](./Findings.md) | what we learned, why MariaDB, where it loses |
 | [Podman on Windows](./podman.md) | running the database container with Podman instead of Docker |

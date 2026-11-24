@@ -19,7 +19,7 @@ from typing import Any, Protocol
 
 from src.evaluation.ground_truth import Question
 from src.evaluation.metrics import latency_stats
-from src.rag.models import Answer, SearchFilters
+from src.rag.models import NOT_FOUND_DISTANCE, NOT_FOUND_MODEL, Answer, SearchFilters
 from src.rag.prompt import NOT_FOUND, cited_passages
 
 REJECTED, NOT_FOUND_OUTCOME, ANSWERED, ERROR = "rejected", "not_found", "answered", "error"
@@ -34,7 +34,11 @@ class AnswerServiceLike(Protocol):
 def classify(answer: Answer) -> str:
     if answer.found:
         return ANSWERED
-    # The service does not call the model when every chunk is too far away.
+    if answer.not_found_reason == NOT_FOUND_DISTANCE:
+        return REJECTED
+    if answer.not_found_reason == NOT_FOUND_MODEL:
+        return NOT_FOUND_OUTCOME
+    # Without a reason: the service does not call the model when every chunk is too far away.
     return REJECTED if not answer.timings_ms.get("llm_ms") else NOT_FOUND_OUTCOME
 
 

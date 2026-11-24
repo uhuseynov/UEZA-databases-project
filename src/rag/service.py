@@ -2,7 +2,13 @@ import asyncio
 import time
 from typing import Protocol
 
-from src.rag.models import Answer, RetrievedChunk, SearchFilters
+from src.rag.models import (
+    NOT_FOUND_DISTANCE,
+    NOT_FOUND_MODEL,
+    Answer,
+    RetrievedChunk,
+    SearchFilters,
+)
 from src.rag.prompt import build_messages, is_not_found, sources_for
 
 NOT_FOUND_MESSAGE = "The articles in our corpus do not answer this question."
@@ -93,6 +99,8 @@ class RAGService:
                 found=False,
                 chunks=tuple(chunks),
                 timings_ms=timings,
+                not_found_reason=NOT_FOUND_DISTANCE,
+                max_distance=self.max_distance,
             )
 
         start = time.perf_counter()
@@ -106,6 +114,8 @@ class RAGService:
                 found=False,
                 chunks=tuple(context),
                 timings_ms=timings,
+                not_found_reason=NOT_FOUND_MODEL,
+                max_distance=self.max_distance,
             )
 
         return Answer(
@@ -115,6 +125,7 @@ class RAGService:
             sources=sources_for(reply, context),
             chunks=tuple(context),
             timings_ms=timings,
+            max_distance=self.max_distance,
         )
 
 
