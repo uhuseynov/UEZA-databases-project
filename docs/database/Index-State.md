@@ -75,7 +75,7 @@ What we do about it: `rebuild_vector_index` (behind `make reindex` and the autom
 
 The first load of the articles inserts row by row, which InnoDB counts, so an index that was never rebuilt does not have this problem. It also explains why searches after our integration tests behaved like a fresh build: the tests insert and delete a few rows after rebuilding the index.
 
-We think both behaviours are worth reporting to MariaDB: the statistics of a graph table built by `ALTER TABLE`, and a whole-cache reset as the only way of staying under `mhnsw_max_cache_size`.
+We reported both behaviours to MariaDB: the statistics of a graph table built by `ALTER TABLE` as [MDEV-42430](https://jira.mariadb.org/browse/MDEV-42430), and a whole-cache reset as the only way of staying under `mhnsw_max_cache_size` as [MDEV-42431](https://jira.mariadb.org/browse/MDEV-42431).
 
 ## Replacing part of the chunks
 
